@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.models import JobPosting, Company
-from app.schemas.job_posting import JobPostingCreate, JobPostingUpdate, JobPostingRead
+from app.schemas.job_posting import JobPostingCreate, JobPostingUpdate, JobPostingRead, ImportRequest, ImportPreview
+from app.services.parser_service import parse_posting_text, fetch_and_parse_url
 
 router = APIRouter(prefix="/api/postings", tags=["postings"])
 
@@ -47,6 +48,38 @@ def create_posting(data: JobPostingCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(posting)
     return JobPostingRead.model_validate(posting)
+
+
+@router.post("/import", response_model=ImportPreview)
+def import_preview(data: ImportRequest):
+    if data.url:
+        return fetch_and_parse_url(data.url)
+    if data.text:
+        return parse_posting_text(data.text)
+    raise HTTPException(status_code=400, detail="Provide text or url")
+
+
+@router.post("/import/confirm", response_model=JobPostingRead, status_code=201)
+def import_confirm(data: ImportPreview, db: Session = Depends(get_db)):
+    company = None
+    if data.company_name:
+        company = _get_or_create_company(db, data.company_name)
+    posting = JobPosting(
+        title=data.title or "Untitled",
+        company_id=company.id if company else None,
+        description=data.description,
+        location=data.location,
+        remote_type=data.remote_type,
+        salary_min=data.salary_min,
+        salary_max=data.salary_max,
+        url=data.url,
+        source="url_import" if data.url else "pasted",
+        raw_content=data.raw_content,
+    )
+    db.add(posting)
+    db.commit()
+    db.refresh(posting)
+    return posting
 
 
 @router.get("/{posting_id}", response_model=JobPostingRead)

@@ -56,3 +56,30 @@ def test_delete_posting(client):
     resp = client.delete(f"/api/postings/{pid}")
     assert resp.status_code == 204
     assert client.get(f"/api/postings/{pid}").status_code == 404
+
+
+def test_import_preview_text(client):
+    resp = client.post("/api/postings/import", json={
+        "text": "Software Engineer\nAcme Corp\nSan Francisco, CA (Remote)\n$150,000 - $200,000\n\nWe are looking for..."
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["title"] is not None
+    assert data["raw_content"] is not None
+
+
+def test_import_confirm(client):
+    resp = client.post("/api/postings/import/confirm", json={
+        "title": "Software Engineer",
+        "company_name": "Acme Corp",
+        "location": "San Francisco",
+        "salary_min": 150000,
+        "salary_max": 200000,
+    })
+    assert resp.status_code == 201
+    assert resp.json()["title"] == "Software Engineer"
+
+
+def test_import_no_input(client):
+    resp = client.post("/api/postings/import", json={})
+    assert resp.status_code == 400
