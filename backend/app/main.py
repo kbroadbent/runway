@@ -1,8 +1,25 @@
+import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import companies, postings, pipeline, search
+from app.services.scheduler_service import init_scheduler
+from app.database import DATABASE_URL
 
-app = FastAPI(title="Runway", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app):
+    scheduler = init_scheduler(DATABASE_URL)
+    # Only start the scheduler in production (not during tests)
+    if os.getenv("SCHEDULER_ENABLED", "false").lower() == "true":
+        scheduler.start()
+    app.state.scheduler = scheduler
+    yield
+    if scheduler.running:
+        scheduler.shutdown()
+
+
+app = FastAPI(title="Runway", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

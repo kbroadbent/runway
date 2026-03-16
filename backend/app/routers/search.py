@@ -1,11 +1,12 @@
 import json
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
 from app.models import SearchProfile, SearchResult
 from app.schemas.search import SearchProfileCreate, SearchProfileUpdate, SearchProfileRead
 from app.services.search_service import run_search
+from app.services.scheduler_service import schedule_profile, remove_profile_schedule
 
 router = APIRouter(tags=["search"])
 
@@ -40,7 +41,7 @@ def create_profile(data: SearchProfileCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/api/search-profiles/{profile_id}", response_model=SearchProfileRead)
-def update_profile(profile_id: int, data: SearchProfileUpdate, db: Session = Depends(get_db)):
+def update_profile(profile_id: int, data: SearchProfileUpdate, request: Request, db: Session = Depends(get_db)):
     profile = db.get(SearchProfile, profile_id)
     if not profile:
         raise HTTPException(status_code=404, detail="Search profile not found")
@@ -51,6 +52,15 @@ def update_profile(profile_id: int, data: SearchProfileUpdate, db: Session = Dep
         setattr(profile, key, value)
     db.commit()
     db.refresh(profile)
+
+    # Update scheduler based on auto-run settings
+    scheduler = getattr(request.app.state, "scheduler", None)
+    if scheduler is not None and scheduler.running:
+        if profile.is_auto_enabled and profile.run_interval:
+            schedule_profile(scheduler, profile)
+        else:
+            remove_profile_schedule(scheduler, profile.id)
+
     profile_dict = {c.name: getattr(profile, c.name) for c in profile.__table__.columns}
     profile_dict["sources"] = json.loads(profile.sources) if profile.sources else None
     profile_dict["new_result_count"] = 0
