@@ -37,7 +37,7 @@ def test_stage_history(client, posting_id):
     client.put(f"/api/pipeline/{eid}/move", json={"to_stage": "applied"})
     resp = client.get(f"/api/pipeline/{eid}/history")
     assert resp.status_code == 200
-    assert len(resp.json()) == 2
+    assert len(resp.json()) == 3  # initial entry + 2 moves
 
 
 def test_add_interview_note(client, posting_id):

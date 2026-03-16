@@ -28,6 +28,9 @@ def list_pipeline(db: Session = Depends(get_db)):
 def add_to_pipeline(data: PipelineEntryCreate, db: Session = Depends(get_db)):
     entry = PipelineEntry(job_posting_id=data.job_posting_id, stage=data.stage, position=0)
     db.add(entry)
+    db.flush()
+    history = PipelineHistory(pipeline_entry_id=entry.id, from_stage=None, to_stage=data.stage)
+    db.add(history)
     db.commit()
     db.refresh(entry)
     return entry

@@ -6,11 +6,11 @@ from app.schemas.job_posting import ImportPreview
 
 # --- salary patterns ---
 _SALARY_RANGE_RE = re.compile(
-    r"\$\s*([\d,]+(?:\.\d+)?)\s*[kK]?\s*[-–—to]+\s*\$?\s*([\d,]+(?:\.\d+)?)\s*[kK]?",
+    r"\$\s*([\d,]+(?:\.\d+)?[kK]?)\s*[-–—to]+\s*\$?\s*([\d,]+(?:\.\d+)?[kK]?)",
     re.IGNORECASE,
 )
 _SALARY_SINGLE_RE = re.compile(
-    r"\$\s*([\d,]+(?:\.\d+)?)\s*[kK]?(?:/yr|/year|per year)?",
+    r"\$\s*([\d,]+(?:\.\d+)?[kK]?)(?:/yr|/year|per year)?",
     re.IGNORECASE,
 )
 
