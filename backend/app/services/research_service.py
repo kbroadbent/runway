@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.parse import quote_plus
 import httpx
 from sqlalchemy.orm import Session
@@ -41,7 +41,7 @@ def research_company(company: Company, db: Session) -> Company:
     if salary_data:
         company.levels_salary_data = salary_data
 
-    company.last_researched_at = datetime.utcnow()
+    company.last_researched_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(company)
     return company

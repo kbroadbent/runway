@@ -36,7 +36,16 @@ def create_profile(data: SearchProfileCreate, db: Session = Depends(get_db)):
     db.refresh(profile)
     profile_dict = {c.name: getattr(profile, c.name) for c in profile.__table__.columns}
     profile_dict["sources"] = json.loads(profile.sources) if profile.sources else None
-    profile_dict["new_result_count"] = 0
+    profile_dict["new_result_count"] = 0  # new profile has no results yet
+    return SearchProfileRead.model_validate(profile_dict)
+
+
+def _profile_to_read(profile: SearchProfile, db: Session) -> SearchProfileRead:
+    profile_dict = {c.name: getattr(profile, c.name) for c in profile.__table__.columns}
+    profile_dict["sources"] = json.loads(profile.sources) if profile.sources else None
+    profile_dict["new_result_count"] = db.query(func.count(SearchResult.id)).filter(
+        SearchResult.search_profile_id == profile.id, SearchResult.is_new == True  # noqa: E712
+    ).scalar()
     return SearchProfileRead.model_validate(profile_dict)
 
 
@@ -61,10 +70,7 @@ def update_profile(profile_id: int, data: SearchProfileUpdate, request: Request,
         else:
             remove_profile_schedule(scheduler, profile.id)
 
-    profile_dict = {c.name: getattr(profile, c.name) for c in profile.__table__.columns}
-    profile_dict["sources"] = json.loads(profile.sources) if profile.sources else None
-    profile_dict["new_result_count"] = 0
-    return SearchProfileRead.model_validate(profile_dict)
+    return _profile_to_read(profile, db)
 
 
 @router.delete("/api/search-profiles/{profile_id}", status_code=204)

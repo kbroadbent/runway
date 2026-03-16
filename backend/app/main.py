@@ -3,8 +3,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import companies, postings, pipeline, search
-from app.services.scheduler_service import init_scheduler
-from app.database import DATABASE_URL
+from app.services.scheduler_service import init_scheduler, schedule_profile
+from app.database import DATABASE_URL, SessionLocal
+from app.models import SearchProfile
 
 
 @asynccontextmanager
@@ -13,6 +14,17 @@ async def lifespan(app):
     # Only start the scheduler in production (not during tests)
     if os.getenv("SCHEDULER_ENABLED", "false").lower() == "true":
         scheduler.start()
+        # Restore auto-enabled profiles from the database
+        db = SessionLocal()
+        try:
+            profiles = db.query(SearchProfile).filter(
+                SearchProfile.is_auto_enabled == True,  # noqa: E712
+                SearchProfile.run_interval != None,  # noqa: E711
+            ).all()
+            for profile in profiles:
+                schedule_profile(scheduler, profile)
+        finally:
+            db.close()
     app.state.scheduler = scheduler
     yield
     if scheduler.running:

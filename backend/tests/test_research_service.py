@@ -22,7 +22,9 @@ def test_scrape_levels_fyi_success():
     mock_resp.text = '<div>Some salary data</div>'
     with patch("app.services.research_service.httpx.get", return_value=mock_resp):
         result = scrape_levels_fyi("Google")
-    assert result is not None or result is None  # doesn't crash
+    import json
+    assert result is not None
+    assert "url" in json.loads(result)
 
 
 def test_scrape_levels_fyi_failure():

@@ -10,6 +10,12 @@ from app.schemas.pipeline import (
 router = APIRouter(tags=["pipeline"])
 
 STAGES = ["interested", "applying", "applied", "recruiter_screen", "tech_screen", "onsite", "offer", "rejected", "archived"]
+VALID_STAGES = set(STAGES)
+
+
+def _validate_stage(stage: str) -> None:
+    if stage not in VALID_STAGES:
+        raise HTTPException(status_code=422, detail=f"Invalid stage '{stage}'. Must be one of: {', '.join(STAGES)}")
 
 
 @router.get("/api/pipeline", response_model=dict[str, list[PipelineEntryRead]])
@@ -26,6 +32,7 @@ def list_pipeline(db: Session = Depends(get_db)):
 
 @router.post("/api/pipeline", response_model=PipelineEntryRead, status_code=201)
 def add_to_pipeline(data: PipelineEntryCreate, db: Session = Depends(get_db)):
+    _validate_stage(data.stage)
     entry = PipelineEntry(job_posting_id=data.job_posting_id, stage=data.stage, position=0)
     db.add(entry)
     db.flush()
@@ -50,6 +57,7 @@ def update_pipeline_entry(entry_id: int, data: PipelineEntryUpdate, db: Session 
 
 @router.put("/api/pipeline/{entry_id}/move", response_model=PipelineEntryRead)
 def move_pipeline_entry(entry_id: int, data: PipelineMoveRequest, db: Session = Depends(get_db)):
+    _validate_stage(data.to_stage)
     entry = db.get(PipelineEntry, entry_id)
     if not entry:
         raise HTTPException(status_code=404, detail="Pipeline entry not found")

@@ -3,16 +3,16 @@
 	import { pipeline } from '$lib/api';
 	import KanbanCard from './KanbanCard.svelte';
 
-	const STAGES = [
-		'Interested',
-		'Applying',
-		'Applied',
-		'Recruiter Screen',
-		'Tech Screen',
-		'Onsite',
-		'Offer',
-		'Rejected',
-		'Archived',
+	const STAGES: { key: string; label: string }[] = [
+		{ key: 'interested', label: 'Interested' },
+		{ key: 'applying', label: 'Applying' },
+		{ key: 'applied', label: 'Applied' },
+		{ key: 'recruiter_screen', label: 'Recruiter Screen' },
+		{ key: 'tech_screen', label: 'Tech Screen' },
+		{ key: 'onsite', label: 'Onsite' },
+		{ key: 'offer', label: 'Offer' },
+		{ key: 'rejected', label: 'Rejected' },
+		{ key: 'archived', label: 'Archived' },
 	];
 
 	interface Props {
@@ -31,16 +31,16 @@
 		e.dataTransfer?.setData('text/plain', String(entryId));
 	}
 
-	function handleDragOver(e: DragEvent, stage: string) {
+	function handleDragOver(e: DragEvent, stageKey: string) {
 		e.preventDefault();
-		dragOverStage = stage;
+		dragOverStage = stageKey;
 	}
 
 	function handleDragLeave() {
 		dragOverStage = null;
 	}
 
-	async function handleDrop(e: DragEvent, toStage: string) {
+	async function handleDrop(e: DragEvent, toStageKey: string) {
 		e.preventDefault();
 		dragOverStage = null;
 		if (draggingEntryId === null) return;
@@ -50,26 +50,26 @@
 		// Find the entry to check its current stage
 		for (const entries of Object.values(board)) {
 			const entry = entries.find((en) => en.id === id);
-			if (entry && entry.stage === toStage) return; // no-op
+			if (entry && entry.stage === toStageKey) return; // no-op
 		}
 
-		await pipeline.move(id, { to_stage: toStage });
+		await pipeline.move(id, { to_stage: toStageKey });
 		onMoved();
 	}
 </script>
 
 <div class="kanban-board">
 	{#each STAGES as stage}
-		{@const entries = board[stage] ?? []}
+		{@const entries = board[stage.key] ?? []}
 		<div
 			class="kanban-column"
-			class:drag-over={dragOverStage === stage}
-			ondragover={(e) => handleDragOver(e, stage)}
+			class:drag-over={dragOverStage === stage.key}
+			ondragover={(e) => handleDragOver(e, stage.key)}
 			ondragleave={handleDragLeave}
-			ondrop={(e) => handleDrop(e, stage)}
+			ondrop={(e) => handleDrop(e, stage.key)}
 		>
 			<div class="column-header">
-				<span class="column-name">{stage}</span>
+				<span class="column-name">{stage.label}</span>
 				<span class="column-count">{entries.length}</span>
 			</div>
 			<div class="column-cards">

@@ -41,10 +41,20 @@ def _extract_salary(text: str) -> tuple[int | None, int | None]:
     return None, None
 
 
+_REMOTE_NORMALIZE = {
+    "remote": "remote",
+    "hybrid": "hybrid",
+}
+
+
 def _extract_remote_type(text: str) -> str | None:
     m = _REMOTE_RE.search(text)
     if m:
-        return m.group(1).lower()
+        raw = m.group(1).lower()
+        if raw in _REMOTE_NORMALIZE:
+            return _REMOTE_NORMALIZE[raw]
+        # on-site, on site, in-office, in office → onsite
+        return "onsite"
     return None
 
 

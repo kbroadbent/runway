@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from jobspy import scrape_jobs
 from sqlalchemy.orm import Session
 from app.models import SearchProfile, SearchResult, JobPosting, Company
@@ -69,7 +69,7 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
         db.add(result)
         new_count += 1
 
-    profile.last_run_at = datetime.utcnow()
+    profile.last_run_at = datetime.now(timezone.utc)
     db.commit()
     return {"new_count": new_count, "total_count": total_count}
 

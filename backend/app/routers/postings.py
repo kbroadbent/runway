@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.exc import IntegrityError
 from app.database import get_db
 from app.models import JobPosting, Company
 from app.schemas.job_posting import JobPostingCreate, JobPostingUpdate, JobPostingRead, ImportRequest, ImportPreview
@@ -45,7 +46,11 @@ def create_posting(data: JobPostingCreate, db: Session = Depends(get_db)):
         source=data.source,
     )
     db.add(posting)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="A posting with this title and company already exists")
     db.refresh(posting)
     return JobPostingRead.model_validate(posting)
 
@@ -53,7 +58,10 @@ def create_posting(data: JobPostingCreate, db: Session = Depends(get_db)):
 @router.post("/import", response_model=ImportPreview)
 def import_preview(data: ImportRequest):
     if data.url:
-        return fetch_and_parse_url(data.url)
+        try:
+            return fetch_and_parse_url(data.url)
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail=f"Could not fetch URL: {exc}") from exc
     if data.text:
         return parse_posting_text(data.text)
     raise HTTPException(status_code=400, detail="Provide text or url")
@@ -77,7 +85,11 @@ def import_confirm(data: ImportPreview, db: Session = Depends(get_db)):
         raw_content=data.raw_content,
     )
     db.add(posting)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="A posting with this title and company already exists")
     db.refresh(posting)
     return posting
 
