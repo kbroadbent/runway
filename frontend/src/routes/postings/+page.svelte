@@ -1,4 +1,276 @@
+<script lang="ts">
+	import type { JobPosting, PostingsFilter } from '$lib/types';
+	import { postings as postingsApi } from '$lib/api';
+	import ImportModal from '$lib/components/ImportModal.svelte';
+	import PostingDetailPanel from '$lib/components/PostingDetailPanel.svelte';
+	import { onMount } from 'svelte';
+
+	let allPostings = $state<JobPosting[]>([]);
+	let selectedPosting = $state<JobPosting | null>(null);
+	let showImport = $state(false);
+	let selected = $state<Set<number>>(new Set());
+
+	// Filters
+	let searchText = $state('');
+	let sourceFilter = $state('');
+	let remoteFilter = $state('');
+	let salaryMinFilter = $state<number | undefined>(undefined);
+	let salaryMaxFilter = $state<number | undefined>(undefined);
+
+	// Sort
+	let sortKey = $state('date_saved');
+	let sortAsc = $state(false);
+
+	onMount(loadPostings);
+
+	async function loadPostings() {
+		allPostings = await postingsApi.list();
+	}
+
+	let sources = $derived([...new Set(allPostings.map((p) => p.source))]);
+
+	let filtered = $derived.by(() => {
+		let list = allPostings.filter((p) => {
+			if (searchText) {
+				const q = searchText.toLowerCase();
+				if (
+					!p.title.toLowerCase().includes(q) &&
+					!p.company?.name.toLowerCase().includes(q) &&
+					!(p.location ?? '').toLowerCase().includes(q)
+				)
+					return false;
+			}
+			if (sourceFilter && p.source !== sourceFilter) return false;
+			if (remoteFilter && p.remote_type !== remoteFilter) return false;
+			if (salaryMinFilter && (p.salary_max ?? 0) < salaryMinFilter) return false;
+			if (salaryMaxFilter && (p.salary_min ?? Infinity) > salaryMaxFilter) return false;
+			return true;
+		});
+
+		list.sort((a, b) => {
+			let av: unknown, bv: unknown;
+			switch (sortKey) {
+				case 'title': av = a.title; bv = b.title; break;
+				case 'company': av = a.company?.name ?? ''; bv = b.company?.name ?? ''; break;
+				case 'location': av = a.location ?? ''; bv = b.location ?? ''; break;
+				case 'salary': av = a.salary_min ?? 0; bv = b.salary_min ?? 0; break;
+				case 'source': av = a.source; bv = b.source; break;
+				case 'pipeline_stage': av = a.pipeline_stage ?? ''; bv = b.pipeline_stage ?? ''; break;
+				default: av = a.date_saved; bv = b.date_saved;
+			}
+			if (av! < bv!) return sortAsc ? -1 : 1;
+			if (av! > bv!) return sortAsc ? 1 : -1;
+			return 0;
+		});
+		return list;
+	});
+
+	function handleSort(key: string) {
+		if (sortKey === key) sortAsc = !sortAsc;
+		else { sortKey = key; sortAsc = true; }
+	}
+
+	function toggleSelect(id: number) {
+		const next = new Set(selected);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		selected = next;
+	}
+
+	function toggleSelectAll() {
+		if (selected.size === filtered.length) selected = new Set();
+		else selected = new Set(filtered.map((p) => p.id));
+	}
+
+	async function deleteSelected() {
+		if (!confirm(`Delete ${selected.size} posting(s)?`)) return;
+		await Promise.all([...selected].map((id) => postingsApi.delete(id)));
+		selected = new Set();
+		await loadPostings();
+	}
+
+	function formatSalary(min: number | null, max: number | null): string {
+		if (!min && !max) return '-';
+		const fmt = (n: number) => '$' + Math.round(n / 1000) + 'k';
+		if (min && max) return `${fmt(min)}–${fmt(max)}`;
+		if (min) return `${fmt(min)}+`;
+		return `≤${fmt(max!)}`;
+	}
+
+	const columns = [
+		{ key: 'title', label: 'Title' },
+		{ key: 'company', label: 'Company' },
+		{ key: 'location', label: 'Location' },
+		{ key: 'salary', label: 'Salary' },
+		{ key: 'source', label: 'Source' },
+		{ key: 'pipeline_stage', label: 'Pipeline' },
+		{ key: 'date_saved', label: 'Saved' },
+	];
+</script>
+
 <div class="page-header">
 	<h1>Saved Postings</h1>
+	<button class="btn btn-primary" onclick={() => (showImport = true)}>Import Posting</button>
 </div>
-<p style="color: var(--text-secondary)">Saved postings page coming soon.</p>
+
+<!-- Filters -->
+<div class="filters card">
+	<input type="text" bind:value={searchText} placeholder="Search title, company, location..." />
+	<select bind:value={sourceFilter}>
+		<option value="">All sources</option>
+		{#each sources as src}
+			<option value={src}>{src}</option>
+		{/each}
+	</select>
+	<select bind:value={remoteFilter}>
+		<option value="">Any remote</option>
+		<option value="remote">Remote</option>
+		<option value="hybrid">Hybrid</option>
+		<option value="onsite">Onsite</option>
+	</select>
+	<input type="number" bind:value={salaryMinFilter} placeholder="Min salary" style="width: 120px" />
+	<input type="number" bind:value={salaryMaxFilter} placeholder="Max salary" style="width: 120px" />
+</div>
+
+{#if selected.size > 0}
+	<div class="bulk-actions">
+		<span>{selected.size} selected</span>
+		<button class="btn btn-sm btn-danger" onclick={deleteSelected}>Delete Selected</button>
+		<button class="btn btn-sm btn-secondary" onclick={() => (selected = new Set())}>Clear</button>
+	</div>
+{/if}
+
+<div class="table-wrap">
+	{#if filtered.length === 0}
+		<p class="empty-state">No postings found. Import one or run a search.</p>
+	{:else}
+		<table>
+			<thead>
+				<tr>
+					<th>
+						<input
+							type="checkbox"
+							checked={selected.size === filtered.length && filtered.length > 0}
+							onchange={toggleSelectAll}
+						/>
+					</th>
+					{#each columns as col}
+						<th class="sortable" onclick={() => handleSort(col.key)}>
+							{col.label}
+							{#if sortKey === col.key}<span class="sort-arrow">{sortAsc ? '↑' : '↓'}</span>{/if}
+						</th>
+					{/each}
+				</tr>
+			</thead>
+			<tbody>
+				{#each filtered as posting}
+					<tr
+						class="posting-row"
+						class:row-selected={selected.has(posting.id)}
+						onclick={() => (selectedPosting = posting)}
+					>
+						<td onclick={(e) => { e.stopPropagation(); toggleSelect(posting.id); }}>
+							<input type="checkbox" checked={selected.has(posting.id)} onchange={() => toggleSelect(posting.id)} />
+						</td>
+						<td>{posting.title}</td>
+						<td>{posting.company?.name ?? '-'}</td>
+						<td>{posting.location ?? '-'}</td>
+						<td>{formatSalary(posting.salary_min, posting.salary_max)}</td>
+						<td><span class="badge badge-stage">{posting.source}</span></td>
+						<td>
+							{#if posting.pipeline_stage}
+								<span class="badge badge-stage">{posting.pipeline_stage}</span>
+							{:else}
+								<span class="text-muted">-</span>
+							{/if}
+						</td>
+						<td>{new Date(posting.date_saved).toLocaleDateString()}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	{/if}
+</div>
+
+{#if showImport}
+	<ImportModal
+		onClose={() => (showImport = false)}
+		onSaved={async () => { await loadPostings(); }}
+	/>
+{/if}
+
+{#if selectedPosting}
+	<PostingDetailPanel
+		posting={selectedPosting}
+		onClose={() => (selectedPosting = null)}
+		onDeleted={async () => { await loadPostings(); selectedPosting = null; }}
+		onUpdated={async () => { await loadPostings(); }}
+	/>
+{/if}
+
+<style>
+	.filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		align-items: center;
+		margin-bottom: 1rem;
+		padding: 0.75rem;
+	}
+
+	.filters input[type='text'],
+	.filters select {
+		flex: 1;
+		min-width: 140px;
+	}
+
+	.bulk-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-bottom: 0.75rem;
+		font-size: 0.9rem;
+		color: var(--text-secondary);
+	}
+
+	.table-wrap {
+		overflow-x: auto;
+	}
+
+	.sortable {
+		cursor: pointer;
+		user-select: none;
+	}
+
+	.sortable:hover {
+		color: var(--accent-blue);
+	}
+
+	.sort-arrow {
+		margin-left: 0.25rem;
+		font-size: 0.75rem;
+	}
+
+	.posting-row {
+		cursor: pointer;
+		transition: background 0.1s;
+	}
+
+	.posting-row:hover {
+		background: var(--bg-tertiary);
+	}
+
+	.row-selected {
+		background: color-mix(in srgb, var(--accent-blue) 10%, transparent);
+	}
+
+	.text-muted {
+		color: var(--text-muted);
+	}
+
+	.empty-state {
+		color: var(--text-muted);
+		text-align: center;
+		padding: 3rem;
+	}
+</style>
