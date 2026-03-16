@@ -54,8 +54,8 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
             description=row.get("description"),
             location=str(row.get("location", "")),
             remote_type=remote_type,
-            salary_min=int(row["min_amount"]) if row.get("min_amount") else None,
-            salary_max=int(row["max_amount"]) if row.get("max_amount") else None,
+            salary_min=_to_int(row.get("min_amount")),
+            salary_max=_to_int(row.get("max_amount")),
             url=url,
             source=str(row.get("site", "unknown")),
             date_posted=_parse_date(row.get("date_posted")),
@@ -72,6 +72,15 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
     profile.last_run_at = datetime.now(timezone.utc)
     db.commit()
     return {"new_count": new_count, "total_count": total_count}
+
+
+def _to_int(val) -> int | None:
+    if val is None:
+        return None
+    try:
+        return int(val)
+    except (ValueError, TypeError):
+        return None
 
 
 def _parse_date(val) -> datetime | None:
