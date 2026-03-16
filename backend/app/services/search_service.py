@@ -1,4 +1,5 @@
 import json
+import math
 from datetime import datetime, timezone
 from jobspy import scrape_jobs
 from sqlalchemy.orm import Session
@@ -51,8 +52,8 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
         posting = JobPosting(
             title=title,
             company_id=company.id,
-            description=row.get("description"),
-            location=str(row.get("location", "")),
+            description=_to_str(row.get("description")),
+            location=_to_str(row.get("location")) or "",
             remote_type=remote_type,
             salary_min=_to_int(row.get("min_amount")),
             salary_max=_to_int(row.get("max_amount")),
@@ -83,8 +84,18 @@ def _to_int(val) -> int | None:
         return None
 
 
+def _to_str(val) -> str | None:
+    if val is None:
+        return None
+    if isinstance(val, float) and math.isnan(val):
+        return None
+    return str(val)
+
+
 def _parse_date(val) -> datetime | None:
     if val is None or (hasattr(val, '__class__') and val.__class__.__name__ == 'NaTType'):
+        return None
+    if isinstance(val, float) and math.isnan(val):
         return None
     if isinstance(val, str):
         try:
