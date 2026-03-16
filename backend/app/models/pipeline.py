@@ -1,0 +1,54 @@
+from datetime import datetime
+from sqlalchemy import Integer, String, Text, DateTime, ForeignKey, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.database import Base
+
+
+class PipelineEntry(Base):
+    __tablename__ = "pipeline_entries"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    job_posting_id: Mapped[int] = mapped_column(ForeignKey("job_postings.id", ondelete="CASCADE"), unique=True)
+    stage: Mapped[str] = mapped_column(String, nullable=False)
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    notes: Mapped[str | None] = mapped_column(Text)
+    next_action: Mapped[str | None] = mapped_column(String)
+    next_action_date: Mapped[datetime | None] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    job_posting: Mapped["JobPosting"] = relationship(back_populates="pipeline_entry")
+    interview_notes: Mapped[list["InterviewNote"]] = relationship(
+        back_populates="pipeline_entry", cascade="all, delete-orphan"
+    )
+    history: Mapped[list["PipelineHistory"]] = relationship(
+        back_populates="pipeline_entry", cascade="all, delete-orphan"
+    )
+
+
+class InterviewNote(Base):
+    __tablename__ = "interview_notes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    pipeline_entry_id: Mapped[int] = mapped_column(ForeignKey("pipeline_entries.id", ondelete="CASCADE"))
+    round: Mapped[str] = mapped_column(String, nullable=False)
+    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime)
+    interviewers: Mapped[str | None] = mapped_column(String)
+    notes: Mapped[str | None] = mapped_column(Text)
+    outcome: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    pipeline_entry: Mapped["PipelineEntry"] = relationship(back_populates="interview_notes")
+
+
+class PipelineHistory(Base):
+    __tablename__ = "pipeline_history"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    pipeline_entry_id: Mapped[int] = mapped_column(ForeignKey("pipeline_entries.id", ondelete="CASCADE"))
+    from_stage: Mapped[str | None] = mapped_column(String)
+    to_stage: Mapped[str] = mapped_column(String, nullable=False)
+    note: Mapped[str | None] = mapped_column(String)
+    changed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    pipeline_entry: Mapped["PipelineEntry"] = relationship(back_populates="history")
