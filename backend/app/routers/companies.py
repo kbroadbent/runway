@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Company
 from app.schemas.company import CompanyCreate, CompanyUpdate, CompanyRead
+from app.services.research_service import research_company
 
 router = APIRouter(prefix="/api/companies", tags=["companies"])
 
@@ -39,3 +40,11 @@ def update_company(company_id: int, data: CompanyUpdate, db: Session = Depends(g
     db.commit()
     db.refresh(company)
     return company
+
+
+@router.post("/{company_id}/research", response_model=CompanyRead)
+def research_company_endpoint(company_id: int, db: Session = Depends(get_db)):
+    company = db.get(Company, company_id)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    return research_company(company, db)
