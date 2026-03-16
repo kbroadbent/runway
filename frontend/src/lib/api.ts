@@ -46,7 +46,7 @@ export const searchProfiles = {
 
 export const postings = {
   list: (filters?: PostingsFilter) =>
-    request<JobPosting[]>(`/postings${filters ? toQuery(filters) : ''}`),
+    request<JobPosting[]>(`/postings${filters ? toQuery(filters as Record<string, unknown>) : ''}`),
   get: (id: number) => request<JobPosting>(`/postings/${id}`),
   create: (data: Partial<JobPosting> & { company_name?: string }) =>
     request<JobPosting>('/postings', { method: 'POST', body: JSON.stringify(data) }),
