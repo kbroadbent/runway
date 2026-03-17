@@ -50,7 +50,7 @@
 			await postings.linkCompany(posting.id);
 			onUpdated();
 		} catch (e) {
-			// handle error silently or show status
+			status = e instanceof Error ? e.message : 'Failed to save company';
 		} finally {
 			savingCompany = false;
 		}

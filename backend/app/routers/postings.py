@@ -143,9 +143,10 @@ def delete_posting(posting_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{posting_id}/link-company", response_model=JobPostingRead)
 def link_company(posting_id: int, db: Session = Depends(get_db)):
-    posting = db.query(JobPosting).options(joinedload(JobPosting.company)).filter(
-        JobPosting.id == posting_id
-    ).first()
+    posting = db.query(JobPosting).options(
+        joinedload(JobPosting.company),
+        joinedload(JobPosting.pipeline_entry)
+    ).filter(JobPosting.id == posting_id).first()
     if not posting:
         raise HTTPException(status_code=404, detail="Posting not found")
     if posting.company_id:

@@ -21,9 +21,14 @@
 	let tab = $state<'overview' | 'interviews' | 'questions' | 'salary'>('overview');
 	let companyInterviews = $state<CompanyInterview[]>([]);
 	let loadingInterviews = $state(false);
-	let commonQuestions = $state<string[]>(
-		currentCompany.common_questions ? JSON.parse(currentCompany.common_questions) : []
-	);
+	let commonQuestions = $state<string[]>(() => {
+		if (!currentCompany.common_questions) return [];
+		try {
+			return JSON.parse(currentCompany.common_questions);
+		} catch {
+			return [];
+		}
+	});
 	let newQuestion = $state('');
 	let savingQuestions = $state(false);
 
