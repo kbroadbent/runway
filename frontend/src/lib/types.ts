@@ -10,6 +10,7 @@ export interface Company {
   employee_count: number | null;
   industry: string | null;
   notes: string | null;
+  common_questions: string | null;
   last_researched_at: string | null;
   created_at: string;
 }
@@ -18,6 +19,7 @@ export interface JobPosting {
   id: number;
   title: string;
   company: Company | null;
+  company_name: string | null;
   description: string | null;
   location: string | null;
   remote_type: string | null;
@@ -59,6 +61,18 @@ export interface InterviewNote {
   notes: string | null;
   outcome: string | null;
   created_at: string;
+}
+
+export interface CompanyInterview {
+  id: number;
+  round: string;
+  scheduled_at: string | null;
+  interviewers: string | null;
+  notes: string | null;
+  outcome: string | null;
+  created_at: string;
+  posting_id: number;
+  posting_title: string;
 }
 
 export interface SearchProfile {

@@ -4,6 +4,7 @@ import type {
   PipelineEntry,
   PipelineHistory,
   InterviewNote,
+  CompanyInterview,
   SearchProfile,
   ImportPreview,
   PostingsFilter,
@@ -60,6 +61,8 @@ export const postings = {
     request<ImportPreview>('/postings/import', { method: 'POST', body: JSON.stringify(data) }),
   importConfirm: (data: ImportPreview) =>
     request<JobPosting>('/postings/import/confirm', { method: 'POST', body: JSON.stringify(data) }),
+  linkCompany: (id: number) =>
+    request<JobPosting>(`/postings/${id}/link-company`, { method: 'POST' }),
 };
 
 export const pipeline = {
@@ -94,6 +97,8 @@ export const companies = {
     request<Company>(`/companies/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   research: (id: number) =>
     request<Company>(`/companies/${id}/research`, { method: 'POST' }),
+  interviews: (id: number) =>
+    request<CompanyInterview[]>(`/companies/${id}/interviews`),
 };
 
 export const searchResults = {
