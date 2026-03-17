@@ -71,6 +71,7 @@ export interface SearchProfile {
   salary_max: number | null;
   job_type: string | null;
   sources: string[] | null;
+  exclude_terms: string[] | null;
   run_interval: number | null;
   is_auto_enabled: boolean;
   created_at: string;
