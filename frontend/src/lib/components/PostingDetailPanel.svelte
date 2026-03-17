@@ -1,6 +1,13 @@
 <script lang="ts">
 	import type { JobPosting } from '$lib/types';
 	import { postings, pipeline } from '$lib/api';
+	import { marked } from 'marked';
+	import DOMPurify from 'dompurify';
+
+	function renderMarkdown(text: string): string {
+		const html = marked.parse(text, { async: false }) as string;
+		return DOMPurify.sanitize(html);
+	}
 
 	interface Props {
 		posting: JobPosting;
@@ -112,7 +119,7 @@
 		{#if posting.description}
 			<div class="section">
 				<h3>Description</h3>
-				<div class="description-text">{posting.description}</div>
+				<div class="description-text">{@html renderMarkdown(posting.description)}</div>
 			</div>
 		{/if}
 
@@ -224,12 +231,54 @@
 	}
 
 	.description-text {
-		white-space: pre-wrap;
 		font-size: 0.9rem;
 		color: var(--text-secondary);
-		line-height: 1.6;
+		line-height: 1.7;
 		max-height: 400px;
 		overflow-y: auto;
+	}
+
+	.description-text :global(h1),
+	.description-text :global(h2),
+	.description-text :global(h3),
+	.description-text :global(h4) {
+		color: var(--text-primary);
+		font-weight: 600;
+		margin: 1rem 0 0.5rem;
+	}
+
+	.description-text :global(h1) { font-size: 1.1rem; }
+	.description-text :global(h2) { font-size: 1rem; }
+	.description-text :global(h3) { font-size: 0.95rem; }
+
+	.description-text :global(p) {
+		margin: 0.5rem 0;
+	}
+
+	.description-text :global(ul),
+	.description-text :global(ol) {
+		padding-left: 1.5rem;
+		margin: 0.5rem 0;
+	}
+
+	.description-text :global(li) {
+		margin: 0.25rem 0;
+	}
+
+	.description-text :global(strong) {
+		color: var(--text-primary);
+		font-weight: 600;
+	}
+
+	.description-text :global(a) {
+		color: var(--accent-blue);
+	}
+
+	.description-text :global(code) {
+		background: var(--bg-tertiary);
+		padding: 0.1em 0.3em;
+		border-radius: 3px;
+		font-size: 0.85em;
 	}
 
 	.status-msg {

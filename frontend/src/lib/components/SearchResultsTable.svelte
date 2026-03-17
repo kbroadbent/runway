@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { JobPosting } from '$lib/types';
+	import JobDetailModal from '$lib/components/JobDetailModal.svelte';
 
 	interface Props {
 		results: JobPosting[];
@@ -9,13 +10,9 @@
 
 	let { results, onSavePosting, onAddToPipeline }: Props = $props();
 
-	let expandedId = $state<number | null>(null);
+	let selectedPosting = $state<JobPosting | null>(null);
 	let sortKey = $state<string>('date_posted');
 	let sortAsc = $state(false);
-
-	function toggleExpand(id: number) {
-		expandedId = expandedId === id ? null : id;
-	}
 
 	function handleSort(key: string) {
 		if (sortKey === key) {
@@ -103,7 +100,7 @@
 			</thead>
 			<tbody>
 				{#each sortedResults as posting}
-					<tr class="result-row" onclick={() => toggleExpand(posting.id)}>
+					<tr class="result-row" onclick={() => selectedPosting = posting}>
 						<td>{posting.title}</td>
 						<td>{posting.company?.name ?? '-'}</td>
 						<td>{posting.location ?? '-'}</td>
@@ -118,25 +115,17 @@
 							{/if}
 						</td>
 					</tr>
-					{#if expandedId === posting.id}
-						<tr class="expanded-row">
-							<td colspan="7">
-								<div class="description-panel">
-									{#if posting.url}
-										<p><a href={posting.url} target="_blank" rel="noopener">View original posting</a></p>
-									{/if}
-									<div class="description-text">
-										{posting.description ?? 'No description available.'}
-									</div>
-								</div>
-							</td>
-						</tr>
-					{/if}
 				{/each}
 			</tbody>
 		</table>
 	</div>
 {/if}
+
+<JobDetailModal
+	posting={selectedPosting}
+	onClose={() => selectedPosting = null}
+	onAddToPipeline={onAddToPipeline}
+/>
 
 <style>
 	.table-wrap {
@@ -164,24 +153,6 @@
 
 	.result-row:hover {
 		background: var(--bg-tertiary);
-	}
-
-	.expanded-row td {
-		background: var(--bg-secondary);
-		padding: 1rem;
-	}
-
-	.description-panel {
-		max-height: 300px;
-		overflow-y: auto;
-	}
-
-	.description-text {
-		margin-top: 0.5rem;
-		white-space: pre-wrap;
-		font-size: 0.9rem;
-		color: var(--text-secondary);
-		line-height: 1.6;
 	}
 
 	.actions {
