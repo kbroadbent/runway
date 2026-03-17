@@ -21,6 +21,7 @@ class CompanyUpdate(BaseModel):
     employee_count: int | None = None
     industry: str | None = None
     notes: str | None = None
+    common_questions: str | None = None
 
 
 class CompanyRead(BaseModel):
@@ -35,7 +36,22 @@ class CompanyRead(BaseModel):
     employee_count: int | None
     industry: str | None
     notes: str | None
+    common_questions: str | None
     last_researched_at: datetime | None
     created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class CompanyInterviewRead(BaseModel):
+    id: int
+    round: str
+    scheduled_at: datetime | None
+    interviewers: str | None
+    notes: str | None
+    outcome: str | None
+    created_at: datetime
+    posting_id: int
+    posting_title: str
 
     model_config = {"from_attributes": True}
