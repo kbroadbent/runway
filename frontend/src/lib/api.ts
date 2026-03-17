@@ -42,12 +42,15 @@ export const searchProfiles = {
     request<{ new_count: number; total_count: number }>(`/search-profiles/${id}/run`, {
       method: 'POST',
     }),
+  postings: (id: number) => request<JobPosting[]>(`/search-profiles/${id}/postings`),
 };
 
 export const postings = {
-  list: (filters?: PostingsFilter) =>
-    request<JobPosting[]>(`/postings${filters ? toQuery(filters as Record<string, unknown>) : ''}`),
+  list: (status: string = 'saved', filters?: PostingsFilter) =>
+    request<JobPosting[]>(`/postings${toQuery({ status, ...(filters as Record<string, unknown> ?? {}) })}`),
   get: (id: number) => request<JobPosting>(`/postings/${id}`),
+  save: (id: number) => request<JobPosting>(`/postings/${id}/save`, { method: 'POST' }),
+  dismiss: (id: number) => request<JobPosting>(`/postings/${id}/dismiss`, { method: 'POST' }),
   create: (data: Partial<JobPosting> & { company_name?: string }) =>
     request<JobPosting>('/postings', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: Partial<JobPosting>) =>

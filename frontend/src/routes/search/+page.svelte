@@ -34,8 +34,8 @@
 		try {
 			const result = await searchProfiles.run(selectedProfile.id);
 			runStatus = `Found ${result.new_count} new of ${result.total_count} total results`;
-			// Reload postings to show the results
-			results = await postings.list();
+			// Reload postings scoped to this profile
+			results = await searchProfiles.postings(selectedProfile.id);
 			// Refresh profiles to update new_result_count
 			await loadProfiles();
 			selectedProfile = profiles.find((p) => p.id === selectedProfile!.id) ?? selectedProfile;
@@ -51,6 +51,8 @@
 			await searchProfiles.update(editingProfile.id, data);
 		} else {
 			await searchProfiles.create(data);
+			selectedProfile = null;
+			results = [];
 		}
 		showForm = false;
 		editingProfile = null;
@@ -89,8 +91,19 @@
 		selectedProfile = profiles.find((p) => p.id === selectedProfile!.id) ?? selectedProfile;
 	}
 
+	async function handleSave(posting: JobPosting) {
+		await postings.save(posting.id);
+		results = results.filter((r) => r.id !== posting.id);
+	}
+
+	async function handleDismiss(posting: JobPosting) {
+		await postings.dismiss(posting.id);
+		results = results.filter((r) => r.id !== posting.id);
+	}
+
 	async function handleAddToPipeline(posting: JobPosting) {
 		await pipeline.add({ job_posting_id: posting.id });
+		results = results.filter((r) => r.id !== posting.id);
 		runStatus = `Added "${posting.title}" to pipeline`;
 	}
 </script>
@@ -168,7 +181,7 @@
 					<p class="last-run">Last run: {new Date(selectedProfile.last_run_at).toLocaleString()}</p>
 				{/if}
 
-				<SearchResultsTable {results} onAddToPipeline={handleAddToPipeline} />
+				<SearchResultsTable {results} onSave={handleSave} onDismiss={handleDismiss} onAddToPipeline={handleAddToPipeline} />
 			{:else}
 				<p class="empty-hint">Select a search profile to view results.</p>
 			{/if}

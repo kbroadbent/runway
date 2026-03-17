@@ -8,6 +8,7 @@
 	let allPostings = $state<JobPosting[]>([]);
 	let selectedPosting = $state<JobPosting | null>(null);
 	let showImport = $state(false);
+	let showDismissed = $state(false);
 	let selected = $state<Set<number>>(new Set());
 
 	// Filters
@@ -24,7 +25,7 @@
 	onMount(loadPostings);
 
 	async function loadPostings() {
-		allPostings = await postingsApi.list();
+		allPostings = await postingsApi.list(showDismissed ? 'dismissed' : 'saved');
 	}
 
 	let sources = $derived([...new Set(allPostings.map((p) => p.source))]);
@@ -89,6 +90,12 @@
 		await loadPostings();
 	}
 
+	async function undismissSelected() {
+		await Promise.all([...selected].map((id) => postingsApi.save(id)));
+		selected = new Set();
+		await loadPostings();
+	}
+
 	function formatSalary(min: number | null, max: number | null): string {
 		if (!min && !max) return '-';
 		const fmt = (n: number) => '$' + Math.round(n / 1000) + 'k';
@@ -109,8 +116,15 @@
 </script>
 
 <div class="page-header">
-	<h1>Saved Postings</h1>
-	<button class="btn btn-primary" onclick={() => (showImport = true)}>Import Posting</button>
+	<h1>{showDismissed ? 'Dismissed Postings' : 'Saved Postings'}</h1>
+	<div style="display: flex; gap: 0.5rem;">
+		<button class="btn btn-secondary" onclick={async () => { showDismissed = !showDismissed; selected = new Set(); await loadPostings(); }}>
+			{showDismissed ? 'View Saved' : 'View Dismissed'}
+		</button>
+		{#if !showDismissed}
+			<button class="btn btn-primary" onclick={() => (showImport = true)}>Import Posting</button>
+		{/if}
+	</div>
 </div>
 
 <!-- Filters -->
@@ -135,6 +149,9 @@
 {#if selected.size > 0}
 	<div class="bulk-actions">
 		<span>{selected.size} selected</span>
+		{#if showDismissed}
+			<button class="btn btn-sm btn-primary" onclick={undismissSelected}>Undismiss Selected</button>
+		{/if}
 		<button class="btn btn-sm btn-danger" onclick={deleteSelected}>Delete Selected</button>
 		<button class="btn btn-sm btn-secondary" onclick={() => (selected = new Set())}>Clear</button>
 	</div>

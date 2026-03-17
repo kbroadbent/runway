@@ -89,6 +89,30 @@ def delete_profile(profile_id: int, db: Session = Depends(get_db)):
     db.commit()
 
 
+@router.get("/api/search-profiles/{profile_id}/postings", response_model=list)
+def list_profile_postings(profile_id: int, db: Session = Depends(get_db)):
+    from app.models import JobPosting
+    from app.schemas.job_posting import JobPostingRead
+    from sqlalchemy.orm import joinedload
+    profile = db.get(SearchProfile, profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Search profile not found")
+    postings = (
+        db.query(JobPosting)
+        .join(SearchResult, SearchResult.job_posting_id == JobPosting.id)
+        .filter(SearchResult.search_profile_id == profile_id, JobPosting.status == 'unsaved')
+        .options(joinedload(JobPosting.company), joinedload(JobPosting.pipeline_entry))
+        .distinct()
+        .all()
+    )
+    results = []
+    for p in postings:
+        data = JobPostingRead.model_validate(p)
+        data.pipeline_stage = p.pipeline_entry.stage if p.pipeline_entry else None
+        results.append(data)
+    return results
+
+
 @router.post("/api/search-profiles/{profile_id}/run")
 def run_profile_search(profile_id: int, db: Session = Depends(get_db)):
     profile = db.get(SearchProfile, profile_id)
