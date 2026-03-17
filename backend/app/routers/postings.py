@@ -9,15 +9,6 @@ from app.services.parser_service import parse_posting_text, fetch_and_parse_url
 router = APIRouter(prefix="/api/postings", tags=["postings"])
 
 
-def _get_or_create_company(db: Session, name: str) -> Company:
-    company = db.query(Company).filter(Company.name == name).first()
-    if not company:
-        company = Company(name=name)
-        db.add(company)
-        db.flush()
-    return company
-
-
 @router.get("", response_model=list[JobPostingRead])
 def list_postings(status: str = Query(default='saved'), db: Session = Depends(get_db)):
     query = db.query(JobPosting).options(joinedload(JobPosting.company), joinedload(JobPosting.pipeline_entry))
@@ -33,12 +24,10 @@ def list_postings(status: str = Query(default='saved'), db: Session = Depends(ge
 
 @router.post("", response_model=JobPostingRead, status_code=201)
 def create_posting(data: JobPostingCreate, db: Session = Depends(get_db)):
-    company_id = data.company_id
-    if not company_id and data.company_name:
-        company_id = _get_or_create_company(db, data.company_name).id
     posting = JobPosting(
         title=data.title,
-        company_id=company_id,
+        company_id=data.company_id,
+        company_name=data.company_name if not data.company_id else None,
         description=data.description,
         location=data.location,
         remote_type=data.remote_type,
@@ -71,12 +60,10 @@ def import_preview(data: ImportRequest):
 
 @router.post("/import/confirm", response_model=JobPostingRead, status_code=201)
 def import_confirm(data: ImportPreview, db: Session = Depends(get_db)):
-    company = None
-    if data.company_name:
-        company = _get_or_create_company(db, data.company_name)
     posting = JobPosting(
         title=data.title or "Untitled",
-        company_id=company.id if company else None,
+        company_id=None,
+        company_name=data.company_name or None,
         description=data.description,
         location=data.location,
         remote_type=data.remote_type,
@@ -150,3 +137,30 @@ def delete_posting(posting_id: int, db: Session = Depends(get_db)):
     db.delete(posting)
     db.commit()
     return Response(status_code=204)
+
+
+@router.post("/{posting_id}/link-company", response_model=JobPostingRead)
+def link_company(posting_id: int, db: Session = Depends(get_db)):
+    posting = db.query(JobPosting).options(joinedload(JobPosting.company)).filter(
+        JobPosting.id == posting_id
+    ).first()
+    if not posting:
+        raise HTTPException(status_code=404, detail="Posting not found")
+    if posting.company_id:
+        raise HTTPException(status_code=409, detail="Posting already linked to a company")
+    if not posting.company_name:
+        raise HTTPException(status_code=400, detail="No company name to save")
+
+    company = db.query(Company).filter(Company.name == posting.company_name).first()
+    if not company:
+        company = Company(name=posting.company_name)
+        db.add(company)
+        db.flush()
+
+    posting.company_id = company.id
+    posting.company_name = None
+    db.commit()
+    db.refresh(posting)
+    data = JobPostingRead.model_validate(posting)
+    data.pipeline_stage = posting.pipeline_entry.stage if posting.pipeline_entry else None
+    return data
