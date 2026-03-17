@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { JobPosting, PostingsFilter } from '$lib/types';
-	import { postings as postingsApi } from '$lib/api';
+	import { postings as postingsApi, pipeline } from '$lib/api';
 	import ImportModal from '$lib/components/ImportModal.svelte';
 	import PostingDetailPanel from '$lib/components/PostingDetailPanel.svelte';
 	import { onMount } from 'svelte';
@@ -21,6 +21,8 @@
 	// Sort
 	let sortKey = $state('date_saved');
 	let sortAsc = $state(false);
+
+	let hideArchived = $state(true);
 
 	onMount(loadPostings);
 
@@ -45,6 +47,7 @@
 			if (remoteFilter && p.remote_type !== remoteFilter) return false;
 			if (salaryMinFilter && (p.salary_max ?? 0) < salaryMinFilter) return false;
 			if (salaryMaxFilter && (p.salary_min ?? Infinity) > salaryMaxFilter) return false;
+			if (hideArchived && p.pipeline_stage === 'archived') return false;
 			return true;
 		});
 
@@ -81,6 +84,12 @@
 	function toggleSelectAll() {
 		if (selected.size === filtered.length) selected = new Set();
 		else selected = new Set(filtered.map((p) => p.id));
+	}
+
+	async function addToPipeline(posting: JobPosting, e: MouseEvent) {
+		e.stopPropagation();
+		await pipeline.add({ job_posting_id: posting.id });
+		await loadPostings();
 	}
 
 	async function deleteSelected() {
@@ -144,6 +153,10 @@
 	</select>
 	<input type="number" bind:value={salaryMinFilter} placeholder="Min salary" style="width: 120px" />
 	<input type="number" bind:value={salaryMaxFilter} placeholder="Max salary" style="width: 120px" />
+	<label class="filter-checkbox">
+		<input type="checkbox" bind:checked={hideArchived} />
+		Hide archived
+	</label>
 </div>
 
 {#if selected.size > 0}
@@ -198,7 +211,9 @@
 							{#if posting.pipeline_stage}
 								<span class="badge badge-stage">{posting.pipeline_stage}</span>
 							{:else}
-								<span class="text-muted">-</span>
+								<button class="btn btn-xs btn-secondary" onclick={(e) => addToPipeline(posting, e)}>
+									+ Pipeline
+								</button>
 							{/if}
 						</td>
 						<td>{new Date(posting.date_saved).toLocaleDateString()}</td>
@@ -289,5 +304,20 @@
 		color: var(--text-muted);
 		text-align: center;
 		padding: 3rem;
+	}
+
+	.btn-xs {
+		padding: 0.15rem 0.5rem;
+		font-size: 0.75rem;
+	}
+
+	.filter-checkbox {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.9rem;
+		color: var(--text-secondary);
+		cursor: pointer;
+		white-space: nowrap;
 	}
 </style>
