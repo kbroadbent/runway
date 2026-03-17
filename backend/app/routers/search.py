@@ -18,6 +18,7 @@ def list_profiles(db: Session = Depends(get_db)):
     for profile in profiles:
         profile_dict = {c.name: getattr(profile, c.name) for c in profile.__table__.columns}
         profile_dict["sources"] = json.loads(profile.sources) if profile.sources else None
+        profile_dict["exclude_terms"] = json.loads(profile.exclude_terms) if profile.exclude_terms else None
         profile_dict["new_result_count"] = db.query(func.count(SearchResult.id)).filter(
             SearchResult.search_profile_id == profile.id, SearchResult.is_new == True
         ).scalar()
@@ -30,12 +31,15 @@ def create_profile(data: SearchProfileCreate, db: Session = Depends(get_db)):
     values = data.model_dump()
     if values.get("sources"):
         values["sources"] = json.dumps(values["sources"])
+    if values.get("exclude_terms"):
+        values["exclude_terms"] = json.dumps(values["exclude_terms"])
     profile = SearchProfile(**values)
     db.add(profile)
     db.commit()
     db.refresh(profile)
     profile_dict = {c.name: getattr(profile, c.name) for c in profile.__table__.columns}
     profile_dict["sources"] = json.loads(profile.sources) if profile.sources else None
+    profile_dict["exclude_terms"] = json.loads(profile.exclude_terms) if profile.exclude_terms else None
     profile_dict["new_result_count"] = 0  # new profile has no results yet
     return SearchProfileRead.model_validate(profile_dict)
 
@@ -43,6 +47,7 @@ def create_profile(data: SearchProfileCreate, db: Session = Depends(get_db)):
 def _profile_to_read(profile: SearchProfile, db: Session) -> SearchProfileRead:
     profile_dict = {c.name: getattr(profile, c.name) for c in profile.__table__.columns}
     profile_dict["sources"] = json.loads(profile.sources) if profile.sources else None
+    profile_dict["exclude_terms"] = json.loads(profile.exclude_terms) if profile.exclude_terms else None
     profile_dict["new_result_count"] = db.query(func.count(SearchResult.id)).filter(
         SearchResult.search_profile_id == profile.id, SearchResult.is_new == True  # noqa: E712
     ).scalar()
@@ -57,6 +62,8 @@ def update_profile(profile_id: int, data: SearchProfileUpdate, request: Request,
     values = data.model_dump(exclude_unset=True)
     if "sources" in values and values["sources"] is not None:
         values["sources"] = json.dumps(values["sources"])
+    if "exclude_terms" in values and values["exclude_terms"] is not None:
+        values["exclude_terms"] = json.dumps(values["exclude_terms"])
     for key, value in values.items():
         setattr(profile, key, value)
     db.commit()

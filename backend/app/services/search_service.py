@@ -7,6 +7,7 @@ from app.models import SearchProfile, SearchResult, JobPosting, Company
 
 def run_search(profile: SearchProfile, db: Session) -> dict:
     sources = json.loads(profile.sources) if profile.sources else ["indeed"]
+    exclude_terms = json.loads(profile.exclude_terms) if profile.exclude_terms else []
     df = scrape_jobs(
         site_name=sources,
         search_term=profile.search_term,
@@ -17,11 +18,33 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
         enforce_annual_salary=True,
     )
     new_count = 0
+    saved_count = 0
     total_count = len(df)
     for _, row in df.iterrows():
         url = row.get("job_url")
         title = row.get("title", "Unknown")
         company_name = row.get("company", "Unknown")
+
+        # Salary filter: when min salary is set, require salary data that meets the threshold
+        if profile.salary_min is not None:
+            min_amount = _to_int(row.get("min_amount"))
+            max_amount = _to_int(row.get("max_amount"))
+            # No salary listed → skip
+            if min_amount is None and max_amount is None:
+                continue
+            # Max salary is known and below threshold → skip
+            if max_amount is not None and max_amount < profile.salary_min:
+                continue
+            # Only min_amount listed and it's below threshold → skip
+            if max_amount is None and min_amount is not None and min_amount < profile.salary_min:
+                continue
+
+        # Exclude terms filter: skip if title or description contains any excluded term
+        if exclude_terms:
+            description = str(row.get("description") or "")
+            combined = f"{title} {description}".lower()
+            if any(term.lower() in combined for term in exclude_terms):
+                continue
 
         existing = None
         if url:
@@ -68,10 +91,11 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
         )
         db.add(result)
         new_count += 1
+        saved_count += 1
 
     profile.last_run_at = datetime.now(timezone.utc)
     db.commit()
-    return {"new_count": new_count, "total_count": total_count}
+    return {"new_count": new_count, "saved_count": saved_count, "total_count": total_count}
 
 
 def _to_int(val) -> int | None:

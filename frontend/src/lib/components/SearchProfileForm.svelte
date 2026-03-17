@@ -18,6 +18,7 @@
 	let job_type = $state(profile.job_type ?? '');
 	let run_interval = $state(profile.run_interval ?? undefined);
 	let is_auto_enabled = $state(profile.is_auto_enabled ?? false);
+	let exclude_terms_input = $state(profile.exclude_terms ? profile.exclude_terms.join(', ') : '');
 
 	const allSources = ['indeed', 'linkedin', 'glassdoor', 'zip_recruiter'];
 	let selectedSources = $state<string[]>(profile.sources ?? ['indeed']);
@@ -40,6 +41,9 @@
 			salary_max: salary_max ?? null,
 			job_type: job_type || null,
 			sources: selectedSources.length > 0 ? selectedSources : null,
+			exclude_terms: exclude_terms_input
+				? exclude_terms_input.split(',').map((t) => t.trim()).filter(Boolean)
+				: null,
 			run_interval: run_interval ?? null,
 			is_auto_enabled,
 		});
@@ -94,6 +98,17 @@
 			<label for="salary_max">Max Salary</label>
 			<input id="salary_max" type="number" bind:value={salary_max} placeholder="e.g. 200000" />
 		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="exclude_terms">Exclude Terms</label>
+		<input
+			id="exclude_terms"
+			type="text"
+			bind:value={exclude_terms_input}
+			placeholder="e.g. staff, principal, intern"
+		/>
+		<span class="field-hint">Comma-separated. Listings matching any term will be skipped.</span>
 	</div>
 
 	<div class="form-group">
@@ -182,6 +197,13 @@
 	.checkbox-label input[type='checkbox'] {
 		width: auto;
 		padding: 0;
+	}
+
+	.field-hint {
+		display: block;
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		margin-top: 0.2rem;
 	}
 
 	.form-actions {

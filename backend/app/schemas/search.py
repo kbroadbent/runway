@@ -11,6 +11,7 @@ class SearchProfileCreate(BaseModel):
     salary_max: int | None = None
     job_type: str | None = None
     sources: list[str] | None = None
+    exclude_terms: list[str] | None = None
     run_interval: int | None = None
     is_auto_enabled: bool = False
 
@@ -24,6 +25,7 @@ class SearchProfileUpdate(BaseModel):
     salary_max: int | None = None
     job_type: str | None = None
     sources: list[str] | None = None
+    exclude_terms: list[str] | None = None
     run_interval: int | None = None
     is_auto_enabled: bool | None = None
 
@@ -38,6 +40,7 @@ class SearchProfileRead(BaseModel):
     salary_max: int | None
     job_type: str | None
     sources: list[str] | None
+    exclude_terms: list[str] | None
     run_interval: int | None
     is_auto_enabled: bool
     created_at: datetime

@@ -16,6 +16,7 @@ class SearchProfile(Base):
     salary_max: Mapped[int | None] = mapped_column(Integer)
     job_type: Mapped[str | None] = mapped_column(String)
     sources: Mapped[str | None] = mapped_column(Text)  # JSON array string
+    exclude_terms: Mapped[str | None] = mapped_column(Text)  # JSON array string
     run_interval: Mapped[int | None] = mapped_column(Integer)
     is_auto_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
