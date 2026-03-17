@@ -20,6 +20,7 @@
 
 	let deleting = $state(false);
 	let addingToPipeline = $state(false);
+	let savingCompany = $state(false);
 	let status = $state('');
 
 	function formatSalary(min: number | null, max: number | null): string {
@@ -43,6 +44,18 @@
 		}
 	}
 
+	async function handleSaveCompany() {
+		savingCompany = true;
+		try {
+			await postings.linkCompany(posting.id);
+			onUpdated();
+		} catch (e) {
+			// handle error silently or show status
+		} finally {
+			savingCompany = false;
+		}
+	}
+
 	async function handleAddToPipeline() {
 		addingToPipeline = true;
 		try {
@@ -63,8 +76,8 @@
 		<div class="panel-header">
 			<div class="panel-title-block">
 				<h2>{posting.title}</h2>
-				{#if posting.company}
-					<span class="company-name">{posting.company.name}</span>
+				{#if posting.company || posting.company_name}
+					<span class="company-name">{posting.company?.name ?? posting.company_name}</span>
 				{/if}
 			</div>
 			<button class="close-btn" onclick={onClose}>✕</button>
@@ -113,6 +126,17 @@
 						{#if posting.company.employee_count} · {posting.company.employee_count.toLocaleString()} employees{/if}
 					</p>
 				{/if}
+			</div>
+		{/if}
+		{#if !posting.company && posting.company_name}
+			<div class="section">
+				<h3>Company</h3>
+				<div class="company-unlinked">
+					<span>{posting.company_name}</span>
+					<button class="btn btn-sm btn-secondary" onclick={handleSaveCompany} disabled={savingCompany}>
+						{savingCompany ? 'Saving...' : 'Save Company'}
+					</button>
+				</div>
 			</div>
 		{/if}
 
@@ -226,6 +250,14 @@
 	}
 
 	.company-detail {
+		font-size: 0.9rem;
+		color: var(--text-secondary);
+	}
+
+	.company-unlinked {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
 		font-size: 0.9rem;
 		color: var(--text-secondary);
 	}

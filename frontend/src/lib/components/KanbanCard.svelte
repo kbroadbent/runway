@@ -37,8 +37,8 @@
 	onkeydown={(e) => e.key === 'Enter' && onclick()}
 >
 	<div class="card-title">{entry.job_posting.title}</div>
-	{#if entry.job_posting.company}
-		<div class="card-company">{entry.job_posting.company.name}</div>
+	{#if entry.job_posting.company || entry.job_posting.company_name}
+		<div class="card-company">{entry.job_posting.company?.name ?? entry.job_posting.company_name}</div>
 	{/if}
 	{#if entry.job_posting.salary_min || entry.job_posting.salary_max}
 		<div class="card-salary">

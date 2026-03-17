@@ -38,7 +38,7 @@
 				const q = searchText.toLowerCase();
 				if (
 					!p.title.toLowerCase().includes(q) &&
-					!p.company?.name.toLowerCase().includes(q) &&
+					!(p.company?.name ?? p.company_name ?? '').toLowerCase().includes(q) &&
 					!(p.location ?? '').toLowerCase().includes(q)
 				)
 					return false;
@@ -55,7 +55,7 @@
 			let av: unknown, bv: unknown;
 			switch (sortKey) {
 				case 'title': av = a.title; bv = b.title; break;
-				case 'company': av = a.company?.name ?? ''; bv = b.company?.name ?? ''; break;
+				case 'company': av = a.company?.name ?? a.company_name ?? ''; bv = b.company?.name ?? b.company_name ?? ''; break;
 				case 'location': av = a.location ?? ''; bv = b.location ?? ''; break;
 				case 'salary': av = a.salary_min ?? 0; bv = b.salary_min ?? 0; break;
 				case 'source': av = a.source; bv = b.source; break;
@@ -203,7 +203,7 @@
 							<input type="checkbox" checked={selected.has(posting.id)} onchange={() => toggleSelect(posting.id)} />
 						</td>
 						<td>{posting.title}</td>
-						<td>{posting.company?.name ?? '-'}</td>
+						<td>{posting.company?.name ?? posting.company_name ?? '-'}</td>
 						<td>{posting.location ?? '-'}</td>
 						<td>{formatSalary(posting.salary_min, posting.salary_max)}</td>
 						<td><span class="badge badge-stage">{posting.source}</span></td>
