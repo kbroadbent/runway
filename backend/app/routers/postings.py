@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from app.database import get_db
@@ -19,10 +19,12 @@ def _get_or_create_company(db: Session, name: str) -> Company:
 
 
 @router.get("", response_model=list[JobPostingRead])
-def list_postings(db: Session = Depends(get_db)):
-    postings = db.query(JobPosting).options(joinedload(JobPosting.company), joinedload(JobPosting.pipeline_entry)).all()
+def list_postings(status: str = Query(default='saved'), db: Session = Depends(get_db)):
+    query = db.query(JobPosting).options(joinedload(JobPosting.company), joinedload(JobPosting.pipeline_entry))
+    if status != 'all':
+        query = query.filter(JobPosting.status == status)
     results = []
-    for p in postings:
+    for p in query.all():
         data = JobPostingRead.model_validate(p)
         data.pipeline_stage = p.pipeline_entry.stage if p.pipeline_entry else None
         results.append(data)
@@ -112,6 +114,32 @@ def update_posting(posting_id: int, data: JobPostingUpdate, db: Session = Depend
     db.commit()
     db.refresh(posting)
     return posting
+
+
+@router.post("/{posting_id}/save", response_model=JobPostingRead)
+def save_posting(posting_id: int, db: Session = Depends(get_db)):
+    posting = db.get(JobPosting, posting_id)
+    if not posting:
+        raise HTTPException(status_code=404, detail="Posting not found")
+    posting.status = 'saved'
+    db.commit()
+    db.refresh(posting)
+    data = JobPostingRead.model_validate(posting)
+    data.pipeline_stage = posting.pipeline_entry.stage if posting.pipeline_entry else None
+    return data
+
+
+@router.post("/{posting_id}/dismiss", response_model=JobPostingRead)
+def dismiss_posting(posting_id: int, db: Session = Depends(get_db)):
+    posting = db.get(JobPosting, posting_id)
+    if not posting:
+        raise HTTPException(status_code=404, detail="Posting not found")
+    posting.status = 'dismissed'
+    db.commit()
+    db.refresh(posting)
+    data = JobPostingRead.model_validate(posting)
+    data.pipeline_stage = posting.pipeline_entry.stage if posting.pipeline_entry else None
+    return data
 
 
 @router.delete("/{posting_id}", status_code=204)

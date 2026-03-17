@@ -33,6 +33,11 @@ def list_pipeline(db: Session = Depends(get_db)):
 @router.post("/api/pipeline", response_model=PipelineEntryRead, status_code=201)
 def add_to_pipeline(data: PipelineEntryCreate, db: Session = Depends(get_db)):
     _validate_stage(data.stage)
+    posting = db.get(JobPosting, data.job_posting_id)
+    if not posting:
+        raise HTTPException(status_code=404, detail="Job posting not found")
+    if posting.status == 'unsaved':
+        posting.status = 'saved'
     entry = PipelineEntry(job_posting_id=data.job_posting_id, stage=data.stage, position=0)
     db.add(entry)
     db.flush()

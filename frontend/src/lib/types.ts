@@ -27,7 +27,7 @@ export interface JobPosting {
   source: string;
   date_posted: string | null;
   date_saved: string;
-  is_active: boolean;
+  status: string;
   pipeline_stage: string | null;
 }
 

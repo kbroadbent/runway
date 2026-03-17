@@ -24,7 +24,7 @@ class JobPostingUpdate(BaseModel):
     salary_min: int | None = None
     salary_max: int | None = None
     url: str | None = None
-    is_active: bool | None = None
+    status: str | None = None
 
 
 class JobPostingRead(BaseModel):
@@ -40,7 +40,7 @@ class JobPostingRead(BaseModel):
     source: str
     date_posted: datetime | None
     date_saved: datetime
-    is_active: bool
+    status: str
     pipeline_stage: str | None = None
 
     model_config = {"from_attributes": True}

@@ -3,11 +3,12 @@
 
 	interface Props {
 		results: JobPosting[];
-		onSavePosting?: (posting: JobPosting) => void;
+		onSave?: (posting: JobPosting) => void;
+		onDismiss?: (posting: JobPosting) => void;
 		onAddToPipeline?: (posting: JobPosting) => void;
 	}
 
-	let { results, onSavePosting, onAddToPipeline }: Props = $props();
+	let { results, onSave, onDismiss, onAddToPipeline }: Props = $props();
 
 	let expandedId = $state<number | null>(null);
 	let sortKey = $state<string>('date_posted');
@@ -111,10 +112,14 @@
 						<td><span class="badge badge-stage">{posting.source}</span></td>
 						<td>{posting.date_posted ? new Date(posting.date_posted).toLocaleDateString() : '-'}</td>
 						<td class="actions" onclick={(e) => e.stopPropagation()}>
+							{#if onSave}
+								<button class="btn btn-sm btn-primary" onclick={() => onSave(posting)}>Save</button>
+							{/if}
 							{#if onAddToPipeline}
-								<button class="btn btn-sm btn-primary" onclick={() => onAddToPipeline(posting)}>
-									+ Pipeline
-								</button>
+								<button class="btn btn-sm btn-secondary" onclick={() => onAddToPipeline(posting)}>+ Pipeline</button>
+							{/if}
+							{#if onDismiss}
+								<button class="btn btn-sm btn-danger" onclick={() => onDismiss(posting)}>Dismiss</button>
 							{/if}
 						</td>
 					</tr>

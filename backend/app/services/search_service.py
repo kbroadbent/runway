@@ -58,6 +58,9 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
                 ).first()
 
         if existing:
+            # Skip postings already saved or dismissed — user has already acted on them
+            if existing.status in ('saved', 'dismissed'):
+                continue
             result = SearchResult(
                 search_profile_id=profile.id, job_posting_id=existing.id, is_new=False
             )
@@ -82,6 +85,7 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
             url=url,
             source=str(row.get("site", "unknown")),
             date_posted=_parse_date(row.get("date_posted")),
+            status='unsaved',
         )
         db.add(posting)
         db.flush()
