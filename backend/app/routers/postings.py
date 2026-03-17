@@ -80,7 +80,9 @@ def import_confirm(data: ImportPreview, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=409, detail="A posting with this title and company already exists")
     db.refresh(posting)
-    return posting
+    data = JobPostingRead.model_validate(posting)
+    data.pipeline_stage = posting.pipeline_entry.stage if posting.pipeline_entry else None
+    return data
 
 
 @router.get("/{posting_id}", response_model=JobPostingRead)
