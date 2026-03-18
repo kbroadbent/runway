@@ -74,6 +74,19 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
             db.add(company)
             db.flush()
 
+        # Re-check with resolved company.id — the earlier check may have been skipped
+        # if the company didn't exist yet (e.g. first time seeing this company in this run)
+        existing = db.query(JobPosting).filter(
+            JobPosting.title == title, JobPosting.company_id == company.id
+        ).first()
+        if existing:
+            if existing.status not in ('saved', 'dismissed'):
+                result = SearchResult(
+                    search_profile_id=profile.id, job_posting_id=existing.id, is_new=False
+                )
+                db.add(result)
+            continue
+
         remote_type = "remote" if row.get("is_remote") else None
         posting = JobPosting(
             title=title,
