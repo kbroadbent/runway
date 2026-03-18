@@ -93,6 +93,15 @@ def get_posting(posting_id: int, db: Session = Depends(get_db)):
     return posting
 
 
+def _get_or_create_company(db: Session, name: str) -> Company:
+    company = db.query(Company).filter(Company.name == name).first()
+    if not company:
+        company = Company(name=name)
+        db.add(company)
+        db.flush()
+    return company
+
+
 @router.put("/{posting_id}", response_model=JobPostingRead)
 def update_posting(posting_id: int, data: JobPostingUpdate, db: Session = Depends(get_db)):
     posting = db.get(JobPosting, posting_id)
