@@ -291,15 +291,15 @@
 		background: none;
 		border: none;
 		padding: 0;
-		color: var(--accent-blue);
+		color: inherit;
 		cursor: pointer;
 		font-size: inherit;
 		font-family: inherit;
-		text-decoration: underline;
+		text-decoration: none;
 	}
 
 	.company-link:hover {
-		opacity: 0.8;
+		text-decoration: underline;
 	}
 
 	.sortable {
