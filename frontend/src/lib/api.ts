@@ -53,7 +53,7 @@ export const postings = {
   dismiss: (id: number) => request<JobPosting>(`/postings/${id}/dismiss`, { method: 'POST' }),
   create: (data: Partial<JobPosting> & { company_name?: string }) =>
     request<JobPosting>('/postings', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: number, data: Partial<JobPosting>) =>
+  update: (id: number, data: Partial<JobPosting> & { company_name?: string }) =>
     request<JobPosting>(`/postings/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: number) => request<void>(`/postings/${id}`, { method: 'DELETE' }),
   importPreview: (data: { text?: string; url?: string }) =>
