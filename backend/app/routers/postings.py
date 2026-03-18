@@ -92,8 +92,10 @@ def import_confirm(data: ImportPreview, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=409, detail="A posting with this title and company already exists")
-    db.refresh(posting)
-    return posting
+    posting = db.query(JobPosting).options(
+        joinedload(JobPosting.company), joinedload(JobPosting.pipeline_entry)
+    ).filter(JobPosting.id == posting.id).first()
+    return JobPostingRead.model_validate(posting)
 
 
 @router.get("/{posting_id}", response_model=JobPostingRead)
