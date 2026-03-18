@@ -98,11 +98,19 @@ def update_posting(posting_id: int, data: JobPostingUpdate, db: Session = Depend
     posting = db.get(JobPosting, posting_id)
     if not posting:
         raise HTTPException(status_code=404, detail="Posting not found")
-    for key, value in data.model_dump(exclude_unset=True).items():
+    update_dict = data.model_dump(exclude_unset=True)
+    company_name = update_dict.pop("company_name", None)
+    if company_name is not None:
+        posting.company_id = _get_or_create_company(db, company_name).id
+    for key, value in update_dict.items():
         setattr(posting, key, value)
     db.commit()
-    db.refresh(posting)
-    return posting
+    posting = db.query(JobPosting).options(
+        joinedload(JobPosting.company), joinedload(JobPosting.pipeline_entry)
+    ).filter(JobPosting.id == posting_id).first()
+    result = JobPostingRead.model_validate(posting)
+    result.pipeline_stage = posting.pipeline_entry.stage if posting.pipeline_entry else None
+    return result
 
 
 @router.post("/{posting_id}/save", response_model=JobPostingRead)
