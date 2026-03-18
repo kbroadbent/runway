@@ -32,8 +32,8 @@
 			<div class="modal-header">
 				<div class="title-block">
 					<h2>{posting.title}</h2>
-					{#if posting.company}
-						<span class="company-name">{posting.company.name}</span>
+					{#if posting.company || posting.company_name}
+						<span class="company-name">{posting.company?.name ?? posting.company_name}</span>
 					{/if}
 				</div>
 				<button class="close-btn" onclick={onClose}>✕</button>

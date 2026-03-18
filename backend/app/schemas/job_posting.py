@@ -18,6 +18,7 @@ class JobPostingCreate(BaseModel):
 
 class JobPostingUpdate(BaseModel):
     title: str | None = None
+    company_name: str | None = None
     description: str | None = None
     location: str | None = None
     remote_type: str | None = None
@@ -41,6 +42,7 @@ class JobPostingRead(BaseModel):
     date_posted: datetime | None
     date_saved: datetime
     status: str
+    company_name: str | None = None
     pipeline_stage: str | None = None
 
     model_config = {"from_attributes": True}

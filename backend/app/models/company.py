@@ -18,6 +18,7 @@ class Company(Base):
     employee_count: Mapped[int | None] = mapped_column(Integer)
     industry: Mapped[str | None] = mapped_column(String)
     notes: Mapped[str | None] = mapped_column(Text)
+    common_questions: Mapped[str | None] = mapped_column(Text)  # JSON string array
     last_researched_at: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 

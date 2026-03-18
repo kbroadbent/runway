@@ -11,7 +11,9 @@ def test_create_posting_with_new_company(client):
     assert resp.status_code == 201
     data = resp.json()
     assert data["title"] == "Software Engineer"
-    assert data["company"]["name"] == "Acme Corp"
+    # company_name is stored as text; no Company record is auto-created
+    assert data["company"] is None
+    assert data["company_name"] == "Acme Corp"
 
 
 def test_create_posting_with_existing_company(client):

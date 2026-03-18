@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.models import Company
-from app.schemas.company import CompanyCreate, CompanyUpdate, CompanyRead
+from app.models.job_posting import JobPosting
+from app.models.pipeline import PipelineEntry, InterviewNote
+from app.schemas.company import CompanyCreate, CompanyUpdate, CompanyRead, CompanyInterviewRead
 from app.services.research_service import research_company
 
 router = APIRouter(prefix="/api/companies", tags=["companies"])
@@ -48,3 +50,37 @@ def research_company_endpoint(company_id: int, db: Session = Depends(get_db)):
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     return research_company(company, db)
+
+
+@router.get("/{company_id}/interviews", response_model=list[CompanyInterviewRead])
+def get_company_interviews(company_id: int, db: Session = Depends(get_db)):
+    company = db.get(Company, company_id)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    notes = (
+        db.query(InterviewNote)
+        .join(InterviewNote.pipeline_entry)
+        .join(PipelineEntry.job_posting)
+        .filter(JobPosting.company_id == company_id)
+        .options(
+            joinedload(InterviewNote.pipeline_entry).joinedload(PipelineEntry.job_posting)
+        )
+        .order_by(InterviewNote.scheduled_at.desc())
+        .all()
+    )
+
+    return [
+        CompanyInterviewRead(
+            id=n.id,
+            round=n.round,
+            scheduled_at=n.scheduled_at,
+            interviewers=n.interviewers,
+            notes=n.notes,
+            outcome=n.outcome,
+            created_at=n.created_at,
+            posting_id=n.pipeline_entry.job_posting.id,
+            posting_title=n.pipeline_entry.job_posting.title,
+        )
+        for n in notes
+    ]

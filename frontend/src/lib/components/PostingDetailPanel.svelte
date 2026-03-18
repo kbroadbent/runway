@@ -20,7 +20,63 @@
 
 	let deleting = $state(false);
 	let addingToPipeline = $state(false);
+	let savingCompany = $state(false);
 	let status = $state('');
+
+	let localPosting = $state({ ...posting });
+	$effect(() => { localPosting = { ...posting }; });
+
+	let editing = $state(false);
+	let saving = $state(false);
+	let editTitle = $state('');
+	let editCompany = $state('');
+	let editLocation = $state('');
+	let editRemoteType = $state('');
+	let editSalaryMin = $state<number | undefined>(undefined);
+	let editSalaryMax = $state<number | undefined>(undefined);
+	let editUrl = $state('');
+	let editDescription = $state('');
+
+	function handleEditStart() {
+		editTitle = localPosting.title;
+		editCompany = localPosting.company?.name ?? '';
+		editLocation = localPosting.location ?? '';
+		editRemoteType = localPosting.remote_type ?? '';
+		editSalaryMin = localPosting.salary_min ?? undefined;
+		editSalaryMax = localPosting.salary_max ?? undefined;
+		editUrl = localPosting.url ?? '';
+		editDescription = localPosting.description ?? '';
+		editing = true;
+	}
+
+	function handleCancel() {
+		editing = false;
+		status = '';
+	}
+
+	async function handleSave() {
+		saving = true;
+		status = '';
+		try {
+			const updated = await postings.update(localPosting.id, {
+				title: editTitle,
+				company_name: editCompany || undefined,
+				location: editLocation || undefined,
+				remote_type: editRemoteType || undefined,
+				salary_min: editSalaryMin ?? null,
+				salary_max: editSalaryMax ?? null,
+				url: editUrl || undefined,
+				description: editDescription || undefined,
+			});
+			localPosting = updated;
+			editing = false;
+			onUpdated();
+		} catch (e) {
+			status = e instanceof Error ? e.message : 'Save failed';
+		} finally {
+			saving = false;
+		}
+	}
 
 	function formatSalary(min: number | null, max: number | null): string {
 		if (!min && !max) return 'Not specified';
@@ -43,6 +99,18 @@
 		}
 	}
 
+	async function handleSaveCompany() {
+		savingCompany = true;
+		try {
+			await postings.linkCompany(posting.id);
+			onUpdated();
+		} catch (e) {
+			status = e instanceof Error ? e.message : 'Failed to save company';
+		} finally {
+			savingCompany = false;
+		}
+	}
+
 	async function handleAddToPipeline() {
 		addingToPipeline = true;
 		try {
@@ -62,81 +130,153 @@
 	<div class="panel" onclick={(e) => e.stopPropagation()}>
 		<div class="panel-header">
 			<div class="panel-title-block">
-				<h2>{posting.title}</h2>
-				{#if posting.company}
-					<span class="company-name">{posting.company.name}</span>
+				<h2>{localPosting.title}</h2>
+				{#if localPosting.company || localPosting.company_name}
+					<span class="company-name">{localPosting.company?.name ?? localPosting.company_name}</span>
 				{/if}
 			</div>
-			<button class="close-btn" onclick={onClose}>✕</button>
+			<div class="panel-header-actions">
+				{#if !editing}
+					<button class="btn btn-sm btn-secondary" onclick={handleEditStart}>Edit</button>
+				{/if}
+				<button class="close-btn" onclick={onClose}>✕</button>
+			</div>
 		</div>
 
-		<div class="panel-meta">
-			{#if posting.location}
-				<span class="meta-item">📍 {posting.location}</span>
-			{/if}
-			{#if posting.remote_type}
-				<span class="badge badge-stage">{posting.remote_type}</span>
-			{/if}
-			<span class="meta-item">💰 {formatSalary(posting.salary_min, posting.salary_max)}</span>
-			<span class="meta-item">🔗 {posting.source}</span>
-			{#if posting.pipeline_stage}
-				<span class="badge badge-stage">{posting.pipeline_stage}</span>
-			{/if}
-		</div>
+		{#if editing}
+			<div class="edit-form">
+				<div class="form-group">
+					<label>Title</label>
+					<input type="text" bind:value={editTitle} style="width: 100%" />
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label>Company</label>
+						<input type="text" bind:value={editCompany} style="width: 100%" />
+					</div>
+					<div class="form-group">
+						<label>Location</label>
+						<input type="text" bind:value={editLocation} style="width: 100%" />
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label>Remote</label>
+						<select bind:value={editRemoteType} style="width: 100%">
+							<option value="">Unknown</option>
+							<option value="remote">Remote</option>
+							<option value="hybrid">Hybrid</option>
+							<option value="onsite">Onsite</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>Min Salary</label>
+						<input type="number" bind:value={editSalaryMin} style="width: 100%" />
+					</div>
+					<div class="form-group">
+						<label>Max Salary</label>
+						<input type="number" bind:value={editSalaryMax} style="width: 100%" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label>URL</label>
+					<input type="url" bind:value={editUrl} style="width: 100%" />
+				</div>
+				<div class="form-group">
+					<label>Description</label>
+					<textarea bind:value={editDescription} rows={8} style="width: 100%"></textarea>
+				</div>
+				{#if status}
+					<p class="status-msg error">{status}</p>
+				{/if}
+				<div class="panel-actions">
+					<button class="btn btn-primary" onclick={handleSave} disabled={saving || !editTitle}>
+						{saving ? 'Saving...' : 'Save'}
+					</button>
+					<button class="btn btn-secondary" onclick={handleCancel}>Cancel</button>
+				</div>
+			</div>
+		{:else}
+			<div class="panel-meta">
+				{#if localPosting.location}
+					<span class="meta-item">📍 {localPosting.location}</span>
+				{/if}
+				{#if localPosting.remote_type}
+					<span class="badge badge-stage">{localPosting.remote_type}</span>
+				{/if}
+				<span class="meta-item">💰 {formatSalary(localPosting.salary_min, localPosting.salary_max)}</span>
+				<span class="meta-item">🔗 {localPosting.source}</span>
+				{#if localPosting.pipeline_stage}
+					<span class="badge badge-stage">{localPosting.pipeline_stage}</span>
+				{/if}
+			</div>
 
-		{#if posting.url}
-			<a href={posting.url} target="_blank" rel="noopener" class="view-link">View Original Posting ↗</a>
-		{/if}
+			{#if localPosting.url}
+				<a href={localPosting.url} target="_blank" rel="noopener" class="view-link">View Original Posting ↗</a>
+			{/if}
 
-		{#if posting.company}
-			<div class="section">
-				<h3>Company</h3>
-				<div class="company-links">
-					{#if posting.company.website}
-						<a href={posting.company.website} target="_blank" rel="noopener" class="btn btn-sm btn-secondary">Website ↗</a>
-					{/if}
-					{#if posting.company.glassdoor_url}
-						<a href={posting.company.glassdoor_url} target="_blank" rel="noopener" class="btn btn-sm btn-secondary">
-							Glassdoor {posting.company.glassdoor_rating ? `(${posting.company.glassdoor_rating}★)` : '↗'}
-						</a>
-					{/if}
-					{#if posting.company.levels_url}
-						<a href={posting.company.levels_url} target="_blank" rel="noopener" class="btn btn-sm btn-secondary">Levels.fyi ↗</a>
-					{/if}
-					{#if posting.company.blind_url}
-						<a href={posting.company.blind_url} target="_blank" rel="noopener" class="btn btn-sm btn-secondary">Blind ↗</a>
+			{#if localPosting.company}
+				<div class="section">
+					<h3>Company</h3>
+					<div class="company-links">
+						{#if localPosting.company.website}
+							<a href={localPosting.company.website} target="_blank" rel="noopener" class="btn btn-sm btn-secondary">Website ↗</a>
+						{/if}
+						{#if localPosting.company.glassdoor_url}
+							<a href={localPosting.company.glassdoor_url} target="_blank" rel="noopener" class="btn btn-sm btn-secondary">
+								Glassdoor {localPosting.company.glassdoor_rating ? `(${localPosting.company.glassdoor_rating}★)` : '↗'}
+							</a>
+						{/if}
+						{#if localPosting.company.levels_url}
+							<a href={localPosting.company.levels_url} target="_blank" rel="noopener" class="btn btn-sm btn-secondary">Levels.fyi ↗</a>
+						{/if}
+						{#if localPosting.company.blind_url}
+							<a href={localPosting.company.blind_url} target="_blank" rel="noopener" class="btn btn-sm btn-secondary">Blind ↗</a>
+						{/if}
+					</div>
+					{#if localPosting.company.industry || localPosting.company.employee_count}
+						<p class="company-detail">
+							{#if localPosting.company.industry}{localPosting.company.industry}{/if}
+							{#if localPosting.company.employee_count} · {localPosting.company.employee_count.toLocaleString()} employees{/if}
+						</p>
 					{/if}
 				</div>
-				{#if posting.company.industry || posting.company.employee_count}
-					<p class="company-detail">
-						{#if posting.company.industry}{posting.company.industry}{/if}
-						{#if posting.company.employee_count} · {posting.company.employee_count.toLocaleString()} employees{/if}
-					</p>
-				{/if}
-			</div>
-		{/if}
-
-		{#if posting.description}
-			<div class="section">
-				<h3>Description</h3>
-				<div class="description-text">{@html renderMarkdown(posting.description)}</div>
-			</div>
-		{/if}
-
-		{#if status}
-			<p class="status-msg">{status}</p>
-		{/if}
-
-		<div class="panel-actions">
-			{#if !posting.pipeline_stage}
-				<button class="btn btn-primary" onclick={handleAddToPipeline} disabled={addingToPipeline}>
-					{addingToPipeline ? 'Adding...' : '+ Add to Pipeline'}
-				</button>
 			{/if}
-			<button class="btn btn-danger" onclick={handleDelete} disabled={deleting}>
-				{deleting ? 'Deleting...' : 'Delete'}
-			</button>
-		</div>
+
+			{#if !localPosting.company && localPosting.company_name}
+				<div class="section">
+					<h3>Company</h3>
+					<div class="company-unlinked">
+						<span>{localPosting.company_name}</span>
+						<button class="btn btn-sm btn-secondary" onclick={handleSaveCompany} disabled={savingCompany}>
+							{savingCompany ? 'Saving...' : 'Save Company'}
+						</button>
+					</div>
+				</div>
+			{/if}
+
+			{#if localPosting.description}
+				<div class="section">
+					<h3>Description</h3>
+					<div class="description-text">{@html renderMarkdown(localPosting.description)}</div>
+				</div>
+			{/if}
+
+			{#if status}
+				<p class="status-msg">{status}</p>
+			{/if}
+
+			<div class="panel-actions">
+				{#if !localPosting.pipeline_stage}
+					<button class="btn btn-primary" onclick={handleAddToPipeline} disabled={addingToPipeline}>
+						{addingToPipeline ? 'Adding...' : '+ Add to Pipeline'}
+					</button>
+				{/if}
+				<button class="btn btn-danger" onclick={handleDelete} disabled={deleting}>
+					{deleting ? 'Deleting...' : 'Delete'}
+				</button>
+			</div>
+		{/if}
 	</div>
 </div>
 
@@ -168,6 +308,43 @@
 		align-items: flex-start;
 		justify-content: space-between;
 		gap: 1rem;
+	}
+
+	.panel-header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-shrink: 0;
+	}
+
+	.edit-form {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+	}
+
+	.form-group {
+		margin-bottom: 0.75rem;
+	}
+
+	.form-group label {
+		display: block;
+		font-size: 0.85rem;
+		color: var(--text-secondary);
+		margin-bottom: 0.25rem;
+	}
+
+	.form-row {
+		display: flex;
+		gap: 0.75rem;
+	}
+
+	.form-row .form-group {
+		flex: 1;
+	}
+
+	.status-msg.error {
+		color: var(--accent-red);
 	}
 
 	.panel-title-block h2 {
@@ -226,6 +403,14 @@
 	}
 
 	.company-detail {
+		font-size: 0.9rem;
+		color: var(--text-secondary);
+	}
+
+	.company-unlinked {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
 		font-size: 0.9rem;
 		color: var(--text-secondary);
 	}
