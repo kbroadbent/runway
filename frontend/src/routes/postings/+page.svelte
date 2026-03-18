@@ -1,12 +1,14 @@
 <script lang="ts">
-	import type { JobPosting, PostingsFilter } from '$lib/types';
+	import type { JobPosting, Company, PostingsFilter } from '$lib/types';
 	import { postings as postingsApi, pipeline } from '$lib/api';
 	import ImportModal from '$lib/components/ImportModal.svelte';
 	import PostingDetailPanel from '$lib/components/PostingDetailPanel.svelte';
+	import CompanyDetail from '$lib/components/CompanyDetail.svelte';
 	import { onMount } from 'svelte';
 
 	let allPostings = $state<JobPosting[]>([]);
 	let selectedPosting = $state<JobPosting | null>(null);
+	let selectedCompany = $state<Company | null>(null);
 	let showImport = $state(false);
 	let showDismissed = $state(false);
 	let selected = $state<Set<number>>(new Set());
@@ -203,7 +205,15 @@
 							<input type="checkbox" checked={selected.has(posting.id)} onchange={() => toggleSelect(posting.id)} />
 						</td>
 						<td>{posting.title}</td>
-						<td>{posting.company?.name ?? posting.company_name ?? '-'}</td>
+						<td>
+							{#if posting.company}
+								<button class="company-link" onclick={(e) => { e.stopPropagation(); selectedCompany = posting.company; }}>
+									{posting.company.name}
+								</button>
+							{:else}
+								{posting.company_name ?? '-'}
+							{/if}
+						</td>
 						<td>{posting.location ?? '-'}</td>
 						<td>{formatSalary(posting.salary_min, posting.salary_max)}</td>
 						<td><span class="badge badge-stage">{posting.source}</span></td>
@@ -228,6 +238,14 @@
 	<ImportModal
 		onClose={() => (showImport = false)}
 		onSaved={async () => { await loadPostings(); }}
+	/>
+{/if}
+
+{#if selectedCompany}
+	<CompanyDetail
+		company={selectedCompany}
+		onClose={() => (selectedCompany = null)}
+		onUpdated={loadPostings}
 	/>
 {/if}
 
@@ -267,6 +285,21 @@
 
 	.table-wrap {
 		overflow-x: auto;
+	}
+
+	.company-link {
+		background: none;
+		border: none;
+		padding: 0;
+		color: var(--accent-blue);
+		cursor: pointer;
+		font-size: inherit;
+		font-family: inherit;
+		text-decoration: underline;
+	}
+
+	.company-link:hover {
+		opacity: 0.8;
 	}
 
 	.sortable {

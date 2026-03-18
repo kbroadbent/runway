@@ -60,10 +60,12 @@ def import_preview(data: ImportRequest):
 
 @router.post("/import/confirm", response_model=JobPostingRead, status_code=201)
 def import_confirm(data: ImportPreview, db: Session = Depends(get_db)):
+    company = None
+    if data.company_name:
+        company = _get_or_create_company(db, data.company_name)
     posting = JobPosting(
         title=data.title or "Untitled",
-        company_id=None,
-        company_name=data.company_name or None,
+        company_id=company.id if company else None,
         description=data.description,
         location=data.location,
         remote_type=data.remote_type,
@@ -79,10 +81,12 @@ def import_confirm(data: ImportPreview, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=409, detail="A posting with this title and company already exists")
-    db.refresh(posting)
-    data = JobPostingRead.model_validate(posting)
-    data.pipeline_stage = posting.pipeline_entry.stage if posting.pipeline_entry else None
-    return data
+    posting = db.query(JobPosting).options(
+        joinedload(JobPosting.company), joinedload(JobPosting.pipeline_entry)
+    ).filter(JobPosting.id == posting.id).first()
+    result = JobPostingRead.model_validate(posting)
+    result.pipeline_stage = posting.pipeline_entry.stage if posting.pipeline_entry else None
+    return result
 
 
 @router.get("/{posting_id}", response_model=JobPostingRead)
