@@ -60,13 +60,13 @@
 		try {
 			const updated = await postings.update(localPosting.id, {
 				title: editTitle,
-				company_name: editCompany || undefined,
-				location: editLocation || undefined,
-				remote_type: editRemoteType || undefined,
+				company_name: editCompany || null,
+				location: editLocation || null,
+				remote_type: editRemoteType || null,
 				salary_min: editSalaryMin ?? null,
 				salary_max: editSalaryMax ?? null,
-				url: editUrl || undefined,
-				description: editDescription || undefined,
+				url: editUrl || null,
+				description: editDescription || null,
 			});
 			localPosting = updated;
 			editing = false;
