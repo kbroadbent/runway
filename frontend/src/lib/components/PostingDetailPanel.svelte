@@ -69,7 +69,6 @@
 				salary_max: editSalaryMax ?? null,
 				url: editUrl || null,
 				description: editDescription || null,
-				tier: editTier,
 			});
 			localPosting = updated;
 			editing = false;
@@ -181,20 +180,9 @@
 						<input type="number" bind:value={editSalaryMax} style="width: 100%" />
 					</div>
 				</div>
-				<div class="form-row">
-					<div class="form-group">
-						<label>URL</label>
-						<input type="url" bind:value={editUrl} style="width: 100%" />
-					</div>
-					<div class="form-group" style="flex: 0 0 auto; width: 110px">
-						<label>Tier</label>
-						<select bind:value={editTier} style="width: 100%">
-							<option value={null}>None</option>
-							<option value={1}>Tier 1</option>
-							<option value={2}>Tier 2</option>
-							<option value={3}>Tier 3</option>
-						</select>
-					</div>
+				<div class="form-group">
+					<label>URL</label>
+					<input type="url" bind:value={editUrl} style="width: 100%" />
 				</div>
 				<div class="form-group">
 					<label>Description</label>
@@ -212,9 +200,22 @@
 			</div>
 		{:else}
 			<div class="panel-meta">
-				{#if localPosting.tier}
-					<span class="badge tier-badge tier-{localPosting.tier}">Tier {localPosting.tier}</span>
-				{/if}
+				<select
+					class="tier-select"
+					value={localPosting.tier ?? ''}
+					onchange={async (e) => {
+						const val = (e.target as HTMLSelectElement).value;
+						const newTier = val === '' ? null : Number(val);
+						const updated = await postings.update(localPosting.id, { tier: newTier });
+						localPosting = updated;
+						onUpdated();
+					}}
+				>
+					<option value="">No tier</option>
+					<option value={1}>Tier 1</option>
+					<option value={2}>Tier 2</option>
+					<option value={3}>Tier 3</option>
+				</select>
 				{#if localPosting.location}
 					<span class="meta-item">📍 {localPosting.location}</span>
 				{/if}
@@ -493,6 +494,16 @@
 		gap: 0.5rem;
 		margin-top: auto;
 		padding-top: 1rem;
+	}
+
+	.tier-select {
+		font-size: 0.85rem;
+		padding: 0.15rem 0.35rem;
+		border-radius: var(--radius);
+		border: 1px solid var(--border-color);
+		background: var(--bg-tertiary);
+		color: var(--text-primary);
+		width: auto;
 	}
 
 	.tier-badge {

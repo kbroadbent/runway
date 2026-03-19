@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PipelineEntry, PipelineHistory, InterviewNote } from '$lib/types';
-	import { pipeline, interviews } from '$lib/api';
+	import { pipeline, interviews, postings } from '$lib/api';
 	import { onMount } from 'svelte';
 
 	interface Props {
@@ -23,6 +23,7 @@
 	let next_action_date = $state(
 		entry.next_action_date ? entry.next_action_date.substring(0, 10) : ''
 	);
+	let tier = $state<number | null>(entry.job_posting.tier ?? null);
 
 	// New interview form
 	let showInterviewForm = $state(false);
@@ -132,6 +133,16 @@
 						</div>
 					</div>
 				{/if}
+
+				<div class="section">
+					<h3>Tier</h3>
+					<select bind:value={tier} style="width: 120px" onchange={() => postings.update(entry.job_posting.id, { tier })}>
+						<option value={null}>None</option>
+						<option value={1}>Tier 1</option>
+						<option value={2}>Tier 2</option>
+						<option value={3}>Tier 3</option>
+					</select>
+				</div>
 
 				<div class="section">
 					<h3>Notes</h3>
