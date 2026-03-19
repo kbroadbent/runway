@@ -98,6 +98,15 @@
 		await loadPostings();
 	}
 
+	async function setTier(posting: JobPosting, e: Event) {
+		e.stopPropagation();
+		const val = (e.target as HTMLSelectElement).value;
+		const tier = val === '' ? null : Number(val);
+		await postingsApi.update(posting.id, { tier });
+		posting.tier = tier;
+		allPostings = allPostings; // trigger reactivity
+	}
+
 	async function deleteSelected() {
 		if (!confirm(`Delete ${selected.size} posting(s)?`)) return;
 		await Promise.all([...selected].map((id) => postingsApi.delete(id)));
@@ -228,10 +237,13 @@
 						</td>
 						<td>{posting.location ?? '-'}</td>
 						<td>{formatSalary(posting.salary_min, posting.salary_max)}</td>
-						<td>
-							{#if posting.tier}
-								<span class="badge tier-badge tier-{posting.tier}">T{posting.tier}</span>
-							{/if}
+						<td onclick={(e) => e.stopPropagation()}>
+							<select class="tier-select tier-val-{posting.tier ?? 0}" value={posting.tier ?? ''} onchange={(e) => setTier(posting, e)}>
+								<option value="">—</option>
+								<option value={1}>T1</option>
+								<option value={2}>T2</option>
+								<option value={3}>T3</option>
+							</select>
 						</td>
 						<td><span class="badge badge-stage">{posting.source}</span></td>
 						<td>
@@ -370,6 +382,20 @@
 		cursor: pointer;
 		white-space: nowrap;
 	}
+
+	.tier-select {
+		font-size: 0.8rem;
+		padding: 0.1rem 0.25rem;
+		border-radius: var(--radius);
+		border: 1px solid var(--border-color);
+		background: var(--bg-tertiary);
+		color: var(--text-primary);
+		width: 52px;
+	}
+
+	.tier-val-1 { background: color-mix(in srgb, #f59e0b 20%, transparent); color: #b45309; border-color: #f59e0b; }
+	.tier-val-2 { background: color-mix(in srgb, #6b7280 20%, transparent); color: #4b5563; border-color: #9ca3af; }
+	.tier-val-3 { background: color-mix(in srgb, #cd7c3a 20%, transparent); color: #92400e; border-color: #cd7c3a; }
 
 	.tier-badge {
 		font-weight: 700;
