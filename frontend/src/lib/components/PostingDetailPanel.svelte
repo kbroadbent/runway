@@ -36,6 +36,7 @@
 	let editSalaryMax = $state<number | undefined>(undefined);
 	let editUrl = $state('');
 	let editDescription = $state('');
+	let editTier = $state<number | null>(null);
 
 	function handleEditStart() {
 		editTitle = localPosting.title;
@@ -46,6 +47,7 @@
 		editSalaryMax = localPosting.salary_max ?? undefined;
 		editUrl = localPosting.url ?? '';
 		editDescription = localPosting.description ?? '';
+		editTier = localPosting.tier ?? null;
 		editing = true;
 	}
 
@@ -67,6 +69,7 @@
 				salary_max: editSalaryMax ?? null,
 				url: editUrl || null,
 				description: editDescription || null,
+				tier: editTier,
 			});
 			localPosting = updated;
 			editing = false;
@@ -178,9 +181,20 @@
 						<input type="number" bind:value={editSalaryMax} style="width: 100%" />
 					</div>
 				</div>
-				<div class="form-group">
-					<label>URL</label>
-					<input type="url" bind:value={editUrl} style="width: 100%" />
+				<div class="form-row">
+					<div class="form-group">
+						<label>URL</label>
+						<input type="url" bind:value={editUrl} style="width: 100%" />
+					</div>
+					<div class="form-group" style="flex: 0 0 auto; width: 110px">
+						<label>Tier</label>
+						<select bind:value={editTier} style="width: 100%">
+							<option value={null}>None</option>
+							<option value={1}>Tier 1</option>
+							<option value={2}>Tier 2</option>
+							<option value={3}>Tier 3</option>
+						</select>
+					</div>
 				</div>
 				<div class="form-group">
 					<label>Description</label>
@@ -198,6 +212,9 @@
 			</div>
 		{:else}
 			<div class="panel-meta">
+				{#if localPosting.tier}
+					<span class="badge tier-badge tier-{localPosting.tier}">Tier {localPosting.tier}</span>
+				{/if}
 				{#if localPosting.location}
 					<span class="meta-item">📍 {localPosting.location}</span>
 				{/if}
@@ -476,5 +493,28 @@
 		gap: 0.5rem;
 		margin-top: auto;
 		padding-top: 1rem;
+	}
+
+	.tier-badge {
+		font-weight: 700;
+		font-size: 0.8rem;
+	}
+
+	.tier-1 {
+		background: color-mix(in srgb, #f59e0b 20%, transparent);
+		color: #b45309;
+		border: 1px solid #f59e0b;
+	}
+
+	.tier-2 {
+		background: color-mix(in srgb, #6b7280 20%, transparent);
+		color: #4b5563;
+		border: 1px solid #9ca3af;
+	}
+
+	.tier-3 {
+		background: color-mix(in srgb, #cd7c3a 20%, transparent);
+		color: #92400e;
+		border: 1px solid #cd7c3a;
 	}
 </style>

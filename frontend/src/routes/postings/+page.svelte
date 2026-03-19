@@ -17,6 +17,7 @@
 	let searchText = $state('');
 	let sourceFilter = $state('');
 	let remoteFilter = $state('');
+	let tierFilter = $state<string>('');
 	let salaryMinFilter = $state<number | undefined>(undefined);
 	let salaryMaxFilter = $state<number | undefined>(undefined);
 
@@ -47,6 +48,8 @@
 			}
 			if (sourceFilter && p.source !== sourceFilter) return false;
 			if (remoteFilter && p.remote_type !== remoteFilter) return false;
+			if (tierFilter === 'none' && p.tier !== null) return false;
+			if (tierFilter && tierFilter !== 'none' && p.tier !== Number(tierFilter)) return false;
 			if (salaryMinFilter && (p.salary_max ?? 0) < salaryMinFilter) return false;
 			if (salaryMaxFilter && (p.salary_min ?? Infinity) > salaryMaxFilter) return false;
 			if (hideArchived && p.pipeline_stage === 'archived') return false;
@@ -60,6 +63,7 @@
 				case 'company': av = a.company?.name ?? a.company_name ?? ''; bv = b.company?.name ?? b.company_name ?? ''; break;
 				case 'location': av = a.location ?? ''; bv = b.location ?? ''; break;
 				case 'salary': av = a.salary_min ?? 0; bv = b.salary_min ?? 0; break;
+				case 'tier': av = a.tier ?? 99; bv = b.tier ?? 99; break;
 				case 'source': av = a.source; bv = b.source; break;
 				case 'pipeline_stage': av = a.pipeline_stage ?? ''; bv = b.pipeline_stage ?? ''; break;
 				default: av = a.date_saved; bv = b.date_saved;
@@ -120,6 +124,7 @@
 		{ key: 'company', label: 'Company' },
 		{ key: 'location', label: 'Location' },
 		{ key: 'salary', label: 'Salary' },
+		{ key: 'tier', label: 'Tier' },
 		{ key: 'source', label: 'Source' },
 		{ key: 'pipeline_stage', label: 'Pipeline' },
 		{ key: 'date_saved', label: 'Saved' },
@@ -152,6 +157,13 @@
 		<option value="remote">Remote</option>
 		<option value="hybrid">Hybrid</option>
 		<option value="onsite">Onsite</option>
+	</select>
+	<select bind:value={tierFilter}>
+		<option value="">Any tier</option>
+		<option value="1">Tier 1</option>
+		<option value="2">Tier 2</option>
+		<option value="3">Tier 3</option>
+		<option value="none">Untiered</option>
 	</select>
 	<input type="number" bind:value={salaryMinFilter} placeholder="Min salary" style="width: 120px" />
 	<input type="number" bind:value={salaryMaxFilter} placeholder="Max salary" style="width: 120px" />
@@ -216,6 +228,11 @@
 						</td>
 						<td>{posting.location ?? '-'}</td>
 						<td>{formatSalary(posting.salary_min, posting.salary_max)}</td>
+						<td>
+							{#if posting.tier}
+								<span class="badge tier-badge tier-{posting.tier}">T{posting.tier}</span>
+							{/if}
+						</td>
 						<td><span class="badge badge-stage">{posting.source}</span></td>
 						<td>
 							{#if posting.pipeline_stage}
@@ -352,5 +369,28 @@
 		color: var(--text-secondary);
 		cursor: pointer;
 		white-space: nowrap;
+	}
+
+	.tier-badge {
+		font-weight: 700;
+		font-size: 0.75rem;
+	}
+
+	.tier-1 {
+		background: color-mix(in srgb, #f59e0b 20%, transparent);
+		color: #b45309;
+		border: 1px solid #f59e0b;
+	}
+
+	.tier-2 {
+		background: color-mix(in srgb, #6b7280 20%, transparent);
+		color: #4b5563;
+		border: 1px solid #9ca3af;
+	}
+
+	.tier-3 {
+		background: color-mix(in srgb, #cd7c3a 20%, transparent);
+		color: #92400e;
+		border: 1px solid #cd7c3a;
 	}
 </style>

@@ -26,6 +26,7 @@ class JobPostingUpdate(BaseModel):
     salary_max: int | None = None
     url: str | None = None
     status: str | None = None
+    tier: int | None = None
 
 
 class JobPostingRead(BaseModel):
@@ -42,6 +43,7 @@ class JobPostingRead(BaseModel):
     date_posted: datetime | None
     date_saved: datetime
     status: str
+    tier: int | None = None
     company_name: str | None = None
     pipeline_stage: str | None = None
 
