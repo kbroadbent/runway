@@ -30,6 +30,7 @@ export interface JobPosting {
   date_posted: string | null;
   date_saved: string;
   status: string;
+  tier: 1 | 2 | 3 | null;
   pipeline_stage: string | null;
 }
 

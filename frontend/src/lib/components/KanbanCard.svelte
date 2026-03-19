@@ -36,7 +36,12 @@
 	tabindex="0"
 	onkeydown={(e) => e.key === 'Enter' && onclick()}
 >
-	<div class="card-title">{entry.job_posting.title}</div>
+	<div class="card-header">
+		<div class="card-title">{entry.job_posting.title}</div>
+		{#if entry.job_posting.tier}
+			<span class="tier-badge tier-{entry.job_posting.tier}">T{entry.job_posting.tier}</span>
+		{/if}
+	</div>
 	{#if entry.job_posting.company || entry.job_posting.company_name}
 		<div class="card-company">{entry.job_posting.company?.name ?? entry.job_posting.company_name}</div>
 	{/if}
@@ -73,11 +78,46 @@
 		border-color: var(--accent-yellow);
 	}
 
+	.card-header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.4rem;
+		margin-bottom: 0.2rem;
+	}
+
 	.card-title {
 		font-size: 0.9rem;
 		font-weight: 600;
 		line-height: 1.3;
-		margin-bottom: 0.2rem;
+		flex: 1;
+	}
+
+	.tier-badge {
+		font-size: 0.65rem;
+		font-weight: 700;
+		padding: 0.1rem 0.35rem;
+		border-radius: 3px;
+		flex-shrink: 0;
+		line-height: 1.4;
+	}
+
+	.tier-1 {
+		background: color-mix(in srgb, #f59e0b 25%, transparent);
+		color: #b45309;
+		border: 1px solid #f59e0b;
+	}
+
+	.tier-2 {
+		background: color-mix(in srgb, #6b7280 25%, transparent);
+		color: #4b5563;
+		border: 1px solid #9ca3af;
+	}
+
+	.tier-3 {
+		background: color-mix(in srgb, #cd7c3a 25%, transparent);
+		color: #92400e;
+		border: 1px solid #cd7c3a;
 	}
 
 	.card-company {
