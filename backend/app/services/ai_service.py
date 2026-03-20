@@ -23,7 +23,7 @@ def _llm(messages: list, **kwargs) -> str:
     response = litellm.completion(
         model=AI_MODEL,
         messages=messages,
-        timeout=30,
+        timeout=60,
         **call_kwargs,
     )
     return response.choices[0].message.content
@@ -89,7 +89,7 @@ def extract_job_posting(raw_text: str) -> ImportPreview:
                     f"Job posting:\n{raw_text}"
                 ),
             },
-        ])
+        ], max_tokens=1024)
     except Exception:
         description = None
 
@@ -122,7 +122,7 @@ def summarize_posting(raw_content: str) -> str:
                     f"Job posting:\n{raw_content}"
                 ),
             },
-        ])
+        ], max_tokens=1024)
     except litellm.exceptions.Timeout as e:
         raise AIServiceError(f"AI request timed out: {e}") from e
     except Exception as e:
