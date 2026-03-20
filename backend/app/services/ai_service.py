@@ -67,6 +67,7 @@ def extract_job_posting(raw_text: str) -> ImportPreview:
         parsed = json.loads(content)
         preview = ImportPreview(**parsed)
         preview.raw_content = raw_text
+        preview.ai_used = True
         return preview
     except json.JSONDecodeError as e:
         raise AIServiceError(f"Failed to parse JSON from AI response: {e}") from e

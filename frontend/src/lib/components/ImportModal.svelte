@@ -127,7 +127,14 @@
 			</div>
 		{:else}
 			<div class="preview-form">
-				<p class="preview-label">Review and edit the parsed fields:</p>
+				<p class="preview-label">
+				Review and edit the parsed fields:
+				{#if preview.ai_used}
+					<span class="parse-badge ai">AI parsed</span>
+				{:else}
+					<span class="parse-badge heuristic">Heuristic parsed</span>
+				{/if}
+			</p>
 
 				<div class="form-group">
 					<label>Title</label>
@@ -288,6 +295,26 @@
 		color: var(--text-secondary);
 		font-size: 0.9rem;
 		margin-bottom: 0.75rem;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.parse-badge {
+		font-size: 0.75rem;
+		padding: 0.1rem 0.4rem;
+		border-radius: 4px;
+		font-weight: 500;
+	}
+
+	.parse-badge.ai {
+		background: color-mix(in srgb, var(--accent-blue) 15%, transparent);
+		color: var(--accent-blue);
+	}
+
+	.parse-badge.heuristic {
+		background: color-mix(in srgb, var(--accent-orange, #f59e0b) 15%, transparent);
+		color: var(--accent-orange, #f59e0b);
 	}
 
 	.checkbox-label {

@@ -105,6 +105,7 @@ export interface ImportPreview {
   description: string | null;
   url: string | null;
   raw_content: string | null;
+  ai_used: boolean;
 }
 
 export interface PostingsFilter {

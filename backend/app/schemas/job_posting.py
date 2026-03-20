@@ -71,3 +71,4 @@ class ImportPreview(BaseModel):
     description: str | None = None
     url: str | None = None
     raw_content: str | None = None
+    ai_used: bool = False
