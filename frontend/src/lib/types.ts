@@ -32,6 +32,7 @@ export interface JobPosting {
   status: string;
   tier: 1 | 2 | 3 | null;
   pipeline_stage: string | null;
+  has_raw_content: boolean;
 }
 
 export interface PipelineEntry {

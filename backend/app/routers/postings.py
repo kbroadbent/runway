@@ -5,6 +5,7 @@ from app.database import get_db
 from app.models import JobPosting, Company
 from app.schemas.job_posting import JobPostingCreate, JobPostingUpdate, JobPostingRead, ImportRequest, ImportPreview
 from app.services.parser_service import parse_posting_text, fetch_and_parse_url
+from app.services.ai_service import summarize_posting, AIServiceError
 
 router = APIRouter(prefix="/api/postings", tags=["postings"])
 
@@ -117,6 +118,27 @@ def update_posting(posting_id: int, data: JobPostingUpdate, db: Session = Depend
         posting.company_id = _get_or_create_company(db, company_name).id
     for key, value in update_dict.items():
         setattr(posting, key, value)
+    db.commit()
+    posting = db.query(JobPosting).options(
+        joinedload(JobPosting.company), joinedload(JobPosting.pipeline_entry)
+    ).filter(JobPosting.id == posting_id).first()
+    result = JobPostingRead.model_validate(posting)
+    result.pipeline_stage = posting.pipeline_entry.stage if posting.pipeline_entry else None
+    return result
+
+
+@router.post("/{posting_id}/summarize", response_model=JobPostingRead)
+def summarize_posting_endpoint(posting_id: int, db: Session = Depends(get_db)):
+    posting = db.get(JobPosting, posting_id)
+    if not posting:
+        raise HTTPException(status_code=404, detail="Posting not found")
+    if not posting.raw_content:
+        raise HTTPException(status_code=400, detail="No raw content available to summarize")
+    try:
+        summary = summarize_posting(posting.raw_content)
+    except AIServiceError:
+        raise HTTPException(status_code=503, detail="AI service unavailable — ensure Ollama is running")
+    posting.description = summary
     db.commit()
     posting = db.query(JobPosting).options(
         joinedload(JobPosting.company), joinedload(JobPosting.pipeline_entry)

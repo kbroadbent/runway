@@ -63,6 +63,8 @@ export const postings = {
     request<JobPosting>('/postings/import/confirm', { method: 'POST', body: JSON.stringify(data) }),
   linkCompany: (id: number) =>
     request<JobPosting>(`/postings/${id}/link-company`, { method: 'POST' }),
+  summarize: (id: number) =>
+    request<JobPosting>(`/postings/${id}/summarize`, { method: 'POST' }),
 };
 
 export const pipeline = {

@@ -62,7 +62,9 @@ def extract_job_posting(raw_text: str) -> ImportPreview:
             content = stripped
 
         parsed = json.loads(content)
-        return ImportPreview(**parsed)
+        preview = ImportPreview(**parsed)
+        preview.raw_content = raw_text
+        return preview
     except json.JSONDecodeError as e:
         raise AIServiceError(f"Failed to parse JSON from AI response: {e}") from e
     except litellm.exceptions.Timeout as e:

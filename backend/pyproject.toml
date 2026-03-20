@@ -22,6 +22,11 @@ dependencies = [
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
 
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
