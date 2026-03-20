@@ -91,11 +91,11 @@
 		</div>
 
 		<div class="tabs">
-			<button class="tab" class:active={tab === 'text'} onclick={() => { tab = 'text'; preview = null; }}>
-				Paste Text
-			</button>
 			<button class="tab" class:active={tab === 'url'} onclick={() => { tab = 'url'; preview = null; }}>
 				Paste URL
+			</button>
+			<button class="tab" class:active={tab === 'text'} onclick={() => { tab = 'text'; preview = null; }}>
+				Paste Text
 			</button>
 		</div>
 
