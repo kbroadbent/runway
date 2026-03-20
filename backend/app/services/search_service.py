@@ -24,7 +24,7 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
     for _, row in df.iterrows():
         url = row.get("job_url")
         title = row.get("title", "Unknown")
-        company_name = row.get("company", "Unknown")
+        company_name = _to_str(row.get("company")) or "Unknown"
 
         # Salary filter: when min salary is set, require salary data that meets the threshold
         if profile.salary_min is not None:
