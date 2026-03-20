@@ -81,8 +81,8 @@ def summarize_posting(raw_content: str) -> str:
         kwargs["api_base"] = OLLAMA_BASE_URL
 
     system_prompt = (
-        "You are a job posting parser. Extract structured information from the raw job posting text "
-        "and return valid JSON only — no explanation, no markdown fences, no surrounding text."
+        "You are a job posting summarizer. Write clean, well-structured markdown summaries of job postings. "
+        "Return only markdown — no JSON, no explanation, no surrounding text."
     )
 
     user_prompt = (
