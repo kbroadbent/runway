@@ -20,7 +20,7 @@ def list_profiles(db: Session = Depends(get_db)):
         profile_dict["sources"] = json.loads(profile.sources) if profile.sources else None
         profile_dict["exclude_terms"] = json.loads(profile.exclude_terms) if profile.exclude_terms else None
         profile_dict["new_result_count"] = db.query(func.count(SearchResult.id)).filter(
-            SearchResult.search_profile_id == profile.id, SearchResult.is_new == True
+            SearchResult.search_profile_id == profile.id, SearchResult.is_new.is_(True)
         ).scalar()
         results.append(SearchProfileRead.model_validate(profile_dict))
     return results
@@ -124,7 +124,7 @@ def run_profile_search(profile_id: int, db: Session = Depends(get_db)):
 @router.post("/api/search-results/{profile_id}/mark-reviewed")
 def mark_reviewed(profile_id: int, db: Session = Depends(get_db)):
     db.query(SearchResult).filter(
-        SearchResult.search_profile_id == profile_id, SearchResult.is_new == True
+        SearchResult.search_profile_id == profile_id, SearchResult.is_new.is_(True)
     ).update({"is_new": False})
     db.commit()
     return {"status": "ok"}

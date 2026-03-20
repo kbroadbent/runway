@@ -63,7 +63,7 @@
 		try {
 			const updated = await postings.update(localPosting.id, {
 				title: editTitle,
-				company_name: editCompany || null,
+				company_name: editCompany || undefined,
 				location: editLocation || null,
 				remote_type: editRemoteType || null,
 				salary_min: editSalaryMin ?? null,
@@ -220,7 +220,7 @@
 					value={localPosting.tier ?? ''}
 					onchange={async (e) => {
 						const val = (e.target as HTMLSelectElement).value;
-						const newTier = val === '' ? null : Number(val);
+						const newTier = val === '' ? null : Number(val) as 1 | 2 | 3;
 						const updated = await postings.update(localPosting.id, { tier: newTier });
 						localPosting = updated;
 						onUpdated();

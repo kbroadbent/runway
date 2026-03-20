@@ -1,6 +1,4 @@
-import json
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import pandas as pd
 
 
@@ -40,7 +38,7 @@ def test_delete_search_profile(client):
     pid = create.json()["id"]
     resp = client.delete(f"/api/search-profiles/{pid}")
     assert resp.status_code == 204
-    assert client.get(f"/api/search-profiles").json() == []
+    assert client.get("/api/search-profiles").json() == []
 
 
 def test_run_search(client):

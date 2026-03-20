@@ -101,7 +101,7 @@
 	async function setTier(posting: JobPosting, e: Event) {
 		e.stopPropagation();
 		const val = (e.target as HTMLSelectElement).value;
-		const tier = val === '' ? null : Number(val);
+		const tier = val === '' ? null : Number(val) as 1 | 2 | 3;
 		await postingsApi.update(posting.id, { tier });
 		posting.tier = tier;
 		allPostings = allPostings; // trigger reactivity

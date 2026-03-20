@@ -21,7 +21,7 @@
 	let tab = $state<'overview' | 'interviews' | 'questions' | 'salary'>('overview');
 	let companyInterviews = $state<CompanyInterview[]>([]);
 	let loadingInterviews = $state(false);
-	let commonQuestions = $state<string[]>(() => {
+	let commonQuestions = $derived.by<string[]>(() => {
 		if (!currentCompany.common_questions) return [];
 		try {
 			return JSON.parse(currentCompany.common_questions);

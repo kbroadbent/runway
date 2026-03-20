@@ -23,7 +23,7 @@
 	let next_action_date = $state(
 		entry.next_action_date ? entry.next_action_date.substring(0, 10) : ''
 	);
-	let tier = $state<number | null>(entry.job_posting.tier ?? null);
+	let tier = $state<1 | 2 | 3 | null>(entry.job_posting.tier ?? null);
 
 	// New interview form
 	let showInterviewForm = $state(false);

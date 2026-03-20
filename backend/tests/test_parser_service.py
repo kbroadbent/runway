@@ -1,5 +1,4 @@
-import pytest
-from app.services.parser_service import parse_posting_text, fetch_and_parse_url
+from app.services.parser_service import parse_posting_text
 
 
 def test_parse_basic_posting():
