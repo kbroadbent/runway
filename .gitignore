@@ -1,13 +1,47 @@
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Python
 __pycache__/
 *.pyc
-*.db
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
 .venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Node / SvelteKit
 node_modules/
 .svelte-kit/
 build/
 dist/
+.output/
+
+# Environment
 .env
+.env.*
+!.env.example
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project-specific
 .superpowers/
 .worktrees/
 backups/
