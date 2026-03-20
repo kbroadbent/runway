@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch, MagicMock
 from app.services.research_service import generate_research_links, scrape_levels_fyi
 

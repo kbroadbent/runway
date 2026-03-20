@@ -1,5 +1,4 @@
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 from app.services.scheduler_service import init_scheduler, schedule_profile, remove_profile_schedule
 
 
