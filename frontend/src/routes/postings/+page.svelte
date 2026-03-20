@@ -121,7 +121,7 @@
 	}
 
 	function formatSalary(min: number | null, max: number | null): string {
-		if (!min && !max) return '-';
+		if (!min && !max) return '';
 		const fmt = (n: number) => '$' + Math.round(n / 1000) + 'k';
 		if (min && max) return `${fmt(min)}–${fmt(max)}`;
 		if (min) return `${fmt(min)}+`;
@@ -232,10 +232,10 @@
 									{posting.company.name}
 								</button>
 							{:else}
-								{posting.company_name ?? '-'}
+								{posting.company_name ?? ''}
 							{/if}
 						</td>
-						<td>{posting.location ?? '-'}</td>
+						<td>{posting.location ?? ''}</td>
 						<td>{formatSalary(posting.salary_min, posting.salary_max)}</td>
 						<td onclick={(e) => e.stopPropagation()}>
 							<select class="tier-select tier-val-{posting.tier ?? 0}" value={posting.tier ?? ''} onchange={(e) => setTier(posting, e)}>
