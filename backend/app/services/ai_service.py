@@ -14,61 +14,54 @@ class AIServiceError(Exception):
     pass
 
 
+def _llm(messages: list, **kwargs) -> str:
+    """Make a single LiteLLM completion call and return the text content."""
+    call_kwargs = {}
+    if AI_MODEL.startswith("ollama/"):
+        call_kwargs["api_base"] = OLLAMA_BASE_URL
+    call_kwargs.update(kwargs)
+    response = litellm.completion(
+        model=AI_MODEL,
+        messages=messages,
+        timeout=30,
+        **call_kwargs,
+    )
+    return response.choices[0].message.content
+
+
+def _strip_fences(text: str) -> str:
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        first_newline = stripped.find("\n")
+        if first_newline != -1:
+            stripped = stripped[first_newline + 1:]
+        if stripped.rstrip().endswith("```"):
+            stripped = stripped.rstrip()[:-3].rstrip()
+    return stripped
+
+
 def extract_job_posting(raw_text: str) -> ImportPreview:
     raw_text = raw_text[:16000]
 
-    kwargs = {}
-    if AI_MODEL.startswith("ollama/"):
-        kwargs["api_base"] = OLLAMA_BASE_URL
-
-    system_prompt = (
-        "You are a job posting parser. Extract structured information from the raw job posting text "
-        "and return valid JSON only — no explanation, no markdown fences, no surrounding text."
-    )
-
-    user_prompt = (
-        "Extract the following fields from this job posting. Use null for any field not mentioned.\n\n"
-        "For description, write a clean markdown summary using these sections (omit any section not present in the posting):\n"
-        "- ## Role Overview\n"
-        "- ## Key Responsibilities  \n"
-        "- ## Requirements\n"
-        "- ## Compensation & Benefits\n"
-        "- ## Work Arrangement (ONLY include this section if the role is hybrid — describe the hybrid details such as days in office, office location, and schedule flexibility)\n\n"
-        "If multiple salary ranges are listed (e.g., for different locations), prefer the location-agnostic or remote salary. Use null if no salary is mentioned.\n\n"
-        'Return JSON only:\n'
-        '{"title": "...", "company_name": "...", "location": "...", "remote_type": "remote"|"hybrid"|"onsite"|null, "salary_min": integer|null, "salary_max": integer|null, "description": "..."}\n\n'
-        f"Job posting:\n{raw_text}"
-    )
-
+    # Step 1: extract structured fields only (no description)
     try:
-        response = litellm.completion(
-            model=AI_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            timeout=30,
-            **kwargs,
-        )
-        content = response.choices[0].message.content
-
-        # Strip markdown fences if present
-        stripped = content.strip()
-        if stripped.startswith("```"):
-            # Remove opening fence (e.g. ```json or ```)
-            first_newline = stripped.find("\n")
-            if first_newline != -1:
-                stripped = stripped[first_newline + 1:]
-            # Remove closing fence
-            if stripped.rstrip().endswith("```"):
-                stripped = stripped.rstrip()[:-3].rstrip()
-            content = stripped
-
-        parsed = json.loads(content)
-        preview = ImportPreview(**parsed)
-        preview.raw_content = raw_text
-        preview.ai_used = True
-        return preview
+        fields_content = _llm([
+            {
+                "role": "system",
+                "content": "You are a job posting parser. Return valid JSON only — no explanation, no markdown fences.",
+            },
+            {
+                "role": "user",
+                "content": (
+                    "Extract these fields from the job posting. Use null for any not mentioned.\n"
+                    "If multiple salary ranges are listed, prefer the remote/location-agnostic range.\n\n"
+                    'Return JSON only: {"title": "...", "company_name": "...", "location": "...", '
+                    '"remote_type": "remote"|"hybrid"|"onsite"|null, "salary_min": integer|null, "salary_max": integer|null}\n\n'
+                    f"Job posting:\n{raw_text}"
+                ),
+            },
+        ])
+        parsed = json.loads(_strip_fences(fields_content))
     except json.JSONDecodeError as e:
         raise AIServiceError(f"Failed to parse JSON from AI response: {e}") from e
     except litellm.exceptions.Timeout as e:
@@ -76,41 +69,60 @@ def extract_job_posting(raw_text: str) -> ImportPreview:
     except Exception as e:
         raise AIServiceError(f"AI service error: {e}") from e
 
+    # Step 2: generate description as plain markdown
+    try:
+        description = _llm([
+            {
+                "role": "system",
+                "content": "You are a job posting summarizer. Return only markdown — no JSON, no explanation.",
+            },
+            {
+                "role": "user",
+                "content": (
+                    "Write a markdown summary of this job posting using these sections "
+                    "(omit any section not present in the posting):\n"
+                    "- ## Role Overview\n"
+                    "- ## Key Responsibilities\n"
+                    "- ## Requirements\n"
+                    "- ## Compensation & Benefits\n"
+                    "- ## Work Arrangement (only if hybrid)\n\n"
+                    f"Job posting:\n{raw_text}"
+                ),
+            },
+        ])
+    except Exception:
+        description = None
+
+    preview = ImportPreview(**parsed)
+    preview.description = description
+    preview.raw_content = raw_text
+    preview.ai_used = True
+    return preview
+
 
 def summarize_posting(raw_content: str) -> str:
     raw_content = raw_content[:16000]
 
-    kwargs = {}
-    if AI_MODEL.startswith("ollama/"):
-        kwargs["api_base"] = OLLAMA_BASE_URL
-
-    system_prompt = (
-        "You are a job posting summarizer. Write clean, well-structured markdown summaries of job postings. "
-        "Return only markdown — no JSON, no explanation, no surrounding text."
-    )
-
-    user_prompt = (
-        "Write a clean markdown summary of this job posting using these sections (omit any section not present in the posting):\n"
-        "- ## Role Overview\n"
-        "- ## Key Responsibilities\n"
-        "- ## Requirements\n"
-        "- ## Compensation & Benefits\n"
-        "- ## Work Arrangement (ONLY include this section if the role is hybrid — describe the hybrid details such as days in office, office location, and schedule flexibility)\n\n"
-        "Return only the markdown — no JSON, no explanation.\n\n"
-        f"Job posting:\n{raw_content}"
-    )
-
     try:
-        response = litellm.completion(
-            model=AI_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            timeout=30,
-            **kwargs,
-        )
-        return response.choices[0].message.content
+        return _llm([
+            {
+                "role": "system",
+                "content": "You are a job posting summarizer. Return only markdown — no JSON, no explanation.",
+            },
+            {
+                "role": "user",
+                "content": (
+                    "Write a markdown summary of this job posting using these sections "
+                    "(omit any section not present in the posting):\n"
+                    "- ## Role Overview\n"
+                    "- ## Key Responsibilities\n"
+                    "- ## Requirements\n"
+                    "- ## Compensation & Benefits\n"
+                    "- ## Work Arrangement (only if hybrid)\n\n"
+                    f"Job posting:\n{raw_content}"
+                ),
+            },
+        ])
     except litellm.exceptions.Timeout as e:
         raise AIServiceError(f"AI request timed out: {e}") from e
     except Exception as e:
