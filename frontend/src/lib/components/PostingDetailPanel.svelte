@@ -116,7 +116,8 @@
 	async function handleAddToPipeline() {
 		addingToPipeline = true;
 		try {
-			await pipeline.add({ job_posting_id: posting.id });
+			const entry = await pipeline.add({ job_posting_id: posting.id });
+			localPosting = { ...localPosting, pipeline_stage: entry.stage };
 			status = 'Added to pipeline!';
 			onUpdated();
 		} catch (e) {
