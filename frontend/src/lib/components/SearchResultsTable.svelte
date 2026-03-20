@@ -25,7 +25,7 @@
 	}
 
 	function formatSalary(min: number | null, max: number | null): string {
-		if (!min && !max) return '-';
+		if (!min && !max) return '';
 		const fmt = (n: number) => '$' + n.toLocaleString();
 		if (min && max) return `${fmt(min)} - ${fmt(max)}`;
 		if (min) return `${fmt(min)}+`;
@@ -103,11 +103,11 @@
 				{#each sortedResults as posting}
 					<tr class="result-row" onclick={() => selectedPosting = posting}>
 						<td>{posting.title}</td>
-						<td>{posting.company?.name ?? '-'}</td>
-						<td>{posting.location ?? '-'}</td>
+						<td>{posting.company?.name ?? ''}</td>
+						<td>{posting.location ?? ''}</td>
 						<td>{formatSalary(posting.salary_min, posting.salary_max)}</td>
 						<td><span class="badge badge-stage">{posting.source}</span></td>
-						<td>{posting.date_posted ? new Date(posting.date_posted).toLocaleDateString() : '-'}</td>
+						<td>{posting.date_posted ? new Date(posting.date_posted).toLocaleDateString() : ''}</td>
 						<td class="actions" onclick={(e) => e.stopPropagation()}>
 							{#if onSave}
 								<button class="btn btn-sm btn-primary" onclick={() => onSave(posting)}>Save</button>
