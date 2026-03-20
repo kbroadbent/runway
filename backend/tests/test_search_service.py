@@ -227,7 +227,6 @@ def test_age_out_raw_scrape_check_resets(mock_scrape, db):
     profile_no_filter = _profile(db)
 
     job_df = _make_df([{"title": "SWE", "company": "Acme", "min_amount": None, "max_amount": None, "job_url": "http://a.com/1"}])
-    empty_df = _make_df([])
 
     # Save posting via profile with no filter
     mock_scrape.return_value = job_df
