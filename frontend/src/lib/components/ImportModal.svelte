@@ -9,7 +9,7 @@
 
 	let { onClose, onSaved }: Props = $props();
 
-	let tab = $state<'text' | 'url'>('text');
+	let tab = $state<'text' | 'url'>('url');
 	let rawText = $state('');
 	let rawUrl = $state('');
 	let preview = $state<ImportPreview | null>(null);
