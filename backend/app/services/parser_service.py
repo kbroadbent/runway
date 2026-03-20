@@ -2,6 +2,8 @@ import re
 import httpx
 from bs4 import BeautifulSoup
 from app.schemas.job_posting import ImportPreview
+from app.services import ai_service
+from app.services.ai_service import AIServiceError
 
 
 # --- salary patterns ---
@@ -60,6 +62,11 @@ def _extract_remote_type(text: str) -> str | None:
 
 def parse_posting_text(text: str) -> ImportPreview:
     """Parse raw job posting text and return an ImportPreview with extracted fields."""
+    try:
+        return ai_service.extract_job_posting(text)
+    except AIServiceError:
+        pass
+
     salary_min, salary_max = _extract_salary(text)
     remote_type = _extract_remote_type(text)
 
@@ -123,6 +130,13 @@ def fetch_and_parse_url(url: str) -> ImportPreview:
         unwanted.decompose()
 
     page_text = soup.get_text(separator="\n")
+
+    try:
+        preview = ai_service.extract_job_posting(page_text)
+        preview.url = url
+        return preview
+    except AIServiceError:
+        pass
 
     preview = parse_posting_text(page_text)
     preview.url = url

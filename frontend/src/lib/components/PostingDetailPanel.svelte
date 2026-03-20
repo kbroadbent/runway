@@ -21,6 +21,7 @@
 	let deleting = $state(false);
 	let addingToPipeline = $state(false);
 	let savingCompany = $state(false);
+	let summarizing = $state(false);
 	let status = $state('');
 
 	let localPosting = $state({ ...posting });
@@ -110,6 +111,19 @@
 			status = e instanceof Error ? e.message : 'Failed to save company';
 		} finally {
 			savingCompany = false;
+		}
+	}
+
+	async function handleGenerateSummary() {
+		summarizing = true;
+		status = '';
+		try {
+			localPosting = await postings.summarize(localPosting.id);
+			onUpdated();
+		} catch (e) {
+			status = e instanceof Error ? e.message : 'Failed to generate summary';
+		} finally {
+			summarizing = false;
 		}
 	}
 
@@ -274,10 +288,17 @@
 				</div>
 			{/if}
 
-			{#if localPosting.description}
+			{#if localPosting.has_raw_content || localPosting.description}
 				<div class="section">
 					<h3>Description</h3>
-					<div class="description-text">{@html renderMarkdown(localPosting.description)}</div>
+					{#if localPosting.description}
+						<div class="description-text">{@html renderMarkdown(localPosting.description)}</div>
+					{/if}
+					{#if localPosting.has_raw_content}
+						<button class="btn btn-sm btn-secondary" onclick={handleGenerateSummary} disabled={summarizing}>
+							{summarizing ? 'Generating…' : 'Generate Summary'}
+						</button>
+					{/if}
 				</div>
 			{/if}
 

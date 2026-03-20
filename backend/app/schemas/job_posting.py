@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from app.schemas.company import CompanyRead
 
 
@@ -46,6 +46,12 @@ class JobPostingRead(BaseModel):
     tier: int | None = None
     company_name: str | None = None
     pipeline_stage: str | None = None
+    raw_content: str | None = None
+
+    @computed_field
+    @property
+    def has_raw_content(self) -> bool:
+        return self.raw_content is not None
 
     model_config = {"from_attributes": True}
 
