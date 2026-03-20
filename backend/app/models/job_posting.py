@@ -27,6 +27,7 @@ class JobPosting(Base):
     raw_content: Mapped[str | None] = mapped_column(Text)
     company_name: Mapped[str | None] = mapped_column(String)
     tier: Mapped[int | None] = mapped_column(Integer)
+    consecutive_misses: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
 
     company: Mapped["Company"] = relationship(back_populates="postings")
     pipeline_entry: Mapped["PipelineEntry | None"] = relationship(

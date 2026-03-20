@@ -21,6 +21,15 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
     new_count = 0
     saved_count = 0
     total_count = len(df)
+
+    # Build seen sets from raw scrape (before filters) for age-out tracking
+    seen_urls: set[str] = {str(row["job_url"]) for _, row in df.iterrows() if row.get("job_url")}
+    seen_title_company: set[tuple[str, str]] = {
+        (str(row.get("title") or "").lower(), (_to_str(row.get("company")) or "").lower())
+        for _, row in df.iterrows()
+        if row.get("title") and row.get("company")
+    }
+
     for _, row in df.iterrows():
         url = row.get("job_url")
         title = row.get("title", "Unknown")
@@ -111,6 +120,27 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
         new_count += 1
         saved_count += 1
 
+    # Age-out: update consecutive_misses for unsaved postings linked to this profile
+    AGE_OUT_THRESHOLD = 5
+    linked_unsaved = (
+        db.query(JobPosting)
+        .join(SearchResult, SearchResult.job_posting_id == JobPosting.id)
+        .filter(SearchResult.search_profile_id == profile.id, JobPosting.status == 'unsaved')
+        .distinct()
+        .all()
+    )
+    for posting in linked_unsaved:
+        still_seen = (
+            (posting.url and posting.url in seen_urls)
+            or ((posting.title or "").lower(), (posting.company_name or "").lower()) in seen_title_company
+        )
+        if still_seen:
+            posting.consecutive_misses = 0
+        else:
+            posting.consecutive_misses += 1
+            if posting.consecutive_misses >= AGE_OUT_THRESHOLD:
+                _age_out_posting(posting, profile.id, db)
+
     profile.last_run_at = datetime.now(timezone.utc)
     db.commit()
     return {"new_count": new_count, "saved_count": saved_count, "total_count": total_count}
@@ -144,3 +174,27 @@ def _parse_date(val) -> datetime | None:
         except ValueError:
             return None
     return val
+
+
+def _age_out_posting(posting: JobPosting, profile_id: int, db: Session) -> None:
+    """Remove posting from this profile's search queue.
+    Deletes the posting entirely if no other profile holds an unsaved link to it."""
+    # Remove all SearchResult links for this profile
+    db.query(SearchResult).filter(
+        SearchResult.job_posting_id == posting.id,
+        SearchResult.search_profile_id == profile_id,
+    ).delete(synchronize_session=False)
+
+    # Check if any other profile still has an unsaved link
+    other_link = (
+        db.query(SearchResult)
+        .join(JobPosting, JobPosting.id == SearchResult.job_posting_id)
+        .filter(
+            SearchResult.job_posting_id == posting.id,
+            SearchResult.search_profile_id != profile_id,
+            JobPosting.status == 'unsaved',
+        )
+        .first()
+    )
+    if other_link is None:
+        db.delete(posting)
