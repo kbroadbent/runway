@@ -28,12 +28,14 @@ def extract_job_posting(raw_text: str) -> ImportPreview:
 
     user_prompt = (
         "Extract the following fields from this job posting. Use null for any field not mentioned.\n\n"
-        "For description, write a clean markdown summary using these sections (omit any section not present in the posting):\n"
-        "- ## Role Overview\n"
-        "- ## Key Responsibilities  \n"
+        "For description, write a concise markdown summary. Only include sections that have meaningful content — omit any section not present in the posting. Keep each section brief; do not reproduce the full posting.\n\n"
+        "Sections to use (in order):\n"
+        "- ## Company\n"
+        "- ## Team\n"
+        "- ## Role\n"
         "- ## Requirements\n"
-        "- ## Compensation & Benefits\n"
-        "- ## Work Arrangement (ONLY include this section if the role is hybrid — describe the hybrid details such as days in office, office location, and schedule flexibility)\n\n"
+        "- ## Location\n"
+        "- ## Benefits\n\n"
         "If multiple salary ranges are listed (e.g., for different locations), prefer the location-agnostic or remote salary. Use null if no salary is mentioned.\n\n"
         'Return JSON only:\n'
         '{"title": "...", "company_name": "...", "location": "...", "remote_type": "remote"|"hybrid"|"onsite"|null, "salary_min": integer|null, "salary_max": integer|null, "description": "..."}\n\n'
@@ -90,12 +92,14 @@ def summarize_posting(raw_content: str) -> str:
     )
 
     user_prompt = (
-        "Write a clean markdown summary of this job posting using these sections (omit any section not present in the posting):\n"
-        "- ## Role Overview\n"
-        "- ## Key Responsibilities\n"
+        "Write a concise markdown summary of this job posting. Only include sections that have meaningful content — omit any section not present in the posting. Keep each section brief; do not reproduce the full posting.\n\n"
+        "Sections to use (in order):\n"
+        "- ## Company\n"
+        "- ## Team\n"
+        "- ## Role\n"
         "- ## Requirements\n"
-        "- ## Compensation & Benefits\n"
-        "- ## Work Arrangement (ONLY include this section if the role is hybrid — describe the hybrid details such as days in office, office location, and schedule flexibility)\n\n"
+        "- ## Location\n"
+        "- ## Benefits\n\n"
         "Return only the markdown — no JSON, no explanation.\n\n"
         f"Job posting:\n{raw_content}"
     )
