@@ -1,9 +1,6 @@
 import os
 import json
 import litellm
-
-litellm._turn_on_debug()
-
 from app.schemas.job_posting import ImportPreview
 
 AI_MODEL = os.getenv("AI_MODEL", "ollama/llama3.2")
