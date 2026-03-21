@@ -5,6 +5,7 @@
 	import PostingDetailPanel from '$lib/components/PostingDetailPanel.svelte';
 	import CompanyDetail from '$lib/components/CompanyDetail.svelte';
 	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
 
 	let allPostings = $state<JobPosting[]>([]);
 	let selectedPosting = $state<JobPosting | null>(null);
@@ -31,6 +32,11 @@
 
 	async function loadPostings() {
 		allPostings = await postingsApi.list(showDismissed ? 'dismissed' : 'saved');
+		const idParam = $page.url.searchParams.get('id');
+		if (idParam) {
+			const id = parseInt(idParam);
+			selectedPosting = allPostings.find((p) => p.id === id) ?? null;
+		}
 	}
 
 	let sources = $derived([...new Set(allPostings.map((p) => p.source))]);
