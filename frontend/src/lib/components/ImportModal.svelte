@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ImportPreview } from '$lib/types';
-	import { postings, pipeline } from '$lib/api';
+	import { postings, pipeline, ApiError } from '$lib/api';
 
 	interface Props {
 		onClose: () => void;
@@ -17,6 +17,7 @@
 	let saving = $state(false);
 	let addToPipeline = $state(false);
 	let error = $state('');
+	let duplicateId = $state<number | null>(null);
 
 	// Editable preview fields
 	let title = $state('');
@@ -56,6 +57,7 @@
 	async function handleSave() {
 		saving = true;
 		error = '';
+		duplicateId = null;
 		try {
 			const data: ImportPreview = {
 				title,
@@ -75,7 +77,13 @@
 			onSaved();
 			onClose();
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Save failed';
+			if (e instanceof ApiError && e.status === 409) {
+				const data = e.data as { message?: string; existing_id?: number } | null;
+				duplicateId = data?.existing_id ?? null;
+				error = data?.message ?? 'Already imported';
+			} else {
+				error = e instanceof Error ? e.message : 'Save failed';
+			}
 		} finally {
 			saving = false;
 		}
@@ -184,7 +192,12 @@
 				</label>
 
 				{#if error}
-					<p class="error">{error}</p>
+					<p class="error">
+						{error}
+						{#if duplicateId}
+							— <a href="/postings?id={duplicateId}" onclick={() => onClose()}>View posting</a>
+						{/if}
+					</p>
 				{/if}
 				<div class="modal-actions">
 					<button class="btn btn-primary" onclick={handleSave} disabled={saving || !title}>
