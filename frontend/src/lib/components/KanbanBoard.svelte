@@ -120,7 +120,7 @@
 							{onCardClick}
 							onDragStart={handleDragStart}
 							onDragOver={handleDragOver}
-							{onDragLeave}
+							onDragLeave={handleDragLeave}
 							onDrop={handleDrop}
 						/>
 					{/each}
