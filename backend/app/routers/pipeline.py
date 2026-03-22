@@ -19,10 +19,26 @@ def _validate_stage(stage: str) -> None:
 
 
 @router.get("/api/pipeline", response_model=dict[str, list[PipelineEntryRead]])
-def list_pipeline(db: Session = Depends(get_db)):
-    entries = db.query(PipelineEntry).options(
+def list_pipeline(
+    title: str | None = None,
+    tier: int | None = None,
+    db: Session = Depends(get_db),
+):
+    if tier is not None and tier not in (1, 2, 3):
+        raise HTTPException(status_code=422, detail="Tier must be 1, 2, or 3")
+
+    query = db.query(PipelineEntry).options(
         joinedload(PipelineEntry.job_posting).joinedload(JobPosting.company)
-    ).order_by(PipelineEntry.position).all()
+    )
+
+    if title or tier is not None:
+        query = query.join(JobPosting)
+        if title:
+            query = query.filter(JobPosting.title.ilike(f"%{title}%"))
+        if tier is not None:
+            query = query.filter(JobPosting.tier == tier)
+
+    entries = query.order_by(PipelineEntry.position).all()
     grouped = {stage: [] for stage in STAGES}
     for entry in entries:
         if entry.stage in grouped:
