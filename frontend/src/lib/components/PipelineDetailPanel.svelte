@@ -2,6 +2,7 @@
 	import type { PipelineEntry, PipelineHistory, InterviewNote } from '$lib/types';
 	import { pipeline, interviews, postings } from '$lib/api';
 	import { onMount } from 'svelte';
+	import PipelineComments from './PipelineComments.svelte';
 
 	interface Props {
 		entry: PipelineEntry;
@@ -11,7 +12,7 @@
 
 	let { entry, onClose, onUpdated }: Props = $props();
 
-	let tab = $state<'details' | 'interviews' | 'history'>('details');
+	let tab = $state<'details' | 'interviews' | 'history' | 'comments'>('details');
 	let history = $state<PipelineHistory[]>([]);
 	let interviewNotes = $state<InterviewNote[]>([]);
 	let saving = $state(false);
@@ -24,6 +25,11 @@
 		entry.next_action_date ? entry.next_action_date.substring(0, 10) : ''
 	);
 	let tier = $state<1 | 2 | 3 | null>(entry.job_posting.tier ?? null);
+
+	// Manual event form
+	let showEventForm = $state(false);
+	let eventDescription = $state('');
+	let eventDate = $state('');
 
 	// New interview form
 	let showInterviewForm = $state(false);
@@ -70,6 +76,17 @@
 		showInterviewForm = false;
 	}
 
+	async function addEvent() {
+		await pipeline.addEvent(entry.id, {
+			description: eventDescription,
+			event_date: eventDate || undefined,
+		});
+		history = await pipeline.history(entry.id);
+		eventDescription = '';
+		eventDate = '';
+		showEventForm = false;
+	}
+
 	async function deleteInterview(id: number) {
 		if (!confirm('Delete this interview note?')) return;
 		await interviews.delete(id);
@@ -100,7 +117,7 @@
 		</div>
 
 		<div class="tabs">
-			{#each [['details', 'Details'], ['interviews', 'Interviews'], ['history', 'History']] as [key, label]}
+			{#each [['details', 'Details'], ['interviews', 'Interviews'], ['history', 'History'], ['comments', 'Comments']] as [key, label]}
 				<button class="tab" class:active={tab === key} onclick={() => (tab = key as typeof tab)}>
 					{label}
 					{#if key === 'interviews' && interviewNotes.length > 0}
@@ -218,24 +235,59 @@
 				{/if}
 			</div>
 
-		{:else}
+		{:else if tab === 'history'}
 			<div class="tab-content">
 				{#if history.length === 0}
-					<p class="empty-hint">No stage history yet.</p>
+					<p class="empty-hint">No history yet.</p>
 				{/if}
 				{#each history as h}
 					<div class="history-item">
-						<div class="history-dot"></div>
+						<div class="history-dot" class:manual-event={h.event_type === 'manual'}></div>
 						<div>
-							<span class="history-stages">
-								{#if h.from_stage}<span class="text-muted">{h.from_stage} →</span>{/if}
-								<strong>{h.to_stage}</strong>
-							</span>
-							<p class="history-date">{new Date(h.changed_at).toLocaleString()}</p>
-							{#if h.note}<p class="history-note">{h.note}</p>{/if}
+							{#if h.event_type === 'manual'}
+								<span class="history-description">{h.description}</span>
+								<p class="history-date">
+									{#if h.event_date}
+										{new Date(h.event_date).toLocaleDateString()} &middot;
+									{/if}
+									Added {new Date(h.changed_at).toLocaleString()}
+								</p>
+							{:else}
+								<span class="history-stages">
+									{#if h.from_stage}<span class="text-muted">{h.from_stage} →</span>{/if}
+									<strong>{h.to_stage}</strong>
+								</span>
+								<p class="history-date">{new Date(h.changed_at).toLocaleString()}</p>
+								{#if h.note}<p class="history-note">{h.note}</p>{/if}
+							{/if}
 						</div>
 					</div>
 				{/each}
+
+				{#if showEventForm}
+					<div class="card">
+						<div class="form-group">
+							<label>Description *</label>
+							<input type="text" bind:value={eventDescription} placeholder="e.g. Coffee chat with hiring manager" style="width:100%" />
+						</div>
+						<div class="form-group">
+							<label>Date (optional)</label>
+							<input type="date" bind:value={eventDate} style="width:100%" />
+						</div>
+						<div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+							<button class="btn btn-primary btn-sm" onclick={addEvent} disabled={!eventDescription}>Add</button>
+							<button class="btn btn-secondary btn-sm" onclick={() => (showEventForm = false)}>Cancel</button>
+						</div>
+					</div>
+				{:else}
+					<button class="btn btn-secondary" onclick={() => (showEventForm = true)} style="margin-top:0.5rem">
+						+ Add Event
+					</button>
+				{/if}
+			</div>
+		{:else if tab === 'comments'}
+			<div class="tab-content">
+				<PipelineComments entryId={entry.id} />
 			</div>
 		{/if}
 	</div>
@@ -406,6 +458,15 @@
 		background: var(--accent-blue);
 		margin-top: 0.35rem;
 		flex-shrink: 0;
+	}
+
+	.history-dot.manual-event {
+		background: var(--accent-green);
+	}
+
+	.history-description {
+		font-size: 0.9rem;
+		font-weight: 500;
 	}
 
 	.history-stages {
