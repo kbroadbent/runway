@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.schemas.job_posting import JobPostingRead
 
 
@@ -19,6 +19,11 @@ class PipelineMoveRequest(BaseModel):
     note: str | None = None
 
 
+class ManualEventCreate(BaseModel):
+    description: str = Field(..., max_length=10000)
+    event_date: datetime | None = None
+
+
 class PipelineEntryRead(BaseModel):
     id: int
     job_posting: JobPostingRead
@@ -35,9 +40,12 @@ class PipelineEntryRead(BaseModel):
 
 class PipelineHistoryRead(BaseModel):
     id: int
+    event_type: str
     from_stage: str | None
-    to_stage: str
+    to_stage: str | None
     note: str | None
+    description: str | None
+    event_date: datetime | None
     changed_at: datetime
 
     model_config = {"from_attributes": True}

@@ -46,9 +46,12 @@ class PipelineHistory(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     pipeline_entry_id: Mapped[int] = mapped_column(ForeignKey("pipeline_entries.id", ondelete="CASCADE"))
+    event_type: Mapped[str] = mapped_column(String, default="stage_change", server_default="stage_change")
     from_stage: Mapped[str | None] = mapped_column(String)
-    to_stage: Mapped[str] = mapped_column(String, nullable=False)
+    to_stage: Mapped[str | None] = mapped_column(String)
     note: Mapped[str | None] = mapped_column(String)
+    description: Mapped[str | None] = mapped_column(Text)
+    event_date: Mapped[datetime | None] = mapped_column(DateTime)
     changed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     pipeline_entry: Mapped["PipelineEntry"] = relationship(back_populates="history")

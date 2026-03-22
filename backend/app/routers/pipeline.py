@@ -5,6 +5,7 @@ from app.models import PipelineEntry, PipelineHistory, InterviewNote, JobPosting
 from app.schemas.pipeline import (
     PipelineEntryCreate, PipelineEntryUpdate, PipelineMoveRequest, PipelineEntryRead,
     PipelineHistoryRead, InterviewNoteCreate, InterviewNoteUpdate, InterviewNoteRead,
+    ManualEventCreate,
 )
 from app.constants import STAGES, VALID_STAGES
 
@@ -39,7 +40,7 @@ def add_to_pipeline(data: PipelineEntryCreate, db: Session = Depends(get_db)):
     entry = PipelineEntry(job_posting_id=data.job_posting_id, stage=data.stage, position=0)
     db.add(entry)
     db.flush()
-    history = PipelineHistory(pipeline_entry_id=entry.id, from_stage=None, to_stage=data.stage)
+    history = PipelineHistory(pipeline_entry_id=entry.id, from_stage=None, to_stage=data.stage, event_type="stage_change")
     db.add(history)
     db.commit()
     db.refresh(entry)
@@ -67,7 +68,7 @@ def move_pipeline_entry(entry_id: int, data: PipelineMoveRequest, db: Session = 
     old_stage = entry.stage
     entry.stage = data.to_stage
     history = PipelineHistory(
-        pipeline_entry_id=entry.id, from_stage=old_stage, to_stage=data.to_stage, note=data.note
+        pipeline_entry_id=entry.id, from_stage=old_stage, to_stage=data.to_stage, note=data.note, event_type="stage_change"
     )
     db.add(history)
     db.commit()
@@ -78,6 +79,23 @@ def move_pipeline_entry(entry_id: int, data: PipelineMoveRequest, db: Session = 
 @router.get("/api/pipeline/{entry_id}/history", response_model=list[PipelineHistoryRead])
 def get_pipeline_history(entry_id: int, db: Session = Depends(get_db)):
     return db.query(PipelineHistory).filter(PipelineHistory.pipeline_entry_id == entry_id).order_by(PipelineHistory.changed_at).all()
+
+
+@router.post("/api/pipeline/{entry_id}/history", response_model=PipelineHistoryRead, status_code=201)
+def add_manual_event(entry_id: int, data: ManualEventCreate, db: Session = Depends(get_db)):
+    entry = db.get(PipelineEntry, entry_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Pipeline entry not found")
+    event = PipelineHistory(
+        pipeline_entry_id=entry_id,
+        event_type="manual",
+        description=data.description,
+        event_date=data.event_date,
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+    return event
 
 
 @router.get("/api/pipeline/{entry_id}/interviews", response_model=list[InterviewNoteRead])
