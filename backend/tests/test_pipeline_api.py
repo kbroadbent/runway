@@ -41,7 +41,7 @@ def test_stage_history(client, posting_id):
 
 
 def test_add_interview_note(client, posting_id):
-    create = client.post("/api/pipeline", json={"job_posting_id": posting_id, "stage": "recruiter_screen"})
+    create = client.post("/api/pipeline", json={"job_posting_id": posting_id, "stage": "recruiter_screen_scheduled"})
     eid = create.json()["id"]
     resp = client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Phone Screen", "outcome": "passed"})
     assert resp.status_code == 201
@@ -49,7 +49,7 @@ def test_add_interview_note(client, posting_id):
 
 
 def test_list_interview_notes(client, posting_id):
-    create = client.post("/api/pipeline", json={"job_posting_id": posting_id, "stage": "recruiter_screen"})
+    create = client.post("/api/pipeline", json={"job_posting_id": posting_id, "stage": "recruiter_screen_scheduled"})
     eid = create.json()["id"]
     client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Phone Screen"})
     client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Technical"})
@@ -59,7 +59,7 @@ def test_list_interview_notes(client, posting_id):
 
 
 def test_update_interview_note(client, posting_id):
-    create = client.post("/api/pipeline", json={"job_posting_id": posting_id, "stage": "recruiter_screen"})
+    create = client.post("/api/pipeline", json={"job_posting_id": posting_id, "stage": "recruiter_screen_scheduled"})
     eid = create.json()["id"]
     note = client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Phone Screen"})
     nid = note.json()["id"]
@@ -69,7 +69,7 @@ def test_update_interview_note(client, posting_id):
 
 
 def test_delete_interview_note(client, posting_id):
-    create = client.post("/api/pipeline", json={"job_posting_id": posting_id, "stage": "recruiter_screen"})
+    create = client.post("/api/pipeline", json={"job_posting_id": posting_id, "stage": "recruiter_screen_scheduled"})
     eid = create.json()["id"]
     note = client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Phone Screen"})
     nid = note.json()["id"]

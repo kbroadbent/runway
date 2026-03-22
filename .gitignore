@@ -46,3 +46,5 @@ dist/
 .worktrees/
 backups/
 docs/
+.fabricator/
+.fabricator-worktrees/
