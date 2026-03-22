@@ -228,7 +228,7 @@
 						class:row-selected={selected.has(posting.id)}
 						onclick={() => (selectedPosting = posting)}
 					>
-						<td onclick={(e) => { e.stopPropagation(); toggleSelect(posting.id); }}>
+						<td onclick={(e) => e.stopPropagation()}>
 							<input type="checkbox" checked={selected.has(posting.id)} onchange={() => toggleSelect(posting.id)} />
 						</td>
 						<td>{posting.title}</td>
