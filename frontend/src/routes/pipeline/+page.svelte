@@ -64,7 +64,7 @@
 	</div>
 </div>
 
-<KanbanBoard {board} {tierFilter} onCardClick={handleCardClick} onMoved={handleMoved} />
+<KanbanBoard {board} onCardClick={handleCardClick} onMoved={handleMoved} />
 
 <style>
 	.filters {

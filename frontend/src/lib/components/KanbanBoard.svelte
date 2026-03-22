@@ -45,26 +45,29 @@
 
 	interface Props {
 		board: Record<string, PipelineEntry[]>;
-		tierFilter: number | null;
 		onCardClick: (entry: PipelineEntry) => void;
 		onMoved: () => void;
 	}
 
-	let { board, tierFilter, onCardClick, onMoved }: Props = $props();
+	let { board, onCardClick, onMoved }: Props = $props();
 
 	let draggingEntryId = $state<number | null>(null);
 	let dragOverStage = $state<string | null>(null);
 
-	function filterEntries(entries: PipelineEntry[]): PipelineEntry[] {
-		return entries.filter((e) => tierFilter === null || e.job_posting.tier === tierFilter);
+	function getEntries(key: string): PipelineEntry[] {
+		return board[key] ?? [];
 	}
 
 	function getColumnCount(stage: StageConfig): number {
 		if (stage.subLanes) {
-			return stage.subLanes.reduce((sum, sl) => sum + filterEntries(board[sl.key] ?? []).length, 0);
+			return stage.subLanes.reduce((sum, sl) => sum + getEntries(sl.key).length, 0);
 		}
-		return filterEntries(board[stage.key] ?? []).length;
+		return getEntries(stage.key).length;
 	}
+
+	let totalEntries = $derived(
+		Object.values(board).reduce((sum, entries) => sum + entries.length, 0)
+	);
 
 	function handleDragStart(e: DragEvent, entryId: number) {
 		draggingEntryId = entryId;
@@ -112,7 +115,7 @@
 						<KanbanSubLane
 							label={subLane.label}
 							stageKey={subLane.key}
-							entries={filterEntries(board[subLane.key] ?? [])}
+							entries={getEntries(subLane.key)}
 							{dragOverStage}
 							{onCardClick}
 							onDragStart={handleDragStart}
@@ -123,7 +126,7 @@
 					{/each}
 				</div>
 			{:else}
-				{@const entries = filterEntries(board[stage.key] ?? [])}
+				{@const entries = getEntries(stage.key)}
 				<div
 					class="column-cards"
 					class:drag-over={dragOverStage === stage.key}
@@ -144,7 +147,22 @@
 	{/each}
 </div>
 
+{#if totalEntries === 0}
+	<div class="empty-state">
+		<p>No pipeline entries match your filters.</p>
+	</div>
+{/if}
+
 <style>
+	.empty-state {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		color: var(--text-muted);
+		font-size: 0.95rem;
+	}
+
 	.kanban-board {
 		display: flex;
 		gap: 0.75rem;
