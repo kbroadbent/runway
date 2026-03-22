@@ -2,14 +2,42 @@
 	import type { PipelineEntry } from '$lib/types';
 	import { pipeline } from '$lib/api';
 	import KanbanCard from './KanbanCard.svelte';
+	import KanbanSubLane from './KanbanSubLane.svelte';
 
-	const STAGES: { key: string; label: string }[] = [
+	type StageConfig = {
+		key: string;
+		label: string;
+		subLanes?: { key: string; label: string }[];
+	};
+
+	const STAGES: StageConfig[] = [
 		{ key: 'interested', label: 'Interested' },
 		{ key: 'applying', label: 'Applying' },
 		{ key: 'applied', label: 'Applied' },
-		{ key: 'recruiter_screen', label: 'Recruiter Screen' },
-		{ key: 'tech_screen', label: 'Tech Screen' },
-		{ key: 'onsite', label: 'Onsite' },
+		{
+			key: 'recruiter_screen',
+			label: 'Recruiter Screen',
+			subLanes: [
+				{ key: 'recruiter_screen_scheduled', label: 'Scheduled' },
+				{ key: 'recruiter_screen_completed', label: 'Completed' },
+			],
+		},
+		{
+			key: 'tech_screen',
+			label: 'Tech Screen',
+			subLanes: [
+				{ key: 'tech_screen_scheduled', label: 'Scheduled' },
+				{ key: 'tech_screen_completed', label: 'Completed' },
+			],
+		},
+		{
+			key: 'onsite',
+			label: 'Onsite',
+			subLanes: [
+				{ key: 'onsite_scheduled', label: 'Scheduled' },
+				{ key: 'onsite_completed', label: 'Completed' },
+			],
+		},
 		{ key: 'offer', label: 'Offer' },
 		{ key: 'rejected', label: 'Rejected' },
 		{ key: 'archived', label: 'Archived' },
@@ -26,6 +54,17 @@
 
 	let draggingEntryId = $state<number | null>(null);
 	let dragOverStage = $state<string | null>(null);
+
+	function filterEntries(entries: PipelineEntry[]): PipelineEntry[] {
+		return entries.filter((e) => tierFilter === null || e.job_posting.tier === tierFilter);
+	}
+
+	function getColumnCount(stage: StageConfig): number {
+		if (stage.subLanes) {
+			return stage.subLanes.reduce((sum, sl) => sum + filterEntries(board[sl.key] ?? []).length, 0);
+		}
+		return filterEntries(board[stage.key] ?? []).length;
+	}
 
 	function handleDragStart(e: DragEvent, entryId: number) {
 		draggingEntryId = entryId;
@@ -61,27 +100,46 @@
 
 <div class="kanban-board">
 	{#each STAGES as stage}
-		{@const entries = (board[stage.key] ?? []).filter((e) => tierFilter === null || e.job_posting.tier === tierFilter)}
-		<div
-			class="kanban-column"
-			class:drag-over={dragOverStage === stage.key}
-			ondragover={(e) => handleDragOver(e, stage.key)}
-			ondragleave={handleDragLeave}
-			ondrop={(e) => handleDrop(e, stage.key)}
-		>
+		<div class="kanban-column" class:has-sub-lanes={!!stage.subLanes}>
 			<div class="column-header">
 				<span class="column-name">{stage.label}</span>
-				<span class="column-count">{entries.length}</span>
+				<span class="column-count">{getColumnCount(stage)}</span>
 			</div>
-			<div class="column-cards">
-				{#each entries as entry}
-					<KanbanCard
-						{entry}
-						onclick={() => onCardClick(entry)}
-						ondragstart={(e) => handleDragStart(e, entry.id)}
-					/>
-				{/each}
-			</div>
+
+			{#if stage.subLanes}
+				<div class="column-sub-lanes">
+					{#each stage.subLanes as subLane}
+						<KanbanSubLane
+							label={subLane.label}
+							stageKey={subLane.key}
+							entries={filterEntries(board[subLane.key] ?? [])}
+							{dragOverStage}
+							{onCardClick}
+							onDragStart={handleDragStart}
+							onDragOver={handleDragOver}
+							{onDragLeave}
+							onDrop={handleDrop}
+						/>
+					{/each}
+				</div>
+			{:else}
+				{@const entries = filterEntries(board[stage.key] ?? [])}
+				<div
+					class="column-cards"
+					class:drag-over={dragOverStage === stage.key}
+					ondragover={(e) => handleDragOver(e, stage.key)}
+					ondragleave={handleDragLeave}
+					ondrop={(e) => handleDrop(e, stage.key)}
+				>
+					{#each entries as entry}
+						<KanbanCard
+							{entry}
+							onclick={() => onCardClick(entry)}
+							ondragstart={(e) => handleDragStart(e, entry.id)}
+						/>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	{/each}
 </div>
@@ -106,9 +164,8 @@
 		transition: border-color 0.15s;
 	}
 
-	.kanban-column.drag-over {
-		border-color: var(--accent-blue);
-		background: color-mix(in srgb, var(--accent-blue) 5%, var(--bg-secondary));
+	.kanban-column.has-sub-lanes {
+		min-width: 220px;
 	}
 
 	.column-header {
@@ -135,11 +192,24 @@
 		padding: 0.1rem 0.4rem;
 	}
 
+	.column-sub-lanes {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 0.25rem;
+		flex: 1;
+	}
+
 	.column-cards {
 		padding: 0.5rem;
 		display: flex;
 		flex-direction: column;
 		gap: 0.4rem;
 		flex: 1;
+		transition: background 0.15s;
+	}
+
+	.column-cards.drag-over {
+		background: color-mix(in srgb, var(--accent-blue) 5%, var(--bg-secondary));
 	}
 </style>
