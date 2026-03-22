@@ -3,6 +3,7 @@ import type {
   JobPosting,
   PipelineEntry,
   PipelineHistory,
+  PipelineComment,
   InterviewNote,
   CompanyInterview,
   SearchProfile,
@@ -68,7 +69,8 @@ export const postings = {
 };
 
 export const pipeline = {
-  list: () => request<Record<string, PipelineEntry[]>>('/pipeline'),
+  list: (filters?: { title?: string; tier?: number }) =>
+    request<Record<string, PipelineEntry[]>>(`/pipeline${toQuery(filters ?? {})}`),
   add: (data: { job_posting_id: number; stage?: string }) =>
     request<PipelineEntry>('/pipeline', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: Partial<PipelineEntry>) =>
@@ -76,18 +78,29 @@ export const pipeline = {
   move: (id: number, data: { to_stage: string; note?: string }) =>
     request<PipelineEntry>(`/pipeline/${id}/move`, { method: 'PUT', body: JSON.stringify(data) }),
   history: (id: number) => request<PipelineHistory[]>(`/pipeline/${id}/history`),
+  addEvent: (id: number, data: { description: string; event_date?: string }) =>
+    request<PipelineHistory>(`/pipeline/${id}/history`, { method: 'POST', body: JSON.stringify(data) }),
   interviews: (id: number) => request<InterviewNote[]>(`/pipeline/${id}/interviews`),
   addInterview: (id: number, data: Partial<InterviewNote>) =>
     request<InterviewNote>(`/pipeline/${id}/interviews`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  comments: (id: number) => request<PipelineComment[]>(`/pipeline/${id}/comments`),
+  addComment: (id: number, data: { content: string }) =>
+    request<PipelineComment>(`/pipeline/${id}/comments`, { method: 'POST', body: JSON.stringify(data) }),
 };
 
 export const interviews = {
   update: (id: number, data: Partial<InterviewNote>) =>
     request<InterviewNote>(`/interviews/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: number) => request<void>(`/interviews/${id}`, { method: 'DELETE' }),
+};
+
+export const pipelineComments = {
+  update: (id: number, data: { content: string }) =>
+    request<PipelineComment>(`/pipeline-comments/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: number) => request<void>(`/pipeline-comments/${id}`, { method: 'DELETE' }),
 };
 
 export const companies = {

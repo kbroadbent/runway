@@ -49,10 +49,20 @@ export interface PipelineEntry {
 
 export interface PipelineHistory {
   id: number;
+  event_type: string;
   from_stage: string | null;
-  to_stage: string;
+  to_stage: string | null;
   note: string | null;
+  description: string | null;
+  event_date: string | null;
   changed_at: string;
+}
+
+export interface PipelineComment {
+  id: number;
+  content: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface InterviewNote {
