@@ -6,11 +6,9 @@ from app.schemas.pipeline import (
     PipelineEntryCreate, PipelineEntryUpdate, PipelineMoveRequest, PipelineEntryRead,
     PipelineHistoryRead, InterviewNoteCreate, InterviewNoteUpdate, InterviewNoteRead,
 )
+from app.constants import STAGES, VALID_STAGES
 
 router = APIRouter(tags=["pipeline"])
-
-STAGES = ["interested", "applying", "applied", "recruiter_screen", "tech_screen", "onsite", "offer", "rejected", "archived"]
-VALID_STAGES = set(STAGES)
 
 
 def _validate_stage(stage: str) -> None:
