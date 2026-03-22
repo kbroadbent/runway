@@ -9,8 +9,6 @@ class PipelineEntryCreate(BaseModel):
 
 
 class PipelineEntryUpdate(BaseModel):
-    stage: str | None = None
-    position: int | None = None
     notes: str | None = None
     next_action: str | None = None
     next_action_date: datetime | None = None

@@ -75,3 +75,13 @@ def test_delete_interview_note(client, posting_id):
     nid = note.json()["id"]
     resp = client.delete(f"/api/interviews/{nid}")
     assert resp.status_code == 204
+
+
+def test_update_entry_cannot_change_stage(client, posting_id):
+    """Stage changes must go through the /move endpoint."""
+    create = client.post("/api/pipeline", json={"job_posting_id": posting_id})
+    eid = create.json()["id"]
+    resp = client.put(f"/api/pipeline/{eid}", json={"stage": "applied"})
+    assert resp.status_code == 200
+    # stage should NOT have changed — the field is ignored
+    assert resp.json()["stage"] == "interested"
