@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
-from app.models import PipelineEntry, PipelineHistory, InterviewNote, JobPosting
+from app.models import PipelineEntry, PipelineHistory, InterviewNote, JobPosting, PipelineComment
 from app.schemas.pipeline import (
     PipelineEntryCreate, PipelineEntryUpdate, PipelineMoveRequest, PipelineEntryRead,
     PipelineHistoryRead, InterviewNoteCreate, InterviewNoteUpdate, InterviewNoteRead,
     ManualEventCreate,
 )
+from app.schemas.pipeline_comment import PipelineCommentCreate, PipelineCommentUpdate, PipelineCommentRead
 from app.constants import STAGES, VALID_STAGES
 
 router = APIRouter(tags=["pipeline"])
@@ -133,5 +134,47 @@ def delete_interview(note_id: int, db: Session = Depends(get_db)):
     if not note:
         raise HTTPException(status_code=404, detail="Interview note not found")
     db.delete(note)
+    db.commit()
+    return Response(status_code=204)
+
+
+# --- Comments ---
+
+@router.get("/api/pipeline/{entry_id}/comments", response_model=list[PipelineCommentRead])
+def list_comments(entry_id: int, db: Session = Depends(get_db)):
+    return db.query(PipelineComment).filter(
+        PipelineComment.pipeline_entry_id == entry_id
+    ).order_by(PipelineComment.created_at).all()
+
+
+@router.post("/api/pipeline/{entry_id}/comments", response_model=PipelineCommentRead, status_code=201)
+def add_comment(entry_id: int, data: PipelineCommentCreate, db: Session = Depends(get_db)):
+    entry = db.get(PipelineEntry, entry_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Pipeline entry not found")
+    comment = PipelineComment(pipeline_entry_id=entry_id, content=data.content)
+    db.add(comment)
+    db.commit()
+    db.refresh(comment)
+    return comment
+
+
+@router.put("/api/pipeline-comments/{comment_id}", response_model=PipelineCommentRead)
+def update_comment(comment_id: int, data: PipelineCommentUpdate, db: Session = Depends(get_db)):
+    comment = db.get(PipelineComment, comment_id)
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    comment.content = data.content
+    db.commit()
+    db.refresh(comment)
+    return comment
+
+
+@router.delete("/api/pipeline-comments/{comment_id}", status_code=204)
+def delete_comment(comment_id: int, db: Session = Depends(get_db)):
+    comment = db.get(PipelineComment, comment_id)
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    db.delete(comment)
     db.commit()
     return Response(status_code=204)

@@ -24,6 +24,9 @@ class PipelineEntry(Base):
     history: Mapped[list["PipelineHistory"]] = relationship(
         back_populates="pipeline_entry", cascade="all, delete-orphan"
     )
+    comments: Mapped[list["PipelineComment"]] = relationship(
+        back_populates="pipeline_entry", cascade="all, delete-orphan"
+    )
 
 
 class InterviewNote(Base):
