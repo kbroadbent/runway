@@ -146,7 +146,7 @@
 
 				<div class="section">
 					<h3>Notes</h3>
-					<textarea bind:value={notes} rows={4} style="width: 100%" placeholder="Application notes..."></textarea>
+					<textarea bind:value={notes} rows={4} style="width: 100%" placeholder="Application notes..." onkeydown={(e) => { if (e.ctrlKey && e.key === 'Enter') saveDetails(); }}></textarea>
 				</div>
 
 				<div class="section">
@@ -195,7 +195,7 @@
 						</div>
 						<div class="form-group">
 							<label>Notes</label>
-							<textarea bind:value={iNotes} rows={3} style="width:100%"></textarea>
+							<textarea bind:value={iNotes} rows={3} style="width:100%" onkeydown={(e) => { if (e.ctrlKey && e.key === 'Enter' && iRound) addInterview(); }}></textarea>
 						</div>
 						<div class="form-group">
 							<label>Outcome</label>
