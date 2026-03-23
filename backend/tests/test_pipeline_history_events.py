@@ -5,8 +5,11 @@ import pytest
 def pipeline_entry_id(client):
     resp = client.post("/api/postings", json={"title": "Eng", "company_name": "Acme", "source": "manual"})
     pid = resp.json()["id"]
-    resp = client.post("/api/pipeline", json={"job_posting_id": pid, "stage": "interested"})
-    return resp.json()["id"]
+    data = client.get("/api/pipeline").json()
+    for entries in data.values():
+        for e in entries:
+            if e["job_posting"]["id"] == pid:
+                return e["id"]
 
 
 def test_add_manual_event(client, pipeline_entry_id):

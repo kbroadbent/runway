@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from app.database import get_db
-from app.models import JobPosting, Company
+from app.models import JobPosting, Company, PipelineEntry, PipelineHistory
 from app.schemas.job_posting import JobPostingCreate, JobPostingUpdate, JobPostingRead, ImportRequest, ImportPreview
 from app.services.parser_service import parse_posting_text, fetch_and_parse_url
 from app.services.ai_service import summarize_posting, AIServiceError
@@ -43,6 +43,9 @@ def create_posting(data: JobPostingCreate, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=409, detail="A posting with this title and company already exists")
+    db.refresh(posting)
+    _ensure_pipeline_entry(db, posting)
+    db.commit()
     db.refresh(posting)
     return JobPostingRead.model_validate(posting)
 
@@ -93,6 +96,9 @@ def import_confirm(data: ImportPreview, db: Session = Depends(get_db)):
         if existing:
             detail["existing_id"] = existing.id
         raise HTTPException(status_code=409, detail=detail)
+    db.refresh(posting)
+    _ensure_pipeline_entry(db, posting)
+    db.commit()
     posting = db.query(JobPosting).options(
         joinedload(JobPosting.company), joinedload(JobPosting.pipeline_entry)
     ).filter(JobPosting.id == posting.id).first()
@@ -107,6 +113,18 @@ def get_posting(posting_id: int, db: Session = Depends(get_db)):
     if not posting:
         raise HTTPException(status_code=404, detail="Posting not found")
     return posting
+
+
+def _ensure_pipeline_entry(db: Session, posting: JobPosting) -> None:
+    if posting.pipeline_entry is not None:
+        return
+    entry = PipelineEntry(job_posting_id=posting.id, stage="interested", position=0)
+    db.add(entry)
+    db.flush()
+    history = PipelineHistory(
+        pipeline_entry_id=entry.id, from_stage=None, to_stage="interested", event_type="stage_change"
+    )
+    db.add(history)
 
 
 def _get_or_create_company(db: Session, name: str) -> Company:
@@ -129,6 +147,8 @@ def update_posting(posting_id: int, data: JobPostingUpdate, db: Session = Depend
         posting.company_id = _get_or_create_company(db, company_name).id
     for key, value in update_dict.items():
         setattr(posting, key, value)
+    if posting.status == 'saved':
+        _ensure_pipeline_entry(db, posting)
     db.commit()
     posting = db.query(JobPosting).options(
         joinedload(JobPosting.company), joinedload(JobPosting.pipeline_entry)
@@ -165,6 +185,7 @@ def save_posting(posting_id: int, db: Session = Depends(get_db)):
     if not posting:
         raise HTTPException(status_code=404, detail="Posting not found")
     posting.status = 'saved'
+    _ensure_pipeline_entry(db, posting)
     db.commit()
     db.refresh(posting)
     data = JobPostingRead.model_validate(posting)

@@ -8,14 +8,24 @@ def posting_id(client):
     return resp.json()["id"]
 
 
+def _get_entry_id(client, posting_id):
+    data = client.get("/api/pipeline").json()
+    for entries in data.values():
+        for e in entries:
+            if e["job_posting"]["id"] == posting_id:
+                return e["id"]
+    raise AssertionError(f"No pipeline entry found for posting {posting_id}")
+
+
 def test_add_to_pipeline(client, posting_id):
-    resp = client.post("/api/pipeline", json={"job_posting_id": posting_id, "stage": "interested"})
-    assert resp.status_code == 201
-    assert resp.json()["stage"] == "interested"
+    # Posting is auto-added to pipeline when created
+    resp = client.get("/api/pipeline")
+    assert resp.status_code == 200
+    entries = [e for es in resp.json().values() for e in es]
+    assert any(e["job_posting"]["id"] == posting_id for e in entries)
 
 
 def test_list_pipeline(client, posting_id):
-    client.post("/api/pipeline", json={"job_posting_id": posting_id})
     resp = client.get("/api/pipeline")
     assert resp.status_code == 200
     data = resp.json()
@@ -23,16 +33,14 @@ def test_list_pipeline(client, posting_id):
 
 
 def test_move_stage(client, posting_id):
-    create = client.post("/api/pipeline", json={"job_posting_id": posting_id})
-    eid = create.json()["id"]
+    eid = _get_entry_id(client, posting_id)
     resp = client.put(f"/api/pipeline/{eid}/move", json={"to_stage": "applying", "note": "Applied online"})
     assert resp.status_code == 200
     assert resp.json()["stage"] == "applying"
 
 
 def test_stage_history(client, posting_id):
-    create = client.post("/api/pipeline", json={"job_posting_id": posting_id})
-    eid = create.json()["id"]
+    eid = _get_entry_id(client, posting_id)
     client.put(f"/api/pipeline/{eid}/move", json={"to_stage": "applying"})
     client.put(f"/api/pipeline/{eid}/move", json={"to_stage": "applied"})
     resp = client.get(f"/api/pipeline/{eid}/history")
@@ -41,16 +49,14 @@ def test_stage_history(client, posting_id):
 
 
 def test_add_interview_note(client, posting_id):
-    create = client.post("/api/pipeline", json={"job_posting_id": posting_id, "stage": "recruiter_screen_scheduled"})
-    eid = create.json()["id"]
+    eid = _get_entry_id(client, posting_id)
     resp = client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Phone Screen", "outcome": "passed"})
     assert resp.status_code == 201
     assert resp.json()["round"] == "Phone Screen"
 
 
 def test_list_interview_notes(client, posting_id):
-    create = client.post("/api/pipeline", json={"job_posting_id": posting_id, "stage": "recruiter_screen_scheduled"})
-    eid = create.json()["id"]
+    eid = _get_entry_id(client, posting_id)
     client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Phone Screen"})
     client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Technical"})
     resp = client.get(f"/api/pipeline/{eid}/interviews")
@@ -59,8 +65,7 @@ def test_list_interview_notes(client, posting_id):
 
 
 def test_update_interview_note(client, posting_id):
-    create = client.post("/api/pipeline", json={"job_posting_id": posting_id, "stage": "recruiter_screen_scheduled"})
-    eid = create.json()["id"]
+    eid = _get_entry_id(client, posting_id)
     note = client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Phone Screen"})
     nid = note.json()["id"]
     resp = client.put(f"/api/interviews/{nid}", json={"outcome": "passed", "notes": "Went well"})
@@ -69,8 +74,7 @@ def test_update_interview_note(client, posting_id):
 
 
 def test_delete_interview_note(client, posting_id):
-    create = client.post("/api/pipeline", json={"job_posting_id": posting_id, "stage": "recruiter_screen_scheduled"})
-    eid = create.json()["id"]
+    eid = _get_entry_id(client, posting_id)
     note = client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Phone Screen"})
     nid = note.json()["id"]
     resp = client.delete(f"/api/interviews/{nid}")
@@ -79,8 +83,7 @@ def test_delete_interview_note(client, posting_id):
 
 def test_update_entry_cannot_change_stage(client, posting_id):
     """Stage changes must go through the /move endpoint."""
-    create = client.post("/api/pipeline", json={"job_posting_id": posting_id})
-    eid = create.json()["id"]
+    eid = _get_entry_id(client, posting_id)
     resp = client.put(f"/api/pipeline/{eid}", json={"stage": "applied"})
     assert resp.status_code == 200
     # stage should NOT have changed — the field is ignored
