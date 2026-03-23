@@ -62,7 +62,7 @@
 	{#each comments as comment}
 		<div class="comment">
 			{#if editingId === comment.id}
-				<textarea bind:value={editContent} rows={3} style="width:100%"></textarea>
+				<textarea bind:value={editContent} rows={3} style="width:100%" onkeydown={(e) => { if (e.ctrlKey && e.key === 'Enter' && editContent.trim()) saveEdit(comment.id); }}></textarea>
 				<div class="comment-actions">
 					<button class="btn btn-primary btn-sm" onclick={() => saveEdit(comment.id)} disabled={!editContent.trim()}>Save</button>
 					<button class="btn btn-secondary btn-sm" onclick={cancelEdit}>Cancel</button>
@@ -84,7 +84,7 @@
 	{/each}
 
 	<div class="add-comment">
-		<textarea bind:value={newContent} rows={2} placeholder="Add a comment..." style="width:100%"></textarea>
+		<textarea bind:value={newContent} rows={2} placeholder="Add a comment..." style="width:100%" onkeydown={(e) => { if (e.ctrlKey && e.key === 'Enter') addComment(); }}></textarea>
 		<button class="btn btn-primary btn-sm" onclick={addComment} disabled={!newContent.trim()} style="margin-top:0.4rem">
 			Add Comment
 		</button>
