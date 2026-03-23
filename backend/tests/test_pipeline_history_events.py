@@ -8,7 +8,7 @@ def pipeline_entry_id(client):
     data = client.get("/api/pipeline").json()
     for entries in data.values():
         for e in entries:
-            if e["job_posting_id"] == pid:
+            if e["job_posting"]["id"] == pid:
                 return e["id"]
 
 

@@ -12,7 +12,7 @@ def _get_entry_id(client, posting_id):
     data = client.get("/api/pipeline").json()
     for entries in data.values():
         for e in entries:
-            if e["job_posting_id"] == posting_id:
+            if e["job_posting"]["id"] == posting_id:
                 return e["id"]
     raise AssertionError(f"No pipeline entry found for posting {posting_id}")
 
@@ -22,7 +22,7 @@ def test_add_to_pipeline(client, posting_id):
     resp = client.get("/api/pipeline")
     assert resp.status_code == 200
     entries = [e for es in resp.json().values() for e in es]
-    assert any(e["job_posting_id"] == posting_id for e in entries)
+    assert any(e["job_posting"]["id"] == posting_id for e in entries)
 
 
 def test_list_pipeline(client, posting_id):
