@@ -201,7 +201,7 @@
 				</div>
 				<div class="form-group">
 					<label>Description</label>
-					<textarea bind:value={editDescription} rows={8} style="width: 100%"></textarea>
+					<textarea bind:value={editDescription} rows={8} style="width: 100%" onkeydown={(e) => { if (e.ctrlKey && e.key === 'Enter' && editTitle) handleSave(); }}></textarea>
 				</div>
 				{#if status}
 					<p class="status-msg error">{status}</p>
