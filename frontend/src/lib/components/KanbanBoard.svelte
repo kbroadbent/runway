@@ -18,11 +18,12 @@
 	interface Props {
 		board: Record<string, PipelineEntry[]>;
 		tierFilter: number | null;
+		searchFilter: string;
 		onCardClick: (entry: PipelineEntry) => void;
 		onMoved: () => void;
 	}
 
-	let { board, tierFilter, onCardClick, onMoved }: Props = $props();
+	let { board, tierFilter, searchFilter, onCardClick, onMoved }: Props = $props();
 
 	let draggingEntryId = $state<number | null>(null);
 	let dragOverStage = $state<string | null>(null);
@@ -61,7 +62,16 @@
 
 <div class="kanban-board">
 	{#each STAGES as stage}
-		{@const entries = (board[stage.key] ?? []).filter((e) => tierFilter === null || e.job_posting.tier === tierFilter)}
+		{@const entries = (board[stage.key] ?? [])
+			.filter((e) => tierFilter === null || e.job_posting.tier === tierFilter)
+			.filter((e) => {
+				if (!searchFilter) return true;
+				const q = searchFilter.toLowerCase();
+				return (
+					e.job_posting.company_name?.toLowerCase().includes(q) ||
+					e.job_posting.description?.toLowerCase().includes(q)
+				);
+			})}
 		<div
 			class="kanban-column"
 			class:drag-over={dragOverStage === stage.key}
