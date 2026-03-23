@@ -115,9 +115,9 @@
 	}
 
 	.tier-3 {
-		background: color-mix(in srgb, #cd7c3a 25%, transparent);
-		color: #92400e;
-		border: 1px solid #cd7c3a;
+		background: color-mix(in srgb, #3b82f6 25%, transparent);
+		color: #1d4ed8;
+		border: 1px solid #3b82f6;
 	}
 
 	.card-company {
