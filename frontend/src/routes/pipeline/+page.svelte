@@ -44,7 +44,7 @@
 	}
 </script>
 
-<div class="page-header">
+<div class="pipeline-header">
 	<h1>Pipeline</h1>
 	<div class="filters">
 		<input
@@ -65,9 +65,10 @@
 <KanbanBoard {board} onCardClick={handleCardClick} onMoved={handleMoved} />
 
 <style>
-	.page-header {
+	.pipeline-header {
 		display: flex;
 		flex-direction: column;
+		align-items: flex-start;
 		gap: 0.5rem;
 		margin-bottom: 1rem;
 	}
