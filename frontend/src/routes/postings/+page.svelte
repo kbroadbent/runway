@@ -331,6 +331,7 @@
 		font-size: inherit;
 		font-family: inherit;
 		text-decoration: none;
+		white-space: nowrap;
 	}
 
 	.company-link:hover {
