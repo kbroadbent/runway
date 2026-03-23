@@ -13,13 +13,25 @@ import type {
 
 const BASE = 'http://localhost:8000/api';
 
+export class ApiError extends Error {
+  status: number;
+  data: unknown;
+  constructor(status: number, statusText: string, data: unknown) {
+    super(`API error: ${status} ${statusText}`);
+    this.status = status;
+    this.data = data;
+  }
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const resp = await fetch(`${BASE}${path}`, {
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });
   if (!resp.ok) {
-    throw new Error(`API error: ${resp.status} ${resp.statusText}`);
+    let data: unknown = null;
+    try { data = await resp.json(); } catch { /* ignore */ }
+    throw new ApiError(resp.status, resp.statusText, data);
   }
   if (resp.status === 204) return undefined as T;
   return resp.json();
