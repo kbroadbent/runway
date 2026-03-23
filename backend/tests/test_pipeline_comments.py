@@ -1,5 +1,4 @@
 import pytest
-from app.models import PipelineEntry, PipelineHistory, PipelineComment
 
 
 @pytest.fixture
