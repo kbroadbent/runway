@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import companies, postings, pipeline, search
 from app.services.scheduler_service import init_scheduler, schedule_profile
 from app.database import DATABASE_URL, SessionLocal
-from app.models import SearchProfile
+from app.models import SearchProfile, JobPosting, PipelineEntry, PipelineHistory
 
 
 @asynccontextmanager
@@ -25,6 +25,25 @@ async def lifespan(app):
                 schedule_profile(scheduler, profile)
         finally:
             db.close()
+    # Backfill pipeline entries for any saved postings that don't have one
+    db = SessionLocal()
+    try:
+        orphans = db.query(JobPosting).outerjoin(PipelineEntry).filter(
+            JobPosting.status == 'saved',
+            PipelineEntry.id == None,  # noqa: E711
+        ).all()
+        for posting in orphans:
+            entry = PipelineEntry(job_posting_id=posting.id, stage="interested", position=0)
+            db.add(entry)
+            db.flush()
+            db.add(PipelineHistory(
+                pipeline_entry_id=entry.id, from_stage=None, to_stage="interested", event_type="stage_change"
+            ))
+        if orphans:
+            db.commit()
+    finally:
+        db.close()
+
     app.state.scheduler = scheduler
     yield
     if scheduler.running:
