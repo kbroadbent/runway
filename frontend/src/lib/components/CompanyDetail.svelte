@@ -176,7 +176,7 @@
 
 			<div class="section">
 				<h3>Notes</h3>
-				<textarea bind:value={notes} rows={4} style="width:100%" placeholder="Notes about this company..."></textarea>
+				<textarea bind:value={notes} rows={4} style="width:100%" placeholder="Notes about this company..." onkeydown={(e) => { if (e.ctrlKey && e.key === 'Enter') saveNotes(); }}></textarea>
 				<button class="btn btn-sm btn-secondary" onclick={saveNotes} disabled={savingNotes} style="margin-top:0.4rem">
 					{savingNotes ? 'Saving...' : 'Save Notes'}
 				</button>
