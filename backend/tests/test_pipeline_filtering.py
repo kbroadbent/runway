@@ -9,7 +9,6 @@ def seeded_pipeline(client):
         resp = client.post("/api/postings", json={"title": title, "company_name": "Co", "source": "manual"})
         pid = resp.json()["id"]
         client.put(f"/api/postings/{pid}", json={"tier": tier})
-        client.post("/api/pipeline", json={"job_posting_id": pid, "stage": "interested"})
         ids.append(pid)
     return ids
 
