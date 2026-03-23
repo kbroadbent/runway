@@ -9,7 +9,7 @@
 		{ href: '/companies', label: 'Companies' },
 	];
 
-	$: onPipeline = page.url.pathname.startsWith('/pipeline');
+	const onPipeline = $derived(page.url.pathname.startsWith('/pipeline'));
 </script>
 
 <aside class="sidebar">
