@@ -1,5 +1,4 @@
 import pytest
-from app.models import Company, JobPosting, PipelineEntry, PipelineHistory, InterviewNote
 
 
 @pytest.fixture
