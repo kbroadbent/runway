@@ -107,15 +107,15 @@
 	}
 
 	.tier-btn-2.active {
-		background: color-mix(in srgb, #6b7280 30%, transparent);
-		color: #374151;
-		border-color: #9ca3af;
-	}
-
-	.tier-btn-3.active {
 		background: color-mix(in srgb, #cd7c3a 30%, transparent);
 		color: #92400e;
 		border-color: #cd7c3a;
+	}
+
+	.tier-btn-3.active {
+		background: color-mix(in srgb, #6b7280 30%, transparent);
+		color: #374151;
+		border-color: #9ca3af;
 	}
 </style>
 

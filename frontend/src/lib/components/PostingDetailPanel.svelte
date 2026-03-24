@@ -540,14 +540,14 @@
 	}
 
 	.tier-2 {
-		background: color-mix(in srgb, #6b7280 20%, transparent);
-		color: #4b5563;
-		border: 1px solid #9ca3af;
-	}
-
-	.tier-3 {
 		background: color-mix(in srgb, #3b82f6 20%, transparent);
 		color: #1d4ed8;
 		border: 1px solid #3b82f6;
+	}
+
+	.tier-3 {
+		background: color-mix(in srgb, #6b7280 20%, transparent);
+		color: #4b5563;
+		border: 1px solid #9ca3af;
 	}
 </style>
