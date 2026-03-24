@@ -33,6 +33,7 @@ export interface JobPosting {
   tier: 1 | 2 | 3 | null;
   pipeline_stage: string | null;
   has_raw_content: boolean;
+  notes: string | null;
 }
 
 export interface PipelineEntry {
@@ -40,7 +41,6 @@ export interface PipelineEntry {
   job_posting: JobPosting;
   stage: string;
   position: number;
-  notes: string | null;
   next_action: string | null;
   next_action_date: string | null;
   created_at: string;
@@ -116,6 +116,7 @@ export interface ImportPreview {
   url: string | null;
   raw_content: string | null;
   ai_used?: boolean;
+  notes?: string | null;
 }
 
 export interface PostingsFilter {

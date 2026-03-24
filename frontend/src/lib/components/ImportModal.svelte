@@ -27,6 +27,7 @@
 	let salary_min = $state<number | undefined>(undefined);
 	let salary_max = $state<number | undefined>(undefined);
 	let description = $state('');
+	let notes = $state('');
 	let url = $state('');
 
 	function applyPreview(p: ImportPreview) {
@@ -37,6 +38,7 @@
 		salary_min = p.salary_min ?? undefined;
 		salary_max = p.salary_max ?? undefined;
 		description = p.description ?? '';
+		notes = p.notes ?? '';
 		url = p.url ?? '';
 	}
 
@@ -67,6 +69,7 @@
 				salary_min: salary_min ?? null,
 				salary_max: salary_max ?? null,
 				description,
+				notes: notes || null,
 				url,
 				raw_content: preview?.raw_content ?? null,
 			};
@@ -184,6 +187,10 @@
 				<div class="form-group">
 					<label>Description</label>
 					<textarea bind:value={description} rows={6} style="width: 100%"></textarea>
+				</div>
+				<div class="form-group">
+					<label>Notes</label>
+					<textarea bind:value={notes} rows={3} style="width: 100%" placeholder="e.g. Referral from Jane, found via recruiter..."></textarea>
 				</div>
 
 				<label class="checkbox-label">
