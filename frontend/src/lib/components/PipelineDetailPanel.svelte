@@ -19,7 +19,7 @@
 	let status = $state('');
 
 	// Detail edit state
-	let notes = $state(entry.notes ?? '');
+	let notes = $state(entry.job_posting.notes ?? '');
 	let next_action = $state(entry.next_action ?? '');
 	let next_action_date = $state(
 		entry.next_action_date ? entry.next_action_date.substring(0, 10) : ''
@@ -49,11 +49,13 @@
 	async function saveDetails() {
 		saving = true;
 		try {
-			await pipeline.update(entry.id, {
-				notes: notes || null,
-				next_action: next_action || null,
-				next_action_date: next_action_date || null,
-			});
+			await Promise.all([
+				postings.update(entry.job_posting.id, { notes: notes || null }),
+				pipeline.update(entry.id, {
+					next_action: next_action || null,
+					next_action_date: next_action_date || null,
+				}),
+			]);
 			status = 'Saved!';
 			onUpdated();
 		} catch (e) {
