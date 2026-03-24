@@ -119,6 +119,21 @@ export interface ImportPreview {
   notes?: string | null;
 }
 
+export interface DashboardActionItem {
+  pipeline_entry_id: number;
+  job_title: string;
+  company_name: string | null;
+  type: string;
+  description: string;
+  date: string | null;
+  is_overdue: boolean;
+}
+
+export interface DashboardResponse {
+  lane_counts: Record<string, number>;
+  action_items: DashboardActionItem[];
+}
+
 export interface PostingsFilter {
   search?: string;
   source?: string;
