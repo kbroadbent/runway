@@ -14,3 +14,30 @@ STAGES = [
 ]
 
 VALID_STAGES = set(STAGES)
+
+STAGE_GROUPS = {
+    "interested": "Interested",
+    "applying": "Applying",
+    "applied": "Applied",
+    "recruiter_screen_scheduled": "Recruiter Screen",
+    "recruiter_screen_completed": "Recruiter Screen",
+    "tech_screen_scheduled": "Tech Screen",
+    "tech_screen_completed": "Tech Screen",
+    "onsite_scheduled": "Onsite",
+    "onsite_completed": "Onsite",
+    "offer": "Offer",
+    "rejected": "Rejected",
+    "archived": "Archived",
+}
+
+STAGE_GROUP_ORDER = [
+    "Interested",
+    "Applying",
+    "Applied",
+    "Recruiter Screen",
+    "Tech Screen",
+    "Onsite",
+    "Offer",
+    "Rejected",
+    "Archived",
+]
