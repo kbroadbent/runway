@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "server",
+  "dolt_database": "runway",
+  "project_id": "c8244e00-8b25-4fc9-8377-924baa6ebd18"
+}
