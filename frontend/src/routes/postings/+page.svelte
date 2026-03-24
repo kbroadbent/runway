@@ -401,8 +401,8 @@
 	}
 
 	.tier-val-1 { background: color-mix(in srgb, #f59e0b 20%, transparent); color: #b45309; border-color: #f59e0b; }
-	.tier-val-2 { background: color-mix(in srgb, #6b7280 20%, transparent); color: #4b5563; border-color: #9ca3af; }
-	.tier-val-3 { background: color-mix(in srgb, #cd7c3a 20%, transparent); color: #92400e; border-color: #cd7c3a; }
+	.tier-val-2 { background: color-mix(in srgb, #cd7c3a 20%, transparent); color: #92400e; border-color: #cd7c3a; }
+	.tier-val-3 { background: color-mix(in srgb, #6b7280 20%, transparent); color: #4b5563; border-color: #9ca3af; }
 
 	.tier-badge {
 		font-weight: 700;
@@ -416,14 +416,14 @@
 	}
 
 	.tier-2 {
-		background: color-mix(in srgb, #6b7280 20%, transparent);
-		color: #4b5563;
-		border: 1px solid #9ca3af;
-	}
-
-	.tier-3 {
 		background: color-mix(in srgb, #cd7c3a 20%, transparent);
 		color: #92400e;
 		border: 1px solid #cd7c3a;
+	}
+
+	.tier-3 {
+		background: color-mix(in srgb, #6b7280 20%, transparent);
+		color: #4b5563;
+		border: 1px solid #9ca3af;
 	}
 </style>
