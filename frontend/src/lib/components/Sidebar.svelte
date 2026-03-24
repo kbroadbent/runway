@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 
 	const navItems = [
+		{ href: '/dashboard', label: 'Dashboard', exact: true },
 		{ href: '/search', label: 'Search' },
 		{ href: '/pipeline', label: 'Pipeline' },
 		{ href: '/postings', label: 'Saved Postings' },
@@ -16,7 +17,7 @@
 			<a
 				href={item.href}
 				class="nav-link"
-				class:active={page.url.pathname.startsWith(item.href)}
+				class:active={item.exact ? page.url.pathname === item.href : page.url.pathname.startsWith(item.href)}
 			>
 				{item.label}
 			</a>
