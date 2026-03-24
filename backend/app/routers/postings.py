@@ -78,6 +78,7 @@ def import_confirm(data: ImportPreview, db: Session = Depends(get_db)):
         url=data.url,
         source="url_import" if data.url else "pasted",
         raw_content=data.raw_content,
+        notes=data.notes,
     )
     db.add(posting)
     try:

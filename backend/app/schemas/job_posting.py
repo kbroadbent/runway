@@ -27,6 +27,7 @@ class JobPostingUpdate(BaseModel):
     url: str | None = None
     status: str | None = None
     tier: int | None = None
+    notes: str | None = None
 
 
 class JobPostingRead(BaseModel):
@@ -44,6 +45,7 @@ class JobPostingRead(BaseModel):
     date_saved: datetime
     status: str
     tier: int | None = None
+    notes: str | None = None
     company_name: str | None = None
     pipeline_stage: str | None = None
     raw_content: str | None = None
@@ -71,4 +73,5 @@ class ImportPreview(BaseModel):
     description: str | None = None
     url: str | None = None
     raw_content: str | None = None
+    notes: str | None = None
     ai_used: bool = False
