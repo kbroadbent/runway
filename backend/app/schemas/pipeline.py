@@ -9,7 +9,6 @@ class PipelineEntryCreate(BaseModel):
 
 
 class PipelineEntryUpdate(BaseModel):
-    notes: str | None = None
     next_action: str | None = None
     next_action_date: datetime | None = None
 
@@ -29,7 +28,6 @@ class PipelineEntryRead(BaseModel):
     job_posting: JobPostingRead
     stage: str
     position: int
-    notes: str | None
     next_action: str | None
     next_action_date: datetime | None
     created_at: datetime

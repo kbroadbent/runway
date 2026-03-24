@@ -25,6 +25,7 @@ class JobPosting(Base):
     date_saved: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     status: Mapped[str] = mapped_column(String, default='saved')
     raw_content: Mapped[str | None] = mapped_column(Text)
+    notes: Mapped[str | None] = mapped_column(Text)
     company_name: Mapped[str | None] = mapped_column(String)
     tier: Mapped[int | None] = mapped_column(Integer)
     consecutive_misses: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)

@@ -85,3 +85,21 @@ def test_import_confirm(client):
 def test_import_no_input(client):
     resp = client.post("/api/postings/import", json={})
     assert resp.status_code == 400
+
+
+def test_import_confirm_saves_notes(client):
+    resp = client.post("/api/postings/import/confirm", json={
+        "title": "Staff Engineer",
+        "company_name": "Acme",
+        "notes": "Referral from Jane",
+    })
+    assert resp.status_code == 201
+    assert resp.json()["notes"] == "Referral from Jane"
+
+
+def test_update_posting_notes(client):
+    create = client.post("/api/postings", json={"title": "Eng", "company_name": "A", "source": "manual"})
+    pid = create.json()["id"]
+    resp = client.put(f"/api/postings/{pid}", json={"notes": "Via recruiter"})
+    assert resp.status_code == 200
+    assert resp.json()["notes"] == "Via recruiter"
