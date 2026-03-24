@@ -9,6 +9,7 @@ import type {
   SearchProfile,
   ImportPreview,
   PostingsFilter,
+  DashboardResponse,
 } from './types';
 
 const BASE = 'http://localhost:8000/api';
@@ -126,6 +127,10 @@ export const companies = {
     request<Company>(`/companies/${id}/research`, { method: 'POST' }),
   interviews: (id: number) =>
     request<CompanyInterview[]>(`/companies/${id}/interviews`),
+};
+
+export const dashboard = {
+  get: () => request<DashboardResponse>('/dashboard'),
 };
 
 export const searchResults = {
