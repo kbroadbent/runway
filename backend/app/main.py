@@ -2,7 +2,7 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import companies, postings, pipeline, search
+from app.routers import companies, dashboard, postings, pipeline, search
 from app.services.scheduler_service import init_scheduler, schedule_profile
 from app.database import DATABASE_URL, SessionLocal
 from app.models import SearchProfile, JobPosting, PipelineEntry, PipelineHistory
@@ -60,6 +60,7 @@ app.add_middleware(
 )
 
 app.include_router(companies.router)
+app.include_router(dashboard.router)
 app.include_router(postings.router)
 app.include_router(pipeline.router)
 app.include_router(search.router)
