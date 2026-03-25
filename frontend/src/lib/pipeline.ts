@@ -36,3 +36,10 @@ export const STAGES: StageConfig[] = [
 	{ key: 'rejected', label: 'Rejected' },
 	{ key: 'archived', label: 'Archived' },
 ];
+
+export const ACTIVE_STAGES = STAGES.filter(
+	(s) => s.key !== 'rejected' && s.key !== 'archived'
+);
+export const TERMINAL_STAGES = STAGES.filter(
+	(s) => s.key === 'rejected' || s.key === 'archived'
+);
