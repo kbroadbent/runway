@@ -13,7 +13,7 @@ import type {
   CustomDate,
 } from './types';
 
-const BASE = 'http://localhost:8000/api';
+const BASE = (import.meta.env.VITE_API_BASE || 'http://localhost:8000/api').replace(/\/$/, '');
 
 export class ApiError extends Error {
   status: number;
