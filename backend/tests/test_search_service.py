@@ -56,7 +56,7 @@ def test_salary_filter_excludes_below_min(mock_scrape, db):
     profile = _profile(db, salary_min=180000)
     result = run_search(profile, db)
     assert result["total_count"] == 2
-    assert result["saved_count"] == 1  # only Senior SWE saved
+    assert result["new_count"] == 1  # only Senior SWE is new
 
 
 @patch("app.services.search_service.scrape_jobs")
@@ -67,7 +67,7 @@ def test_salary_filter_excludes_no_salary(mock_scrape, db):
     ])
     profile = _profile(db, salary_min=180000)
     result = run_search(profile, db)
-    assert result["saved_count"] == 0
+    assert result["new_count"] == 0
 
 
 @patch("app.services.search_service.scrape_jobs")
@@ -78,7 +78,7 @@ def test_salary_filter_keeps_no_salary_when_no_min(mock_scrape, db):
     ])
     profile = _profile(db, salary_min=None)
     result = run_search(profile, db)
-    assert result["saved_count"] == 1
+    assert result["new_count"] == 1
 
 
 @patch("app.services.search_service.scrape_jobs")
@@ -89,7 +89,7 @@ def test_salary_filter_keeps_partial_salary_above_min(mock_scrape, db):
     ])
     profile = _profile(db, salary_min=180000)
     result = run_search(profile, db)
-    assert result["saved_count"] == 1
+    assert result["new_count"] == 1
 
 
 @patch("app.services.search_service.scrape_jobs")
@@ -100,7 +100,7 @@ def test_exclude_terms_filters_by_title(mock_scrape, db):
     ])
     profile = _profile(db, exclude_terms='["staff"]')
     result = run_search(profile, db)
-    assert result["saved_count"] == 1  # only Senior Engineer
+    assert result["new_count"] == 1  # only Senior Engineer is new
 
 
 @patch("app.services.search_service.scrape_jobs")
@@ -110,7 +110,7 @@ def test_exclude_terms_case_insensitive(mock_scrape, db):
     ])
     profile = _profile(db, exclude_terms='["staff"]')
     result = run_search(profile, db)
-    assert result["saved_count"] == 0
+    assert result["new_count"] == 0
 
 
 # --- Age-out tests ---

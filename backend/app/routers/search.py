@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
 from app.models import SearchProfile, SearchResult
-from app.schemas.search import SearchProfileCreate, SearchProfileUpdate, SearchProfileRead
+from app.schemas.search import SearchProfileCreate, SearchProfileUpdate, SearchProfileRead, SearchRunResult
 from app.services.search_service import run_search
 from app.services.scheduler_service import schedule_profile, remove_profile_schedule
 
@@ -113,7 +113,7 @@ def list_profile_postings(profile_id: int, db: Session = Depends(get_db)):
     return results
 
 
-@router.post("/api/search-profiles/{profile_id}/run")
+@router.post("/api/search-profiles/{profile_id}/run", response_model=SearchRunResult)
 def run_profile_search(profile_id: int, db: Session = Depends(get_db)):
     profile = db.get(SearchProfile, profile_id)
     if not profile:

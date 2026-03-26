@@ -50,6 +50,11 @@ class SearchProfileRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class SearchRunResult(BaseModel):
+    new_count: int
+    total_count: int
+
+
 class SearchResultRead(BaseModel):
     id: int
     job_posting_id: int

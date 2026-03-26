@@ -19,7 +19,6 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
         enforce_annual_salary=True,
     )
     new_count = 0
-    saved_count = 0
     total_count = len(df)
 
     # Build seen sets from raw scrape (before filters) for age-out tracking
@@ -133,7 +132,6 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
         )
         db.add(result)
         new_count += 1
-        saved_count += 1
 
     # Age-out: update consecutive_misses for unsaved postings linked to this profile
     AGE_OUT_THRESHOLD = 5
@@ -158,7 +156,7 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
 
     profile.last_run_at = datetime.now(timezone.utc)
     db.commit()
-    return {"new_count": new_count, "saved_count": saved_count, "total_count": total_count}
+    return {"new_count": new_count, "total_count": total_count}
 
 
 def _to_int(val) -> int | None:

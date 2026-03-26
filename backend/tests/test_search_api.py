@@ -1,5 +1,7 @@
 from unittest.mock import patch
 import pandas as pd
+import pytest
+from pydantic import ValidationError
 
 
 def test_create_search_profile(client):
@@ -63,6 +65,29 @@ def test_run_search(client):
     assert resp.status_code == 200
     data = resp.json()
     assert data["new_count"] == 1
+    assert data["total_count"] == 1
+    assert set(data.keys()) == {"new_count", "total_count"}, \
+        f"Expected only new_count and total_count, got {set(data.keys())}"
+
+
+def test_search_run_result_schema_has_new_count_and_total_count():
+    from app.schemas.search import SearchRunResult
+    result = SearchRunResult(new_count=5, total_count=10)
+    assert result.new_count == 5
+    assert result.total_count == 10
+
+
+def test_search_run_result_schema_rejects_saved_count():
+    from app.schemas.search import SearchRunResult
+    result = SearchRunResult(new_count=1, total_count=2, saved_count=99)
+    dumped = result.model_dump()
+    assert "saved_count" not in dumped
+
+
+def test_search_run_result_schema_requires_fields():
+    from app.schemas.search import SearchRunResult
+    with pytest.raises(ValidationError):
+        SearchRunResult()
 
 
 def test_mark_results_reviewed(client):
