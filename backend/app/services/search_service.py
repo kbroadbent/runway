@@ -100,6 +100,7 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
         posting = JobPosting(
             title=title,
             company_id=company.id,
+            company_name=company_name,
             description=_to_str(row.get("description")),
             location=_to_str(row.get("location")) or "",
             remote_type=remote_type,
