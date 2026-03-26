@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
-from app.models import PipelineEntry, PipelineHistory, InterviewNote, JobPosting, PipelineComment
+from app.models import PipelineEntry, PipelineHistory, InterviewNote, JobPosting, PipelineComment, PipelineCustomDate
 from app.schemas.pipeline import (
     PipelineEntryCreate, PipelineEntryUpdate, PipelineMoveRequest, PipelineEntryRead,
     PipelineHistoryRead, InterviewNoteCreate, InterviewNoteUpdate, InterviewNoteRead,
-    ManualEventCreate,
+    ManualEventCreate, CustomDateCreate, CustomDateUpdate, CustomDateRead,
 )
 from app.schemas.pipeline_comment import PipelineCommentCreate, PipelineCommentUpdate, PipelineCommentRead
 from app.constants import STAGES, VALID_STAGES
@@ -88,6 +88,12 @@ def move_pipeline_entry(entry_id: int, data: PipelineMoveRequest, db: Session = 
         raise HTTPException(status_code=404, detail="Pipeline entry not found")
     old_stage = entry.stage
     entry.stage = data.to_stage
+    if data.stage_dates:
+        valid_date_fields = {"applied_date", "recruiter_screen_date", "tech_screen_date",
+                             "onsite_date", "offer_date", "offer_expiration_date"}
+        for field, value in data.stage_dates.items():
+            if field in valid_date_fields:
+                setattr(entry, field, value)
     history = PipelineHistory(
         pipeline_entry_id=entry.id, from_stage=old_stage, to_stage=data.to_stage, note=data.note, event_type="stage_change"
     )
@@ -196,5 +202,54 @@ def delete_comment(comment_id: int, db: Session = Depends(get_db)):
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
     db.delete(comment)
+    db.commit()
+    return Response(status_code=204)
+
+
+# --- Custom Dates ---
+
+@router.get("/api/pipeline/{entry_id}/dates", response_model=list[CustomDateRead])
+def list_custom_dates(entry_id: int, db: Session = Depends(get_db)):
+    return db.query(PipelineCustomDate).filter(
+        PipelineCustomDate.pipeline_entry_id == entry_id
+    ).order_by(PipelineCustomDate.date).all()
+
+
+@router.post("/api/pipeline/{entry_id}/dates", response_model=CustomDateRead, status_code=201)
+def create_custom_date(entry_id: int, data: CustomDateCreate, db: Session = Depends(get_db)):
+    entry = db.get(PipelineEntry, entry_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Pipeline entry not found")
+    custom = PipelineCustomDate(pipeline_entry_id=entry_id, label=data.label, date=data.date)
+    db.add(custom)
+    db.commit()
+    db.refresh(custom)
+    return custom
+
+
+@router.put("/api/pipeline/{entry_id}/dates/{date_id}", response_model=CustomDateRead)
+def update_custom_date(entry_id: int, date_id: int, data: CustomDateUpdate, db: Session = Depends(get_db)):
+    custom = db.query(PipelineCustomDate).filter(
+        PipelineCustomDate.id == date_id,
+        PipelineCustomDate.pipeline_entry_id == entry_id,
+    ).first()
+    if not custom:
+        raise HTTPException(status_code=404, detail="Custom date not found")
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(custom, key, value)
+    db.commit()
+    db.refresh(custom)
+    return custom
+
+
+@router.delete("/api/pipeline/{entry_id}/dates/{date_id}", status_code=204)
+def delete_custom_date(entry_id: int, date_id: int, db: Session = Depends(get_db)):
+    custom = db.query(PipelineCustomDate).filter(
+        PipelineCustomDate.id == date_id,
+        PipelineCustomDate.pipeline_entry_id == entry_id,
+    ).first()
+    if not custom:
+        raise HTTPException(status_code=404, detail="Custom date not found")
+    db.delete(custom)
     db.commit()
     return Response(status_code=204)
