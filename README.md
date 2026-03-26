@@ -24,7 +24,7 @@ Requires only [Docker](https://docs.docker.com/get-docker/).
 git clone <repo-url>
 cd runway
 cp .env.example .env
-just docker-build
+docker compose up --build
 ```
 
 Open [http://localhost:8000](http://localhost:8000). Migrations run automatically on startup.
