@@ -30,6 +30,14 @@ STAGE_GROUPS = {
     "archived": "Archived",
 }
 
+STAGE_DATE_FIELDS: dict[str, list[tuple[str, str]]] = {
+    "applied": [("applied_date", "Applied Date")],
+    "recruiter_screen_scheduled": [("recruiter_screen_date", "Recruiter Screen Date")],
+    "tech_screen_scheduled": [("tech_screen_date", "Tech Screen Date")],
+    "onsite_scheduled": [("onsite_date", "Onsite Date")],
+    "offer": [("offer_date", "Offer Date"), ("offer_expiration_date", "Offer Expiration Date")],
+}
+
 STAGE_GROUP_ORDER = [
     "Interested",
     "Applying",
