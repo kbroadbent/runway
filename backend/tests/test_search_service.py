@@ -250,6 +250,38 @@ def test_age_out_raw_scrape_check_resets(mock_scrape, db):
 
 
 @patch("app.services.search_service.scrape_jobs")
+def test_search_sets_company_name_on_posting(mock_scrape, db):
+    """Search-created postings should have company_name set for age-out title+company matching."""
+    profile = _profile(db)
+    mock_scrape.return_value = _make_df([
+        {"title": "SWE", "company": "Acme Corp", "min_amount": None, "max_amount": None, "job_url": "http://a.com/1"},
+    ])
+    run_search(profile, db)
+
+    posting = db.query(JobPosting).filter(JobPosting.url == "http://a.com/1").first()
+    assert posting is not None
+    assert posting.company_name == "Acme Corp"
+
+
+@patch("app.services.search_service.scrape_jobs")
+def test_age_out_title_company_match_resets_without_url(mock_scrape, db):
+    """When URL changes but title+company stays the same, age-out should reset via title+company match."""
+    profile = _profile(db)
+    job_df = _make_df([{"title": "SWE", "company": "Acme", "min_amount": None, "max_amount": None, "job_url": "http://a.com/1"}])
+
+    mock_scrape.return_value = job_df
+    run_search(profile, db)
+
+    # Run with same title+company but different URL (simulates re-posted job)
+    new_url_df = _make_df([{"title": "SWE", "company": "Acme", "min_amount": None, "max_amount": None, "job_url": "http://a.com/999"}])
+    _run_n_times(profile, db, [new_url_df], mock_scrape)
+
+    posting = db.query(JobPosting).filter(JobPosting.url == "http://a.com/1").first()
+    assert posting is not None
+    assert posting.consecutive_misses == 0, "title+company match should reset consecutive_misses"
+
+
+@patch("app.services.search_service.scrape_jobs")
 def test_age_out_url_match_priority(mock_scrape, db):
     """Same URL, different title → still counts as seen (URL match wins)."""
     profile = _profile(db)
