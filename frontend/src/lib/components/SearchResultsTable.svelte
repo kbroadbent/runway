@@ -4,12 +4,14 @@
 
 	interface Props {
 		results: JobPosting[];
+		addedIds?: Set<number>;
+		removedPostings?: JobPosting[];
 		onSave?: (posting: JobPosting) => void;
 		onDismiss?: (posting: JobPosting) => void;
 		onAddToPipeline?: (posting: JobPosting) => void;
 	}
 
-	let { results, onSave, onDismiss, onAddToPipeline }: Props = $props();
+	let { results, addedIds = new Set(), removedPostings = [], onSave, onDismiss, onAddToPipeline }: Props = $props();
 
 	let selectedPosting = $state<JobPosting | null>(null);
 	let sortKey = $state<string>('date_posted');
@@ -101,7 +103,7 @@
 			</thead>
 			<tbody>
 				{#each sortedResults as posting}
-					<tr class="result-row" onclick={() => selectedPosting = posting}>
+					<tr class="result-row" data-delta={addedIds.has(posting.id) ? 'added' : undefined} onclick={() => selectedPosting = posting}>
 						<td>{posting.title}</td>
 						<td>{posting.company?.name ?? ''}</td>
 						<td>{posting.location ?? ''}</td>
@@ -119,6 +121,23 @@
 								<button class="btn btn-sm btn-danger" onclick={() => onDismiss(posting)}>Dismiss</button>
 							{/if}
 						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+{/if}
+
+{#if removedPostings.length > 0}
+	<div class="removed-section">
+		<h3>Removed</h3>
+		<table>
+			<tbody>
+				{#each removedPostings as posting}
+					<tr class="result-row removed" data-delta="removed">
+						<td>{posting.title}</td>
+						<td>{posting.company?.name ?? ''}</td>
+						<td>{posting.location ?? ''}</td>
 					</tr>
 				{/each}
 			</tbody>

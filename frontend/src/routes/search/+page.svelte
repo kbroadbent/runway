@@ -13,6 +13,8 @@
 	let loading = $state(false);
 	let loadingPostings = $state(false);
 	let runStatus = $state('');
+	let addedIds = $state<Set<number>>(new Set());
+	let removedPostings = $state<JobPosting[]>([]);
 
 	onMount(async () => {
 		await loadProfiles();
@@ -26,6 +28,8 @@
 		selectedProfile = profile;
 		results = [];
 		runStatus = '';
+		addedIds = new Set();
+		removedPostings = [];
 		loadingPostings = true;
 		try {
 			results = await searchProfiles.postings(profile.id);
@@ -41,10 +45,24 @@
 		loading = true;
 		runStatus = 'Searching...';
 		try {
+			const previousResults = results;
+			const previousIds = new Set(previousResults.map((r) => r.id));
 			const result = await searchProfiles.run(selectedProfile.id);
 			runStatus = `${result.new_count} new · ${result.total_count} total`;
 			// Reload postings scoped to this profile
-			results = await searchProfiles.postings(selectedProfile.id);
+			const newResults = await searchProfiles.postings(selectedProfile.id);
+			const newIds = new Set(newResults.map((r) => r.id));
+
+			// Only compute deltas if there were previous results
+			if (previousResults.length > 0) {
+				addedIds = new Set([...newIds].filter((id) => !previousIds.has(id)));
+				removedPostings = previousResults.filter((r) => !newIds.has(r.id));
+			} else {
+				addedIds = new Set();
+				removedPostings = [];
+			}
+
+			results = newResults;
 			// Refresh profiles to update new_result_count
 			await loadProfiles();
 			selectedProfile = profiles.find((p) => p.id === selectedProfile!.id) ?? selectedProfile;
@@ -96,6 +114,8 @@
 	async function handleMarkReviewed() {
 		if (!selectedProfile) return;
 		await searchResults.markReviewed(selectedProfile.id);
+		addedIds = new Set();
+		removedPostings = [];
 		await loadProfiles();
 		selectedProfile = profiles.find((p) => p.id === selectedProfile!.id) ?? selectedProfile;
 	}
@@ -103,11 +123,17 @@
 	async function handleSave(posting: JobPosting) {
 		await postings.save(posting.id);
 		results = results.filter((r) => r.id !== posting.id);
+		if (addedIds.has(posting.id)) {
+			addedIds = new Set([...addedIds].filter((id) => id !== posting.id));
+		}
 	}
 
 	async function handleDismiss(posting: JobPosting) {
 		await postings.dismiss(posting.id);
 		results = results.filter((r) => r.id !== posting.id);
+		if (addedIds.has(posting.id)) {
+			addedIds = new Set([...addedIds].filter((id) => id !== posting.id));
+		}
 	}
 
 	async function handleAddToPipeline(posting: JobPosting) {
@@ -167,7 +193,7 @@
 				<div class="results-header">
 					<h2 class="panel-title">{selectedProfile.name}</h2>
 					<div class="results-actions">
-						{#if selectedProfile.new_result_count > 0}
+						{#if selectedProfile.new_result_count > 0 || addedIds.size > 0}
 							<button class="btn btn-sm btn-secondary" onclick={handleMarkReviewed}>
 								Mark All Reviewed
 							</button>
@@ -197,7 +223,7 @@
 				{#if loadingPostings}
 					<p class="empty-hint">Loading results...</p>
 				{:else}
-					<SearchResultsTable {results} onSave={handleSave} onDismiss={handleDismiss} onAddToPipeline={handleAddToPipeline} />
+					<SearchResultsTable {results} {addedIds} {removedPostings} onSave={handleSave} onDismiss={handleDismiss} onAddToPipeline={handleAddToPipeline} />
 				{/if}
 			{:else}
 				<p class="empty-hint">Select a search profile to view results.</p>
