@@ -96,7 +96,7 @@ describe('SearchResultsTable — added postings (green border)', () => {
 		render(SearchResultsTable, {
 			props: {
 				results: [POSTING_A],
-				addedIds: new Set(),
+				addedIds: new Set<number>(),
 			},
 		});
 
