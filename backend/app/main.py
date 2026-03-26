@@ -50,11 +50,14 @@ async def lifespan(app):
         scheduler.shutdown()
 
 
+cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173")
+CORS_ORIGINS = [o.strip() for o in cors_origins.split(",") if o.strip()]
+
 app = FastAPI(title="Runway", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=CORS_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -69,3 +72,26 @@ app.include_router(search.router)
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
+
+
+STATIC_DIR = os.environ.get("STATIC_DIR")
+if STATIC_DIR:
+    from pathlib import Path
+
+    from fastapi.responses import FileResponse
+    from fastapi.staticfiles import StaticFiles
+
+    _static_dir = Path(STATIC_DIR)
+
+    @app.middleware("http")
+    async def spa_fallback(request, call_next):
+        response = await call_next(request)
+        if (
+            response.status_code == 404
+            and not request.url.path.startswith("/api")
+            and (_static_dir / "index.html").is_file()
+        ):
+            return FileResponse(_static_dir / "index.html")
+        return response
+
+    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
