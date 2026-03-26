@@ -10,6 +10,7 @@ import type {
   ImportPreview,
   PostingsFilter,
   DashboardResponse,
+  CustomDate,
 } from './types';
 
 const BASE = 'http://localhost:8000/api';
@@ -88,7 +89,7 @@ export const pipeline = {
     request<PipelineEntry>('/pipeline', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: Partial<PipelineEntry>) =>
     request<PipelineEntry>(`/pipeline/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  move: (id: number, data: { to_stage: string; note?: string }) =>
+  move: (id: number, data: { to_stage: string; note?: string; stage_dates?: Record<string, string | null> }) =>
     request<PipelineEntry>(`/pipeline/${id}/move`, { method: 'PUT', body: JSON.stringify(data) }),
   history: (id: number) => request<PipelineHistory[]>(`/pipeline/${id}/history`),
   addEvent: (id: number, data: { description: string; event_date?: string }) =>
@@ -102,6 +103,13 @@ export const pipeline = {
   comments: (id: number) => request<PipelineComment[]>(`/pipeline/${id}/comments`),
   addComment: (id: number, data: { content: string }) =>
     request<PipelineComment>(`/pipeline/${id}/comments`, { method: 'POST', body: JSON.stringify(data) }),
+  customDates: (id: number) => request<CustomDate[]>(`/pipeline/${id}/dates`),
+  createCustomDate: (id: number, data: { label: string; date: string }) =>
+    request<CustomDate>(`/pipeline/${id}/dates`, { method: 'POST', body: JSON.stringify(data) }),
+  updateCustomDate: (id: number, dateId: number, data: { label?: string; date?: string }) =>
+    request<CustomDate>(`/pipeline/${id}/dates/${dateId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteCustomDate: (id: number, dateId: number) =>
+    request<void>(`/pipeline/${id}/dates/${dateId}`, { method: 'DELETE' }),
 };
 
 export const interviews = {

@@ -43,6 +43,13 @@ export interface PipelineEntry {
   position: number;
   next_action: string | null;
   next_action_date: string | null;
+  applied_date: string | null;
+  recruiter_screen_date: string | null;
+  tech_screen_date: string | null;
+  onsite_date: string | null;
+  offer_date: string | null;
+  offer_expiration_date: string | null;
+  custom_dates: CustomDate[];
   created_at: string;
   updated_at: string;
 }
@@ -56,6 +63,13 @@ export interface PipelineHistory {
   description: string | null;
   event_date: string | null;
   changed_at: string;
+}
+
+export interface CustomDate {
+  id: number;
+  label: string;
+  date: string;
+  created_at: string;
 }
 
 export interface PipelineComment {

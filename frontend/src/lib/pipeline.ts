@@ -37,6 +37,17 @@ export const STAGES: StageConfig[] = [
 	{ key: 'archived', label: 'Archived' },
 ];
 
+export const STAGE_DATE_FIELDS: Record<string, { label: string; field: string }[]> = {
+	applied: [{ label: 'Applied Date', field: 'applied_date' }],
+	recruiter_screen_scheduled: [{ label: 'Recruiter Screen Date', field: 'recruiter_screen_date' }],
+	tech_screen_scheduled: [{ label: 'Tech Screen Date', field: 'tech_screen_date' }],
+	onsite_scheduled: [{ label: 'Onsite Date', field: 'onsite_date' }],
+	offer: [
+		{ label: 'Offer Date', field: 'offer_date' },
+		{ label: 'Offer Expiration Date', field: 'offer_expiration_date' },
+	],
+};
+
 export const ACTIVE_STAGES = STAGES.filter(
 	(s) => s.key !== 'rejected' && s.key !== 'archived'
 );
