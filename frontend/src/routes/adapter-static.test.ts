@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
-const projectRoot = resolve(__dirname, '../../..');
+const projectRoot = resolve(__dirname, '../..');
 
 describe('adapter-static configuration', () => {
 	it('svelte.config.js imports adapter-static instead of adapter-auto', () => {
