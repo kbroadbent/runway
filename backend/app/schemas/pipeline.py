@@ -11,6 +11,12 @@ class PipelineEntryCreate(BaseModel):
 class PipelineEntryUpdate(BaseModel):
     next_action: str | None = None
     next_action_date: datetime | None = None
+    applied_date: datetime | None = None
+    recruiter_screen_date: datetime | None = None
+    tech_screen_date: datetime | None = None
+    onsite_date: datetime | None = None
+    offer_date: datetime | None = None
+    offer_expiration_date: datetime | None = None
 
 
 class PipelineMoveRequest(BaseModel):
@@ -30,6 +36,12 @@ class PipelineEntryRead(BaseModel):
     position: int
     next_action: str | None
     next_action_date: datetime | None
+    applied_date: datetime | None
+    recruiter_screen_date: datetime | None
+    tech_screen_date: datetime | None
+    onsite_date: datetime | None
+    offer_date: datetime | None
+    offer_expiration_date: datetime | None
     created_at: datetime
     updated_at: datetime
 

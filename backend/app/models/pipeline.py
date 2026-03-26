@@ -14,6 +14,12 @@ class PipelineEntry(Base):
     notes: Mapped[str | None] = mapped_column(Text)
     next_action: Mapped[str | None] = mapped_column(String)
     next_action_date: Mapped[datetime | None] = mapped_column(DateTime)
+    applied_date: Mapped[datetime | None] = mapped_column(DateTime)
+    recruiter_screen_date: Mapped[datetime | None] = mapped_column(DateTime)
+    tech_screen_date: Mapped[datetime | None] = mapped_column(DateTime)
+    onsite_date: Mapped[datetime | None] = mapped_column(DateTime)
+    offer_date: Mapped[datetime | None] = mapped_column(DateTime)
+    offer_expiration_date: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
