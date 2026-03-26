@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Integer, String, Text, DateTime, Boolean, ForeignKey, func
+from sqlalchemy import Integer, String, Text, DateTime, Boolean, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
@@ -29,6 +29,9 @@ class SearchProfile(Base):
 
 class SearchResult(Base):
     __tablename__ = "search_results"
+    __table_args__ = (
+        UniqueConstraint("search_profile_id", "job_posting_id", name="uq_search_result_profile_posting"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     search_profile_id: Mapped[int] = mapped_column(ForeignKey("search_profiles.id", ondelete="CASCADE"))

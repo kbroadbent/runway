@@ -71,10 +71,17 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
             # Skip postings already saved or dismissed — user has already acted on them
             if existing.status in ('saved', 'dismissed'):
                 continue
-            result = SearchResult(
-                search_profile_id=profile.id, job_posting_id=existing.id, is_new=False
-            )
-            db.add(result)
+            existing_result = db.query(SearchResult).filter(
+                SearchResult.search_profile_id == profile.id,
+                SearchResult.job_posting_id == existing.id,
+            ).first()
+            if existing_result:
+                existing_result.run_date = datetime.now(timezone.utc)
+            else:
+                result = SearchResult(
+                    search_profile_id=profile.id, job_posting_id=existing.id, is_new=False
+                )
+                db.add(result)
             continue
 
         company = db.query(Company).filter(Company.name == company_name).first()
@@ -90,10 +97,17 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
         ).first()
         if existing:
             if existing.status not in ('saved', 'dismissed'):
-                result = SearchResult(
-                    search_profile_id=profile.id, job_posting_id=existing.id, is_new=False
-                )
-                db.add(result)
+                existing_result = db.query(SearchResult).filter(
+                    SearchResult.search_profile_id == profile.id,
+                    SearchResult.job_posting_id == existing.id,
+                ).first()
+                if existing_result:
+                    existing_result.run_date = datetime.now(timezone.utc)
+                else:
+                    result = SearchResult(
+                        search_profile_id=profile.id, job_posting_id=existing.id, is_new=False
+                    )
+                    db.add(result)
             continue
 
         remote_type = "remote" if row.get("is_remote") else None
