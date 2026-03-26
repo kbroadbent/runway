@@ -3,6 +3,7 @@
 	import { pipeline } from '$lib/api';
 	import KanbanCard from './KanbanCard.svelte';
 	import KanbanSubLane from './KanbanSubLane.svelte';
+	import StageDateModal from './StageDateModal.svelte';
 	import { STAGES } from '$lib/pipeline';
 	import type { StageConfig } from '$lib/pipeline';
 
@@ -16,6 +17,8 @@
 
 	let draggingEntryId = $state<number | null>(null);
 	let dragOverStage = $state<string | null>(null);
+
+	let pendingMove = $state<{ entryId: number; toStage: string; entryTitle: string } | null>(null);
 
 	function getEntries(key: string): PipelineEntry[] {
 		return board[key] ?? [];
@@ -54,13 +57,37 @@
 		draggingEntryId = null;
 
 		// Find the entry to check its current stage
+		let entryTitle = '';
 		for (const entries of Object.values(board)) {
 			const entry = entries.find((en) => en.id === id);
-			if (entry && entry.stage === toStageKey) return; // no-op
+			if (entry) {
+				if (entry.stage === toStageKey) return; // no-op same stage
+				entryTitle = entry.job_posting?.title ?? '';
+				break;
+			}
 		}
 
-		await pipeline.move(id, { to_stage: toStageKey });
+		pendingMove = { entryId: id, toStage: toStageKey, entryTitle };
+	}
+
+	async function handleModalConfirm(dates: Record<string, string>) {
+		if (!pendingMove) return;
+		const { entryId, toStage } = pendingMove;
+		pendingMove = null;
+		await pipeline.move(entryId, { to_stage: toStage, stage_dates: dates });
 		onMoved();
+	}
+
+	async function handleModalSkip() {
+		if (!pendingMove) return;
+		const { entryId, toStage } = pendingMove;
+		pendingMove = null;
+		await pipeline.move(entryId, { to_stage: toStage });
+		onMoved();
+	}
+
+	function handleModalCancel() {
+		pendingMove = null;
 	}
 </script>
 
@@ -109,6 +136,16 @@
 		</div>
 	{/each}
 </div>
+
+{#if pendingMove}
+	<StageDateModal
+		stage={pendingMove.toStage}
+		entryTitle={pendingMove.entryTitle}
+		onConfirm={handleModalConfirm}
+		onSkip={handleModalSkip}
+		onCancel={handleModalCancel}
+	/>
+{/if}
 
 {#if totalEntries === 0}
 	<div class="empty-state">
