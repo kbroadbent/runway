@@ -7,9 +7,8 @@ from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.models import PipelineEntry, JobPosting, InterviewNote
 from app.schemas.dashboard import (
+    ActionItemRead,
     DashboardResponse,
-    InterviewItemRead,
-    NextActionItemRead,
 )
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
@@ -34,7 +33,7 @@ def get_dashboard(db: Session = Depends(get_db)):
     lane_counts = dict(Counter(e.stage for e in entries))
 
     # Next-action items
-    action_items: list[NextActionItemRead | InterviewItemRead] = []
+    action_items: list[ActionItemRead] = []
     for entry in entries:
         if entry.next_action:
             posting = entry.job_posting
@@ -42,7 +41,7 @@ def get_dashboard(db: Session = Depends(get_db)):
                 entry.next_action_date is not None and entry.next_action_date < now
             )
             action_items.append(
-                NextActionItemRead(
+                ActionItemRead(
                     pipeline_entry_id=entry.id,
                     job_title=posting.title,
                     company_name=(
@@ -50,7 +49,7 @@ def get_dashboard(db: Session = Depends(get_db)):
                     ),
                     type="action",
                     description=entry.next_action,
-                    date=entry.next_action_date,
+                    date=str(entry.next_action_date) if entry.next_action_date else None,
                     is_overdue=is_overdue,
                 )
             )
@@ -76,7 +75,7 @@ def get_dashboard(db: Session = Depends(get_db)):
         posting = entry.job_posting
         is_overdue = note.scheduled_at is not None and note.scheduled_at < now
         action_items.append(
-            InterviewItemRead(
+            ActionItemRead(
                 pipeline_entry_id=entry.id,
                 job_title=posting.title,
                 company_name=(
@@ -84,7 +83,7 @@ def get_dashboard(db: Session = Depends(get_db)):
                 ),
                 type="interview",
                 description=note.round,
-                date=note.scheduled_at,
+                date=str(note.scheduled_at) if note.scheduled_at else None,
                 is_overdue=is_overdue,
             )
         )
@@ -92,11 +91,11 @@ def get_dashboard(db: Session = Depends(get_db)):
     # Sort: overdue first (oldest first), then upcoming (soonest first), undated last
     def sort_key(item):
         if item.is_overdue:
-            return (0, item.date or datetime.min)
+            return (0, item.date or "")
         elif item.date is not None:
             return (1, item.date)
         else:
-            return (2, datetime.max)
+            return (2, "")
 
     action_items.sort(key=sort_key)
 
