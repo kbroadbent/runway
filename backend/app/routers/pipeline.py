@@ -210,6 +210,9 @@ def delete_comment(comment_id: int, db: Session = Depends(get_db)):
 
 @router.get("/api/pipeline/{entry_id}/dates", response_model=list[CustomDateRead])
 def list_custom_dates(entry_id: int, db: Session = Depends(get_db)):
+    entry = db.get(PipelineEntry, entry_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Pipeline entry not found")
     return db.query(PipelineCustomDate).filter(
         PipelineCustomDate.pipeline_entry_id == entry_id
     ).order_by(PipelineCustomDate.date).all()
