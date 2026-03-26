@@ -42,7 +42,7 @@
 		runStatus = 'Searching...';
 		try {
 			const result = await searchProfiles.run(selectedProfile.id);
-			runStatus = `Found ${result.new_count} new of ${result.total_count} total results`;
+			runStatus = `${result.new_count} new · ${result.total_count} total`;
 			// Reload postings scoped to this profile
 			results = await searchProfiles.postings(selectedProfile.id);
 			// Refresh profiles to update new_result_count
@@ -177,10 +177,14 @@
 							onclick={handleRunSearch}
 							disabled={loading}
 						>
-							{loading ? 'Searching...' : 'Run Search'}
+							{loading ? 'Searching...' : 'Refresh'}
 						</button>
 					</div>
 				</div>
+
+				{#if !loadingPostings}
+					<p class="results-count">{results.length} results</p>
+				{/if}
 
 				{#if runStatus}
 					<p class="run-status">{runStatus}</p>
@@ -279,6 +283,12 @@
 	.results-actions {
 		display: flex;
 		gap: 0.5rem;
+	}
+
+	.results-count {
+		color: var(--text-secondary);
+		font-size: 0.9rem;
+		margin-bottom: 0.25rem;
 	}
 
 	.run-status {
