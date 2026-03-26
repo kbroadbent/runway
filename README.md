@@ -192,43 +192,63 @@ npm run test
 Build and run Runway with Docker Compose:
 
 ```bash
-docker compose build
+cp .env.example .env
 docker compose up
 ```
 
-The app will be available at [http://localhost:8000](http://localhost:8000).
+The app will be available at [http://localhost:8000](http://localhost:8000). Migrations run automatically on startup.
 
 ### Using an Existing Database
 
-To use an existing `runway.db` file, mount it as a volume and set the `DATABASE_PATH` environment variable:
-
-```yaml
-# docker-compose.yml volume mount
-volumes:
-  - ./backend/runway.db:/app/data/runway.db
-environment:
-  - DATABASE_PATH=/app/data/runway.db
-```
-
-### Ollama / AI Setup
-
-To connect the Docker container to an Ollama instance running on your host machine, set the `OLLAMA_BASE_URL` environment variable to point to `host.docker.internal`:
+To use an existing `runway.db`, copy it into the container's data volume:
 
 ```bash
-OLLAMA_BASE_URL=http://host.docker.internal:11434
+# Start once to create the volume
+docker compose up -d
+# Copy your database into the running container
+docker cp /path/to/your/runway.db $(docker compose ps -q app):/app/data/runway.db
+# Restart to run migrations
+docker compose restart
 ```
 
-Or add it to your `.env` file (see below).
+Alternatively, switch to a bind mount in `docker-compose.yml` to use a local directory:
+
+```yaml
+volumes:
+  - ./data:/app/data
+```
+
+Then place your `runway.db` in the `./data/` directory before starting.
+
+### AI Features (Optional)
+
+Runway uses LLM-powered parsing for job postings. Without an LLM, it falls back to heuristics.
+
+**Ollama (local, free):** If [Ollama](https://ollama.com) is running on your host machine, the Docker container connects to it automatically — no configuration needed.
+
+**Cloud LLM provider:** Set your provider's API key in `.env`:
+
+```bash
+# OpenAI
+AI_MODEL=gpt-4o
+OPENAI_API_KEY=sk-...
+
+# Or Anthropic
+AI_MODEL=anthropic/claude-sonnet-4-20250514
+ANTHROPIC_API_KEY=sk-ant-...
+```
 
 ### Environment Variables
 
 Configuration is done via environment variables. Copy `.env.example` to `.env` and adjust as needed:
 
-| Variable         | Description                              | Default                |
-| ---------------- | ---------------------------------------- | ---------------------- |
-| `DATABASE_PATH`  | Path to the SQLite database file         | `runway.db`            |
-| `CORS_ORIGINS`   | Comma-separated list of allowed origins  | `http://localhost:5173` |
-| `OLLAMA_BASE_URL`| URL of the Ollama server                 | `http://localhost:11434`|
+| Variable         | Description                              | Default                          |
+| ---------------- | ---------------------------------------- | -------------------------------- |
+| `DATABASE_PATH`  | Path to the SQLite database file         | `/app/data/runway.db` (Docker)   |
+| `CORS_ORIGINS`   | Comma-separated list of allowed origins  | `http://localhost:8000`          |
+| `STATIC_DIR`     | Path to built frontend static files      | `/app/frontend/build` (Docker)   |
+| `OLLAMA_BASE_URL`| URL of the Ollama server                 | `http://localhost:11434`         |
+| `AI_MODEL`       | LLM model to use for parsing             | Ollama default                   |
 
 ## Key Dependencies
 

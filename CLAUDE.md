@@ -50,7 +50,7 @@ frontend/
 
 ## Database
 
-SQLite database lives at `backend/runway.db`.
+SQLite database lives at `backend/runway.db` by default. The path is configurable via the `DATABASE_PATH` environment variable (used by Docker to store the DB at `/app/data/runway.db`).
 
 All schema changes must go through Alembic migrations:
 
@@ -72,9 +72,8 @@ make backup   # creates a timestamped copy in backups/
 
 ```bash
 cd backend && pytest
+cd frontend && npm run test
 ```
-
-No frontend tests currently exist.
 
 ## Key Conventions
 
