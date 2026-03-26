@@ -203,3 +203,129 @@ describe('Search Page — selectProfile loads persisted results', () => {
 		});
 	});
 });
+
+describe('Search Page — results header with count and timestamp', () => {
+	let SearchPage: typeof import('./+page.svelte').default;
+
+	beforeEach(async () => {
+		mockFetch.mockReset();
+		const mod = await import('./+page.svelte');
+		SearchPage = mod.default;
+	});
+
+	it('shows result count after selecting a profile with postings', async () => {
+		mockJsonResponse([MOCK_PROFILE]);
+		render(SearchPage);
+
+		await waitFor(() => {
+			expect(screen.getByText('Frontend Jobs')).toBeInTheDocument();
+		});
+
+		mockJsonResponse(MOCK_POSTINGS);
+		await fireEvent.click(screen.getByText('Frontend Jobs'));
+
+		await waitFor(() => {
+			expect(screen.getByText(/2 results/i)).toBeInTheDocument();
+		});
+	});
+
+	it('shows last run timestamp when profile has last_run_at', async () => {
+		mockJsonResponse([MOCK_PROFILE]);
+		render(SearchPage);
+
+		await waitFor(() => {
+			expect(screen.getByText('Frontend Jobs')).toBeInTheDocument();
+		});
+
+		mockJsonResponse(MOCK_POSTINGS);
+		await fireEvent.click(screen.getByText('Frontend Jobs'));
+
+		await waitFor(() => {
+			// last_run_at is '2026-03-24T12:00:00' — should be displayed as a readable timestamp
+			expect(screen.getByText(/last run/i)).toBeInTheDocument();
+		});
+	});
+
+	it('does not show last run timestamp when profile has no last_run_at', async () => {
+		mockJsonResponse([MOCK_PROFILE_NO_RESULTS]);
+		render(SearchPage);
+
+		await waitFor(() => {
+			expect(screen.getByText('Backend Jobs')).toBeInTheDocument();
+		});
+
+		mockJsonResponse([]);
+		await fireEvent.click(screen.getByText('Backend Jobs'));
+
+		await waitFor(() => {
+			expect(screen.queryByText(/last run/i)).not.toBeInTheDocument();
+		});
+	});
+
+	it('shows delta summary after running a search', async () => {
+		mockJsonResponse([MOCK_PROFILE]);
+		render(SearchPage);
+
+		await waitFor(() => {
+			expect(screen.getByText('Frontend Jobs')).toBeInTheDocument();
+		});
+
+		// Select the profile first
+		mockJsonResponse(MOCK_POSTINGS);
+		await fireEvent.click(screen.getByText('Frontend Jobs'));
+
+		await waitFor(() => {
+			expect(screen.getByText('Senior Frontend Developer')).toBeInTheDocument();
+		});
+
+		// Run search — returns new_count and total_count
+		mockJsonResponse({ new_count: 3, total_count: 15 });
+		// After run, it reloads postings
+		mockJsonResponse(MOCK_POSTINGS);
+		// Then reloads profiles
+		mockJsonResponse([MOCK_PROFILE]);
+
+		await fireEvent.click(screen.getByText('Refresh'));
+
+		await waitFor(() => {
+			expect(screen.getByText(/3 new/)).toBeInTheDocument();
+			expect(screen.getByText(/15 total/)).toBeInTheDocument();
+		});
+	});
+
+	it('labels the search button as Refresh instead of Run Search', async () => {
+		mockJsonResponse([MOCK_PROFILE]);
+		render(SearchPage);
+
+		await waitFor(() => {
+			expect(screen.getByText('Frontend Jobs')).toBeInTheDocument();
+		});
+
+		mockJsonResponse(MOCK_POSTINGS);
+		await fireEvent.click(screen.getByText('Frontend Jobs'));
+
+		await waitFor(() => {
+			expect(screen.getByText('Senior Frontend Developer')).toBeInTheDocument();
+		});
+
+		// The button should say "Refresh", not "Run Search"
+		expect(screen.queryByText('Run Search')).not.toBeInTheDocument();
+		expect(screen.getByText('Refresh')).toBeInTheDocument();
+	});
+
+	it('shows zero results count when profile has no postings', async () => {
+		mockJsonResponse([MOCK_PROFILE_NO_RESULTS]);
+		render(SearchPage);
+
+		await waitFor(() => {
+			expect(screen.getByText('Backend Jobs')).toBeInTheDocument();
+		});
+
+		mockJsonResponse([]);
+		await fireEvent.click(screen.getByText('Backend Jobs'));
+
+		await waitFor(() => {
+			expect(screen.getByText(/0 results/i)).toBeInTheDocument();
+		});
+	});
+});
