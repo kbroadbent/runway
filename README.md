@@ -12,112 +12,105 @@ A personal job search pipeline tool that tracks job postings from initial discov
 | Scraping | python-jobspy                                     |
 | AI       | LiteLLM (optional Ollama for local model support) |
 
-## Prerequisites
+## Getting Started
 
-> **Note:** These instructions assume macOS. Other platforms should work but are untested.
+There are two ways to run Runway. Pick whichever suits you.
 
-### Python (>= 3.10)
+### Option A: Docker (recommended)
 
-Install via [Homebrew](https://brew.sh):
-
-```bash
-brew install python
-```
-
-Or use a version manager like [pyenv](https://github.com/pyenv/pyenv):
-
-```bash
-brew install pyenv
-pyenv install 3.12
-pyenv local 3.12
-```
-
-### Node.js
-
-Install via Homebrew:
-
-```bash
-brew install node
-```
-
-Or use a version manager like [nvm](https://github.com/nvm-sh/nvm):
-
-```bash
-brew install nvm
-nvm install --lts
-nvm use --lts
-```
-
-### Ollama (optional)
-
-Ollama provides local LLM support for AI-powered job parsing. Without it, parsing falls back to heuristics.
-
-```bash
-brew install ollama
-```
-
-## Installation
-
-Clone the repo and install dependencies for both backend and frontend:
+Requires only [Docker](https://docs.docker.com/get-docker/).
 
 ```bash
 git clone <repo-url>
 cd runway
+cp .env.example .env
+just docker-build
 ```
 
-### Backend
+Open [http://localhost:8000](http://localhost:8000). Migrations run automatically on startup.
+
+### Option B: Local Development
+
+Requires Python (>= 3.10), Node.js, and optionally Ollama. Instructions assume macOS.
 
 ```bash
+# Python
+brew install python
+# Or: brew install pyenv && pyenv install 3.12 && pyenv local 3.12
+
+# Node.js
+brew install node
+# Or: brew install nvm && nvm install --lts && nvm use --lts
+
+# Ollama (optional — AI-powered job parsing, falls back to heuristics without it)
+brew install ollama
+```
+
+Clone and install dependencies:
+
+```bash
+git clone <repo-url>
+cd runway
+
+# Backend
 cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
-```
+cd ..
 
-### Frontend
-
-```bash
+# Frontend
 cd frontend
 npm install
+cd ..
+
+# Database
+cd backend && alembic upgrade head && cd ..
 ```
 
-### Database
-
-Apply migrations to initialize the SQLite database:
+Start both backend and frontend:
 
 ```bash
-cd backend
-alembic upgrade head
+just dev
 ```
-
-The database is created at `backend/runway.db`.
-
-## Running Locally
-
-Start both backend and frontend with a single command:
-
-```bash
-./run.sh
-```
-
-This starts:
 
 - **Backend** at [http://localhost:8000](http://localhost:8000)
 - **Frontend** at [http://localhost:5173](http://localhost:5173)
 
-It will also start Ollama automatically if installed.
+Ollama starts automatically if installed.
 
-To run services individually:
+## Using an Existing Database
+
+The database lives at `data/runway.db`. To use an existing database, copy it there before starting:
 
 ```bash
-# Backend
-cd backend
-source .venv/bin/activate
-uvicorn app.main:app --port 8000 --reload
+cp /path/to/your/runway.db data/runway.db
+```
 
-# Frontend (in a separate terminal)
-cd frontend
-npm run dev
+This works for both Docker and local development. Migrations run automatically on startup (Docker) or via `just migrate` (local).
+
+## AI Features (Optional)
+
+Runway uses LLM-powered parsing for job postings. Without an LLM, it falls back to heuristics.
+
+**Ollama (local, free):** Install and run [Ollama](https://ollama.com) on your machine. Runway connects to it automatically — no configuration needed.
+
+```bash
+brew install ollama
+ollama serve &
+ollama pull llama3.2
+```
+
+**Cloud LLM provider:** Set your provider's API key in `.env`:
+
+```bash
+# OpenAI
+AI_MODEL=gpt-4o
+OPENAI_API_KEY=sk-...
+
+# Or Anthropic
+AI_MODEL=anthropic/claude-sonnet-4-20250514
+ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 ## Project Structure
@@ -137,6 +130,8 @@ frontend/
     routes/       # SvelteKit pages (search, postings, pipeline)
     lib/
       components/ # Reusable Svelte components
+
+data/               # SQLite database (gitignored)
 ```
 
 ## Database Management
@@ -156,125 +151,39 @@ alembic revision --autogenerate -m "description"
 Back up the database before risky changes:
 
 ```bash
-make backup
+just backup
 ```
 
 ## Testing
 
-### Backend
-
 ```bash
-cd backend
-pytest
+# Backend
+cd backend && pytest
+
+# Frontend
+cd frontend && npm run test
 ```
 
-### Frontend
+## Just Commands
 
-```bash
-cd frontend
-npm run test
-```
+| Command            | Description                              |
+| ------------------ | ---------------------------------------- |
+| `just dev`         | Start backend and frontend (local)       |
+| `just docker`      | Run Docker container                     |
+| `just docker-build`| Rebuild and run Docker container         |
+| `just docker-bg`   | Run Docker container in background       |
+| `just docker-down` | Stop Docker container                    |
+| `just migrate`     | Apply all pending Alembic migrations     |
+| `just backup`      | Create a timestamped database backup     |
 
-## Available Make/Just Commands
+## Environment Variables
 
-| Command        | Description                              |
-| -------------- | ---------------------------------------- |
-| `./run.sh`     | Start backend and frontend together      |
-| `make backup`  | Create a timestamped database backup     |
-| `just migrate` | Apply all pending Alembic migrations     |
-| `just dev`     | Run `./run.sh`                           |
-| `just backup`  | Create a timestamped database backup     |
-
-## Docker
-
-### Quick Start
-
-Build and run Runway with Docker Compose:
-
-```bash
-cp .env.example .env
-docker compose up
-```
-
-The app will be available at [http://localhost:8000](http://localhost:8000). Migrations run automatically on startup.
-
-### Using an Existing Database
-
-To use an existing `runway.db`, copy it into the container's data volume:
-
-```bash
-# Start once to create the volume
-docker compose up -d
-# Copy your database into the running container
-docker cp /path/to/your/runway.db $(docker compose ps -q app):/app/data/runway.db
-# Restart to run migrations
-docker compose restart
-```
-
-Alternatively, switch to a bind mount in `docker-compose.yml` to use a local directory:
-
-```yaml
-volumes:
-  - ./data:/app/data
-```
-
-Then place your `runway.db` in the `./data/` directory before starting.
-
-### AI Features (Optional)
-
-Runway uses LLM-powered parsing for job postings. Without an LLM, it falls back to heuristics.
-
-**Ollama (local, free):** If [Ollama](https://ollama.com) is running on your host machine, the Docker container connects to it automatically — no configuration needed.
-
-**Cloud LLM provider:** Set your provider's API key in `.env`:
-
-```bash
-# OpenAI
-AI_MODEL=gpt-4o
-OPENAI_API_KEY=sk-...
-
-# Or Anthropic
-AI_MODEL=anthropic/claude-sonnet-4-20250514
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
-### Environment Variables
-
-Configuration is done via environment variables. Copy `.env.example` to `.env` and adjust as needed:
+See `.env.example` for all options. Docker-specific paths (`DATABASE_PATH`, `STATIC_DIR`) are set in `docker-compose.yml` — don't put them in `.env`.
 
 | Variable         | Description                              | Default                          |
 | ---------------- | ---------------------------------------- | -------------------------------- |
-| `DATABASE_PATH`  | Path to the SQLite database file         | `/app/data/runway.db` (Docker)   |
-| `CORS_ORIGINS`   | Comma-separated list of allowed origins  | `http://localhost:8000`          |
-| `STATIC_DIR`     | Path to built frontend static files      | `/app/frontend/build` (Docker)   |
+| `CORS_ORIGINS`   | Comma-separated list of allowed origins  | `http://localhost:5173,http://localhost:8000` |
 | `OLLAMA_BASE_URL`| URL of the Ollama server                 | `http://localhost:11434`         |
-| `AI_MODEL`       | LLM model to use for parsing             | Ollama default                   |
-
-## Key Dependencies
-
-### Backend
-
-| Package        | Purpose                    |
-| -------------- | -------------------------- |
-| fastapi        | Web framework              |
-| uvicorn        | ASGI server                |
-| sqlalchemy     | ORM                        |
-| alembic        | Database migrations        |
-| pydantic       | Data validation            |
-| python-jobspy  | Job board scraping         |
-| litellm        | LLM integration            |
-| httpx          | HTTP client                |
-| beautifulsoup4 | HTML parsing               |
-| apscheduler    | Background task scheduling |
-
-### Frontend
-
-| Package              | Purpose                  |
-| -------------------- | ------------------------ |
-| @sveltejs/kit        | Application framework    |
-| svelte               | UI framework             |
-| typescript           | Type checking            |
-| vite                 | Build tool               |
-| marked               | Markdown rendering       |
-| dompurify            | HTML sanitization        |
-| @sveltejs/adapter-static | Static site generation |
+| `AI_MODEL`       | LLM model to use for parsing             | `ollama/llama3.2`                |
+| `DATABASE_PATH`  | Path to the SQLite database file         | `data/runway.db` (set by Docker) |
+| `STATIC_DIR`     | Path to built frontend static files      | Unset (set by Docker)            |

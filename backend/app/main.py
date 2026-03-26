@@ -50,7 +50,7 @@ async def lifespan(app):
         scheduler.shutdown()
 
 
-cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173")
+cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:8000,http://0.0.0.0:8000")
 CORS_ORIGINS = [o.strip() for o in cors_origins.split(",") if o.strip()]
 
 app = FastAPI(title="Runway", version="0.1.0", lifespan=lifespan)

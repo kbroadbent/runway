@@ -2,11 +2,20 @@ services:
   app:
     build: .
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
-      - runway-data:/app/data
+      - ./data:/app/data
     env_file:
       - .env
-
-volumes:
-  runway-data:
+    environment:
+      - DATABASE_PATH=/app/data/runway.db
+      - STATIC_DIR=/app/frontend/build
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
