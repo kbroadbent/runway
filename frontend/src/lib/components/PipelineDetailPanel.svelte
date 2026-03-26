@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { PipelineEntry, PipelineHistory, InterviewNote } from '$lib/types';
 	import { pipeline, interviews, postings } from '$lib/api';
-	import { onMount } from 'svelte';
 	import PipelineComments from './PipelineComments.svelte';
+	import KeyDates from './KeyDates.svelte';
 
 	interface Props {
 		entry: PipelineEntry;
@@ -26,6 +26,14 @@
 	);
 	let tier = $state<1 | 2 | 3 | null>(entry.job_posting.tier ?? null);
 
+	// Re-sync edit state when entry changes
+	$effect(() => {
+		notes = entry.job_posting.notes ?? '';
+		next_action = entry.next_action ?? '';
+		next_action_date = entry.next_action_date ? entry.next_action_date.substring(0, 10) : '';
+		tier = entry.job_posting.tier ?? null;
+	});
+
 	// Manual event form
 	let showEventForm = $state(false);
 	let eventDescription = $state('');
@@ -39,11 +47,17 @@
 	let iNotes = $state('');
 	let iOutcome = $state('');
 
-	onMount(async () => {
+	async function loadEntryData() {
 		[history, interviewNotes] = await Promise.all([
 			pipeline.history(entry.id),
 			pipeline.interviews(entry.id),
 		]);
+	}
+
+	// Load (and reload on entry change) history and interviews
+	$effect(() => {
+		const _id = entry.id;
+		loadEntryData();
 	});
 
 	async function saveDetails() {
@@ -162,6 +176,8 @@
 						<option value={3}>Tier 3</option>
 					</select>
 				</div>
+
+				<KeyDates {entry} {onUpdated} />
 
 				<div class="section">
 					<h3>Notes</h3>
