@@ -82,7 +82,7 @@ export const postings = {
 };
 
 export const pipeline = {
-  list: (filters?: { title?: string; tier?: number }) =>
+  list: (filters?: { search?: string; tier?: number }) =>
     request<Record<string, PipelineEntry[]>>(`/pipeline${toQuery(filters ?? {})}`),
   add: (data: { job_posting_id: number; stage?: string }) =>
     request<PipelineEntry>('/pipeline', { method: 'POST', body: JSON.stringify(data) }),

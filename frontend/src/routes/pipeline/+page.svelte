@@ -20,7 +20,7 @@
 
 	async function loadBoard() {
 		board = await pipeline.list({
-			title: $searchFilter || undefined,
+			search: $searchFilter || undefined,
 			tier: $tierFilter ?? undefined,
 		});
 	}

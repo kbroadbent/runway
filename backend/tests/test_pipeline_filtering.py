@@ -14,7 +14,7 @@ def seeded_pipeline(client):
 
 
 def test_filter_by_title(client, seeded_pipeline):
-    resp = client.get("/api/pipeline?title=engineer")
+    resp = client.get("/api/pipeline?search=engineer")
     data = resp.json()
     titles = [e["job_posting"]["title"] for entries in data.values() for e in entries]
     assert "Senior Engineer" in titles
@@ -31,7 +31,7 @@ def test_filter_by_tier(client, seeded_pipeline):
 
 
 def test_filter_by_title_and_tier(client, seeded_pipeline):
-    resp = client.get("/api/pipeline?title=engineer&tier=1")
+    resp = client.get("/api/pipeline?search=engineer&tier=1")
     data = resp.json()
     entries = [e for entries in data.values() for e in entries]
     assert len(entries) == 1
@@ -39,7 +39,7 @@ def test_filter_by_title_and_tier(client, seeded_pipeline):
 
 
 def test_filter_no_results(client, seeded_pipeline):
-    resp = client.get("/api/pipeline?title=nonexistent")
+    resp = client.get("/api/pipeline?search=nonexistent")
     data = resp.json()
     entries = [e for entries in data.values() for e in entries]
     assert len(entries) == 0
@@ -53,10 +53,23 @@ def test_no_filter_returns_all(client, seeded_pipeline):
 
 
 def test_filter_case_insensitive(client, seeded_pipeline):
-    resp = client.get("/api/pipeline?title=ENGINEER")
+    resp = client.get("/api/pipeline?search=ENGINEER")
     data = resp.json()
     entries = [e for entries in data.values() for e in entries]
     assert len(entries) == 2
+
+
+def test_filter_by_company_name(client, seeded_pipeline):
+    """Search should match against company_name on the job posting."""
+    # All seeded postings have company_name "Co"
+    resp = client.get("/api/pipeline?search=Co")
+    entries = [e for entries in resp.json().values() for e in entries]
+    assert len(entries) == 3
+
+    # No match on a company name that doesn't exist
+    resp = client.get("/api/pipeline?search=Acme")
+    entries = [e for entries in resp.json().values() for e in entries]
+    assert len(entries) == 0
 
 
 def test_invalid_tier_rejected(client, seeded_pipeline):

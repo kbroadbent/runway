@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
+from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.models import PipelineEntry, PipelineHistory, InterviewNote, JobPosting, PipelineComment
@@ -20,7 +21,7 @@ def _validate_stage(stage: str) -> None:
 
 @router.get("/api/pipeline", response_model=dict[str, list[PipelineEntryRead]])
 def list_pipeline(
-    title: str | None = None,
+    search: str | None = None,
     tier: int | None = None,
     db: Session = Depends(get_db),
 ):
@@ -31,10 +32,13 @@ def list_pipeline(
         joinedload(PipelineEntry.job_posting).joinedload(JobPosting.company)
     )
 
-    if title or tier is not None:
+    if search or tier is not None:
         query = query.join(JobPosting)
-        if title:
-            query = query.filter(JobPosting.title.ilike(f"%{title}%"))
+        if search:
+            query = query.filter(or_(
+                JobPosting.title.ilike(f"%{search}%"),
+                JobPosting.company_name.ilike(f"%{search}%"),
+            ))
         if tier is not None:
             query = query.filter(JobPosting.tier == tier)
 
