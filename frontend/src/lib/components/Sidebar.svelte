@@ -3,8 +3,8 @@
 
 	const navItems = [
 		{ href: '/dashboard', label: 'Dashboard', exact: true },
-		{ href: '/search', label: 'Search' },
 		{ href: '/pipeline', label: 'Pipeline' },
+		{ href: '/search', label: 'Search' },
 		{ href: '/postings', label: 'Saved Postings' },
 		{ href: '/companies', label: 'Companies' },
 	];

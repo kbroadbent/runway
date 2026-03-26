@@ -64,11 +64,14 @@
 		}
 	}
 
+	let interviewsLoaded = $state(false);
+
 	async function loadInterviews() {
-		if (companyInterviews.length > 0) return;
+		if (interviewsLoaded || loadingInterviews) return;
 		loadingInterviews = true;
 		try {
 			companyInterviews = await companies.interviews(company.id);
+			interviewsLoaded = true;
 		} finally {
 			loadingInterviews = false;
 		}

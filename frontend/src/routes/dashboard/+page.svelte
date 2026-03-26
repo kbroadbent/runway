@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { DashboardResponse, DashboardActionItem } from '$lib/types';
+	import type { DashboardResponse } from '$lib/types';
+	import DashboardLaneCounts from '$lib/components/DashboardLaneCounts.svelte';
+	import DashboardActionItems from '$lib/components/DashboardActionItems.svelte';
 
 	let data = $state<DashboardResponse | null>(null);
 	let error = $state<string | null>(null);
@@ -31,27 +33,22 @@
 {:else if data}
 	<h1>Dashboard</h1>
 
-	<div class="lane-counts">
-		{#each Object.entries(data.lane_counts) as [name, count]}
-			<div class="lane">
-				<span class="lane-name">{name}</span>
-				<span class="lane-count">{count}</span>
-			</div>
-		{/each}
+	<div class="dashboard-grid">
+		<DashboardLaneCounts laneCounts={data.lane_counts} />
+		<DashboardActionItems items={data.action_items} />
 	</div>
-
-	{#if data.action_items.length > 0}
-		<div class="action-items">
-			<h2>Action Items</h2>
-			{#each data.action_items as item}
-				<div class="action-item">
-					<span class="job-title">{item.job_title}</span>
-					{#if item.company_name}
-						<span class="company">{item.company_name}</span>
-					{/if}
-					<span class="description">{item.description}</span>
-				</div>
-			{/each}
-		</div>
-	{/if}
 {/if}
+
+<style>
+	h1 {
+		font-size: 1.5rem;
+		font-weight: 700;
+		margin-bottom: 1.25rem;
+	}
+
+	.dashboard-grid {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+	}
+</style>

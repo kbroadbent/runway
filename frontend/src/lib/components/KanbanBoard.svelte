@@ -4,7 +4,7 @@
 	import KanbanCard from './KanbanCard.svelte';
 	import KanbanSubLane from './KanbanSubLane.svelte';
 	import StageDateModal from './StageDateModal.svelte';
-	import { STAGES } from '$lib/pipeline';
+	import { STAGES, STAGE_DATE_FIELDS, AUTO_DATE_STAGES } from '$lib/pipeline';
 	import type { StageConfig } from '$lib/pipeline';
 
 	interface Props {
@@ -67,14 +67,33 @@
 			}
 		}
 
-		pendingMove = { entryId: id, toStage: toStageKey, entryTitle };
+		const hasDateFields = (STAGE_DATE_FIELDS[toStageKey] ?? []).length > 0;
+		if (hasDateFields) {
+			pendingMove = { entryId: id, toStage: toStageKey, entryTitle };
+		} else {
+			// No date prompt needed — move directly, auto-setting any derived dates
+			const autoField = AUTO_DATE_STAGES[toStageKey];
+			const stageDates = autoField
+				? { [autoField]: new Date().toISOString().substring(0, 10) }
+				: undefined;
+			await pipeline.move(id, { to_stage: toStageKey, stage_dates: stageDates });
+			onMoved();
+		}
+	}
+
+	function withAutoDates(toStage: string, dates: Record<string, string>): Record<string, string> {
+		const autoField = AUTO_DATE_STAGES[toStage];
+		if (autoField && !dates[autoField]) {
+			dates[autoField] = new Date().toISOString().substring(0, 10);
+		}
+		return dates;
 	}
 
 	async function handleModalConfirm(dates: Record<string, string>) {
 		if (!pendingMove) return;
 		const { entryId, toStage } = pendingMove;
 		pendingMove = null;
-		await pipeline.move(entryId, { to_stage: toStage, stage_dates: dates });
+		await pipeline.move(entryId, { to_stage: toStage, stage_dates: withAutoDates(toStage, dates) });
 		onMoved();
 	}
 
@@ -82,7 +101,9 @@
 		if (!pendingMove) return;
 		const { entryId, toStage } = pendingMove;
 		pendingMove = null;
-		await pipeline.move(entryId, { to_stage: toStage });
+		const autoDates = withAutoDates(toStage, {});
+		const stageDates = Object.keys(autoDates).length > 0 ? autoDates : undefined;
+		await pipeline.move(entryId, { to_stage: toStage, stage_dates: stageDates });
 		onMoved();
 	}
 
