@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { DashboardResponse } from '$lib/types';
+	import { dashboard as dashboardApi } from '$lib/api';
 	import DashboardLaneCounts from '$lib/components/DashboardLaneCounts.svelte';
 	import DashboardActionItems from '$lib/components/DashboardActionItems.svelte';
 
@@ -10,14 +11,7 @@
 
 	onMount(async () => {
 		try {
-			const resp = await fetch('http://localhost:8000/api/dashboard', {
-				headers: { 'Content-Type': 'application/json' },
-			});
-			if (!resp.ok) {
-				error = 'Failed to load dashboard';
-				return;
-			}
-			data = await resp.json();
+			data = await dashboardApi.get();
 		} catch (e) {
 			error = 'Failed to load dashboard';
 		} finally {
