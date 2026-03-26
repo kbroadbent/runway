@@ -11,6 +11,7 @@
 	let showForm = $state(false);
 	let editingProfile = $state<SearchProfile | null>(null);
 	let loading = $state(false);
+	let loadingPostings = $state(false);
 	let runStatus = $state('');
 
 	onMount(async () => {
@@ -25,6 +26,14 @@
 		selectedProfile = profile;
 		results = [];
 		runStatus = '';
+		loadingPostings = true;
+		try {
+			results = await searchProfiles.postings(profile.id);
+		} catch {
+			// silently fail — results stays empty
+		} finally {
+			loadingPostings = false;
+		}
 	}
 
 	async function handleRunSearch() {
@@ -181,7 +190,11 @@
 					<p class="last-run">Last run: {new Date(selectedProfile.last_run_at).toLocaleString()}</p>
 				{/if}
 
-				<SearchResultsTable {results} onSave={handleSave} onDismiss={handleDismiss} onAddToPipeline={handleAddToPipeline} />
+				{#if loadingPostings}
+					<p class="empty-hint">Loading results...</p>
+				{:else}
+					<SearchResultsTable {results} onSave={handleSave} onDismiss={handleDismiss} onAddToPipeline={handleAddToPipeline} />
+				{/if}
 			{:else}
 				<p class="empty-hint">Select a search profile to view results.</p>
 			{/if}
