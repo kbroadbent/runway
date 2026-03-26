@@ -1,7 +1,26 @@
 from datetime import date as Date, datetime
-from typing import Optional
-from pydantic import BaseModel, Field
+from typing import Annotated, Optional
+from pydantic import BaseModel, BeforeValidator, Field
 from app.schemas.job_posting import JobPostingRead
+
+
+def _coerce_to_date(v):
+    """Accept date, datetime, or ISO datetime string and return a date."""
+    if v is None:
+        return v
+    if isinstance(v, datetime):
+        return v.date()
+    if isinstance(v, Date):
+        return v
+    if isinstance(v, str):
+        try:
+            return datetime.fromisoformat(v).date()
+        except ValueError:
+            return Date.fromisoformat(v)
+    return v
+
+
+FlexDate = Annotated[Date, BeforeValidator(_coerce_to_date)]
 
 
 class PipelineEntryCreate(BaseModel):
@@ -12,12 +31,12 @@ class PipelineEntryCreate(BaseModel):
 class PipelineEntryUpdate(BaseModel):
     next_action: str | None = None
     next_action_date: datetime | None = None
-    applied_date: Optional[Date] = None
-    recruiter_screen_date: Optional[Date] = None
-    tech_screen_date: Optional[Date] = None
-    onsite_date: Optional[Date] = None
-    offer_date: Optional[Date] = None
-    offer_expiration_date: Optional[Date] = None
+    applied_date: Optional[FlexDate] = None
+    recruiter_screen_date: Optional[FlexDate] = None
+    tech_screen_date: Optional[FlexDate] = None
+    onsite_date: Optional[FlexDate] = None
+    offer_date: Optional[FlexDate] = None
+    offer_expiration_date: Optional[FlexDate] = None
 
 
 class PipelineMoveRequest(BaseModel):

@@ -31,6 +31,13 @@ function makeEntry(stage: string, id = 1): PipelineEntry {
 		position: 0,
 		next_action: null,
 		next_action_date: null,
+		applied_date: null,
+		recruiter_screen_date: null,
+		tech_screen_date: null,
+		onsite_date: null,
+		offer_date: null,
+		offer_expiration_date: null,
+		custom_dates: [],
 		created_at: '2026-01-01',
 		updated_at: '2026-01-01',
 	};
