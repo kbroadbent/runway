@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import date as Date, datetime
+from typing import Optional
 from pydantic import BaseModel, Field
 from app.schemas.job_posting import JobPostingRead
 
@@ -11,16 +12,42 @@ class PipelineEntryCreate(BaseModel):
 class PipelineEntryUpdate(BaseModel):
     next_action: str | None = None
     next_action_date: datetime | None = None
+    applied_date: Optional[Date] = None
+    recruiter_screen_date: Optional[Date] = None
+    tech_screen_date: Optional[Date] = None
+    onsite_date: Optional[Date] = None
+    offer_date: Optional[Date] = None
+    offer_expiration_date: Optional[Date] = None
 
 
 class PipelineMoveRequest(BaseModel):
     to_stage: str
     note: str | None = None
+    stage_dates: Optional[dict[str, Optional[Date]]] = None
 
 
 class ManualEventCreate(BaseModel):
     description: str = Field(..., max_length=10000)
     event_date: datetime | None = None
+
+
+class CustomDateCreate(BaseModel):
+    label: str = Field(..., min_length=1, max_length=100)
+    date: Date
+
+
+class CustomDateUpdate(BaseModel):
+    label: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    date: Optional[Date] = None
+
+
+class CustomDateRead(BaseModel):
+    id: int
+    label: str
+    date: Date
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
 
 
 class PipelineEntryRead(BaseModel):
@@ -30,6 +57,13 @@ class PipelineEntryRead(BaseModel):
     position: int
     next_action: str | None
     next_action_date: datetime | None
+    applied_date: Optional[Date] = None
+    recruiter_screen_date: Optional[Date] = None
+    tech_screen_date: Optional[Date] = None
+    onsite_date: Optional[Date] = None
+    offer_date: Optional[Date] = None
+    offer_expiration_date: Optional[Date] = None
+    custom_dates: list[CustomDateRead] = []
     created_at: datetime
     updated_at: datetime
 
