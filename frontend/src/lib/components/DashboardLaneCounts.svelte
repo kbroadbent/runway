@@ -7,8 +7,15 @@
 
 	let { laneCounts }: Props = $props();
 
+	function stageCount(stage: { key: string; subLanes?: { key: string }[] }): number {
+		if (stage.subLanes) {
+			return stage.subLanes.reduce((sum, sub) => sum + (laneCounts[sub.key] ?? 0), 0);
+		}
+		return laneCounts[stage.key] ?? 0;
+	}
+
 	let totalActive = $derived(
-		ACTIVE_STAGES.reduce((sum, s) => sum + (laneCounts[s.label] ?? 0), 0)
+		ACTIVE_STAGES.reduce((sum, s) => sum + stageCount(s), 0)
 	);
 </script>
 
@@ -21,7 +28,7 @@
 	<div class="lanes-grid">
 		{#each ACTIVE_STAGES as stage}
 			<a href="/pipeline" class="lane-card">
-				<span class="lane-count">{laneCounts[stage.label] ?? 0}</span>
+				<span class="lane-count">{stageCount(stage)}</span>
 				<span class="lane-label">{stage.label}</span>
 			</a>
 		{/each}
@@ -31,7 +38,7 @@
 		{#each TERMINAL_STAGES as stage}
 			<div class="terminal-lane">
 				<span class="terminal-label">{stage.label}</span>
-				<span class="terminal-count">{laneCounts[stage.label] ?? 0}</span>
+				<span class="terminal-count">{stageCount(stage)}</span>
 			</div>
 		{/each}
 	</div>
