@@ -185,6 +185,51 @@ npm run test
 | `just dev`     | Run `./run.sh`                           |
 | `just backup`  | Create a timestamped database backup     |
 
+## Docker
+
+### Quick Start
+
+Build and run Runway with Docker Compose:
+
+```bash
+docker compose build
+docker compose up
+```
+
+The app will be available at [http://localhost:8000](http://localhost:8000).
+
+### Using an Existing Database
+
+To use an existing `runway.db` file, mount it as a volume and set the `DATABASE_PATH` environment variable:
+
+```yaml
+# docker-compose.yml volume mount
+volumes:
+  - ./backend/runway.db:/app/data/runway.db
+environment:
+  - DATABASE_PATH=/app/data/runway.db
+```
+
+### Ollama / AI Setup
+
+To connect the Docker container to an Ollama instance running on your host machine, set the `OLLAMA_BASE_URL` environment variable to point to `host.docker.internal`:
+
+```bash
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+```
+
+Or add it to your `.env` file (see below).
+
+### Environment Variables
+
+Configuration is done via environment variables. Copy `.env.example` to `.env` and adjust as needed:
+
+| Variable         | Description                              | Default                |
+| ---------------- | ---------------------------------------- | ---------------------- |
+| `DATABASE_PATH`  | Path to the SQLite database file         | `runway.db`            |
+| `CORS_ORIGINS`   | Comma-separated list of allowed origins  | `http://localhost:5173` |
+| `OLLAMA_BASE_URL`| URL of the Ollama server                 | `http://localhost:11434`|
+
 ## Key Dependencies
 
 ### Backend
