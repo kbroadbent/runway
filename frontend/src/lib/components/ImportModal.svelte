@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ImportPreview } from '$lib/types';
-	import { postings, pipeline, ApiError } from '$lib/api';
+	import { postings, ApiError } from '$lib/api';
 
 	interface Props {
 		onClose: () => void;
@@ -15,7 +15,6 @@
 	let preview = $state<ImportPreview | null>(null);
 	let parsing = $state(false);
 	let saving = $state(false);
-	let addToPipeline = $state(false);
 	let error = $state('');
 	let duplicateId = $state<number | null>(null);
 
@@ -73,10 +72,7 @@
 				url,
 				raw_content: preview?.raw_content ?? null,
 			};
-			const saved = await postings.importConfirm(data);
-			if (addToPipeline) {
-				await pipeline.add({ job_posting_id: saved.id });
-			}
+			await postings.importConfirm(data);
 			onSaved();
 			onClose();
 		} catch (e) {
@@ -192,11 +188,6 @@
 					<label>Notes</label>
 					<textarea bind:value={notes} rows={3} style="width: 100%" placeholder="e.g. Referral from Jane, found via recruiter..."></textarea>
 				</div>
-
-				<label class="checkbox-label">
-					<input type="checkbox" bind:checked={addToPipeline} />
-					Add to Pipeline immediately
-				</label>
 
 				{#if error}
 					<p class="error">
@@ -335,14 +326,6 @@
 	.parse-badge.heuristic {
 		background: color-mix(in srgb, var(--accent-orange, #f59e0b) 15%, transparent);
 		color: var(--accent-orange, #f59e0b);
-	}
-
-	.checkbox-label {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		cursor: pointer;
-		margin-bottom: 0.75rem;
 	}
 
 	.modal-actions {

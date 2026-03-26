@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { SearchProfile, JobPosting } from '$lib/types';
-	import { searchProfiles, postings, pipeline, searchResults } from '$lib/api';
+	import { searchProfiles, postings, searchResults } from '$lib/api';
 	import SearchProfileForm from '$lib/components/SearchProfileForm.svelte';
 	import SearchResultsTable from '$lib/components/SearchResultsTable.svelte';
 	import { onMount } from 'svelte';
@@ -136,11 +136,6 @@
 		}
 	}
 
-	async function handleAddToPipeline(posting: JobPosting) {
-		await pipeline.add({ job_posting_id: posting.id });
-		results = results.filter((r) => r.id !== posting.id);
-		runStatus = `Added "${posting.title}" to pipeline`;
-	}
 </script>
 
 <div class="page-header">
@@ -223,7 +218,7 @@
 				{#if loadingPostings}
 					<p class="empty-hint">Loading results...</p>
 				{:else}
-					<SearchResultsTable {results} {addedIds} {removedPostings} onSave={handleSave} onDismiss={handleDismiss} onAddToPipeline={handleAddToPipeline} />
+					<SearchResultsTable {results} {addedIds} {removedPostings} onSave={handleSave} onDismiss={handleDismiss} />
 				{/if}
 			{:else}
 				<p class="empty-hint">Select a search profile to view results.</p>

@@ -8,10 +8,9 @@
 		removedPostings?: JobPosting[];
 		onSave?: (posting: JobPosting) => void;
 		onDismiss?: (posting: JobPosting) => void;
-		onAddToPipeline?: (posting: JobPosting) => void;
 	}
 
-	let { results, addedIds = new Set(), removedPostings = [], onSave, onDismiss, onAddToPipeline }: Props = $props();
+	let { results, addedIds = new Set(), removedPostings = [], onSave, onDismiss }: Props = $props();
 
 	let selectedPosting = $state<JobPosting | null>(null);
 	let sortKey = $state<string>('date_posted');
@@ -115,9 +114,6 @@
 							{#if onSave}
 								<button class="btn btn-sm btn-primary" onclick={() => onSave(posting)}>Save</button>
 							{/if}
-							{#if onAddToPipeline}
-								<button class="btn btn-sm btn-secondary" onclick={() => onAddToPipeline(posting)}>+ Pipeline</button>
-							{/if}
 							{#if onDismiss}
 								<button class="btn btn-sm btn-danger" onclick={() => onDismiss(posting)}>Dismiss</button>
 							{/if}
@@ -153,7 +149,7 @@
 <JobDetailModal
 	posting={selectedPosting}
 	onClose={() => selectedPosting = null}
-	onAddToPipeline={onAddToPipeline}
+	onSave={onSave}
 />
 
 <style>

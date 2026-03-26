@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { JobPosting, Company, PostingsFilter } from '$lib/types';
-	import { postings as postingsApi, pipeline } from '$lib/api';
+	import { postings as postingsApi } from '$lib/api';
 	import ImportModal from '$lib/components/ImportModal.svelte';
 	import PostingDetailPanel from '$lib/components/PostingDetailPanel.svelte';
 	import CompanyDetail from '$lib/components/CompanyDetail.svelte';
@@ -96,12 +96,6 @@
 	function toggleSelectAll() {
 		if (selected.size === filtered.length) selected = new Set();
 		else selected = new Set(filtered.map((p) => p.id));
-	}
-
-	async function addToPipeline(posting: JobPosting, e: MouseEvent) {
-		e.stopPropagation();
-		await pipeline.add({ job_posting_id: posting.id });
-		await loadPostings();
 	}
 
 	async function setTier(posting: JobPosting, e: Event) {
@@ -255,10 +249,6 @@
 						<td>
 							{#if posting.pipeline_stage}
 								<span class="badge badge-stage">{posting.pipeline_stage}</span>
-							{:else}
-								<button class="btn btn-xs btn-secondary" onclick={(e) => addToPipeline(posting, e)}>
-									+ Pipeline
-								</button>
 							{/if}
 						</td>
 						<td>{new Date(posting.date_saved).toLocaleDateString()}</td>

@@ -6,10 +6,10 @@
 	interface Props {
 		posting: JobPosting | null;
 		onClose: () => void;
-		onAddToPipeline?: (posting: JobPosting) => void;
+		onSave?: (posting: JobPosting) => void;
 	}
 
-	let { posting, onClose, onAddToPipeline }: Props = $props();
+	let { posting, onClose, onSave }: Props = $props();
 
 	function formatSalary(min: number | null, max: number | null): string {
 		if (!min && !max) return 'Not specified';
@@ -65,10 +65,10 @@
 				<p class="no-description">No description available.</p>
 			{/if}
 
-			{#if onAddToPipeline}
+			{#if onSave}
 				<div class="modal-actions">
-					<button class="btn btn-primary" onclick={() => { onAddToPipeline!(posting!); onClose(); }}>
-						+ Add to Pipeline
+					<button class="btn btn-primary" onclick={() => { onSave!(posting!); onClose(); }}>
+						Save
 					</button>
 				</div>
 			{/if}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { JobPosting } from '$lib/types';
-	import { postings, pipeline } from '$lib/api';
+	import { postings } from '$lib/api';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 
@@ -19,7 +19,6 @@
 	let { posting, onClose, onDeleted, onUpdated }: Props = $props();
 
 	let deleting = $state(false);
-	let addingToPipeline = $state(false);
 	let savingCompany = $state(false);
 	let summarizing = $state(false);
 	let status = $state('');
@@ -127,19 +126,6 @@
 		}
 	}
 
-	async function handleAddToPipeline() {
-		addingToPipeline = true;
-		try {
-			const entry = await pipeline.add({ job_posting_id: posting.id });
-			localPosting = { ...localPosting, pipeline_stage: entry.stage };
-			status = 'Added to pipeline!';
-			onUpdated();
-		} catch (e) {
-			status = e instanceof Error ? e.message : 'Failed to add to pipeline';
-		} finally {
-			addingToPipeline = false;
-		}
-	}
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -307,11 +293,6 @@
 			{/if}
 
 			<div class="panel-actions">
-				{#if !localPosting.pipeline_stage}
-					<button class="btn btn-primary" onclick={handleAddToPipeline} disabled={addingToPipeline}>
-						{addingToPipeline ? 'Adding...' : '+ Add to Pipeline'}
-					</button>
-				{/if}
 				<button class="btn btn-danger" onclick={handleDelete} disabled={deleting}>
 					{deleting ? 'Deleting...' : 'Delete'}
 				</button>
