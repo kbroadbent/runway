@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import type { DashboardResponse } from '$lib/types';
 
@@ -180,6 +180,63 @@ describe('Dashboard Page', () => {
 
 		await waitFor(() => {
 			expect(screen.getByText(/error|failed/i)).toBeInTheDocument();
+		});
+	});
+});
+
+describe('Dashboard Page respects configured API base URL', () => {
+	let originalViteApiBase: string | undefined;
+
+	beforeEach(() => {
+		mockFetch.mockReset();
+		vi.resetModules();
+		originalViteApiBase = import.meta.env.VITE_API_BASE;
+	});
+
+	afterEach(() => {
+		if (originalViteApiBase !== undefined) {
+			import.meta.env.VITE_API_BASE = originalViteApiBase;
+		} else {
+			delete import.meta.env.VITE_API_BASE;
+		}
+	});
+
+	it('uses VITE_API_BASE for dashboard fetch when env var is set', async () => {
+		import.meta.env.VITE_API_BASE = 'https://custom-host.example.com/api';
+
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: () => Promise.resolve(EMPTY_DASHBOARD),
+		});
+
+		const mod = await import('./+page.svelte');
+		render(mod.default);
+
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalled();
+			const [url] = mockFetch.mock.calls[0];
+			expect(url).toBe('https://custom-host.example.com/api/dashboard');
+		});
+	});
+
+	it('does not use hardcoded localhost:8000 when VITE_API_BASE is set', async () => {
+		import.meta.env.VITE_API_BASE = '/api';
+
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: () => Promise.resolve(EMPTY_DASHBOARD),
+		});
+
+		const mod = await import('./+page.svelte');
+		render(mod.default);
+
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalled();
+			const [url] = mockFetch.mock.calls[0];
+			expect(url).not.toContain('localhost:8000');
+			expect(url).toBe('/api/dashboard');
 		});
 	});
 });
