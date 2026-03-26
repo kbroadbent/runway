@@ -329,3 +329,315 @@ describe('Search Page — results header with count and timestamp', () => {
 		});
 	});
 });
+
+// --- Additional mock postings for delta tests ---
+
+const MOCK_POSTING_NEW: JobPosting = {
+	id: 12,
+	title: 'Vue.js Developer',
+	company: { id: 3, name: 'StartupXYZ', website: null, glassdoor_rating: null, glassdoor_url: null, levels_salary_data: null, levels_url: null, blind_url: null, employee_count: null, industry: null, notes: null, common_questions: null, last_researched_at: null, created_at: '2026-03-20T00:00:00' },
+	company_name: 'StartupXYZ',
+	description: 'Vue work',
+	location: 'Remote',
+	remote_type: 'remote',
+	salary_min: 110000,
+	salary_max: 160000,
+	url: 'https://example.com/job/12',
+	source: 'indeed',
+	date_posted: '2026-03-24T00:00:00',
+	date_saved: '2026-03-25T00:00:00',
+	status: 'new',
+	tier: null,
+	pipeline_stage: null,
+	has_raw_content: false,
+	notes: null,
+};
+
+const MOCK_POSTING_NEW_2: JobPosting = {
+	id: 13,
+	title: 'Angular Developer',
+	company: { id: 4, name: 'MegaCorp', website: null, glassdoor_rating: null, glassdoor_url: null, levels_salary_data: null, levels_url: null, blind_url: null, employee_count: null, industry: null, notes: null, common_questions: null, last_researched_at: null, created_at: '2026-03-20T00:00:00' },
+	company_name: 'MegaCorp',
+	description: 'Angular work',
+	location: 'SF',
+	remote_type: null,
+	salary_min: 130000,
+	salary_max: 190000,
+	url: 'https://example.com/job/13',
+	source: 'indeed',
+	date_posted: '2026-03-24T00:00:00',
+	date_saved: '2026-03-25T00:00:00',
+	status: 'new',
+	tier: null,
+	pipeline_stage: null,
+	has_raw_content: false,
+	notes: null,
+};
+
+/**
+ * Helper to set up a profile with initial postings selected.
+ * Returns after the profile is selected and postings are loaded.
+ */
+async function selectProfileWithPostings(
+	SearchPage: typeof import('./+page.svelte').default,
+	profile: SearchProfile,
+	initialPostings: JobPosting[],
+) {
+	mockJsonResponse([profile]);
+	render(SearchPage);
+
+	await waitFor(() => {
+		expect(screen.getByText(profile.name)).toBeInTheDocument();
+	});
+
+	mockJsonResponse(initialPostings);
+	await fireEvent.click(screen.getByText(profile.name));
+
+	if (initialPostings.length > 0) {
+		await waitFor(() => {
+			expect(screen.getByText(initialPostings[0].title)).toBeInTheDocument();
+		});
+	} else {
+		await waitFor(() => {
+			expect(screen.getByText(/no results/i)).toBeInTheDocument();
+		});
+	}
+}
+
+describe('Search Page — delta tracking on refresh', () => {
+	let SearchPage: typeof import('./+page.svelte').default;
+
+	beforeEach(async () => {
+		mockFetch.mockReset();
+		const mod = await import('./+page.svelte');
+		SearchPage = mod.default;
+	});
+
+	it('identifies added postings after refresh by passing addedIds to results table', async () => {
+		// Initial state: postings [10, 11]
+		await selectProfileWithPostings(SearchPage, MOCK_PROFILE, MOCK_POSTINGS);
+
+		// Refresh: run returns, then postings now [11, 12] — posting 10 removed, 12 added
+		mockJsonResponse({ new_count: 1, total_count: 2 });
+		mockJsonResponse([MOCK_POSTINGS[1], MOCK_POSTING_NEW]); // postings after refresh
+		mockJsonResponse([MOCK_PROFILE]); // profile list reload
+
+		await fireEvent.click(screen.getByText('Refresh'));
+
+		await waitFor(() => {
+			expect(screen.getByText('Vue.js Developer')).toBeInTheDocument();
+		});
+
+		// The new posting (id 12) should be marked as added via a data attribute or CSS class
+		const newRow = screen.getByText('Vue.js Developer').closest('tr');
+		expect(newRow).toHaveAttribute('data-delta', 'added');
+	});
+
+	it('does not mark any postings as added on first refresh with no prior results', async () => {
+		// Initial state: no postings
+		await selectProfileWithPostings(SearchPage, MOCK_PROFILE_NO_RESULTS, []);
+
+		// Refresh: returns postings for the first time
+		mockJsonResponse({ new_count: 2, total_count: 2 });
+		mockJsonResponse(MOCK_POSTINGS); // postings after refresh
+		mockJsonResponse([MOCK_PROFILE_NO_RESULTS]); // profile list reload
+
+		await fireEvent.click(screen.getByText('Refresh'));
+
+		await waitFor(() => {
+			expect(screen.getByText('Senior Frontend Developer')).toBeInTheDocument();
+		});
+
+		// No postings should be marked as added since this is the first load
+		const rows = screen.getAllByRole('row').filter((row) => row.closest('tbody'));
+		rows.forEach((row) => {
+			expect(row).not.toHaveAttribute('data-delta', 'added');
+		});
+	});
+
+	it('tracks removed postings that disappear after refresh', async () => {
+		// Initial state: postings [10, 11]
+		await selectProfileWithPostings(SearchPage, MOCK_PROFILE, MOCK_POSTINGS);
+
+		// Refresh: posting 10 disappears, posting 12 added → results now [11, 12]
+		mockJsonResponse({ new_count: 1, total_count: 2 });
+		mockJsonResponse([MOCK_POSTINGS[1], MOCK_POSTING_NEW]);
+		mockJsonResponse([MOCK_PROFILE]);
+
+		await fireEvent.click(screen.getByText('Refresh'));
+
+		await waitFor(() => {
+			expect(screen.getByText('Vue.js Developer')).toBeInTheDocument();
+		});
+
+		// The removed posting (id 10, "Senior Frontend Developer") should still be visible
+		// in a removed/collapsed section, not just vanished
+		expect(screen.getByText('Senior Frontend Developer')).toBeInTheDocument();
+	});
+
+	it('clears delta state when switching to a different profile', async () => {
+		// Set up with two profiles
+		mockJsonResponse([MOCK_PROFILE, MOCK_PROFILE_NO_RESULTS]);
+		render(SearchPage);
+
+		await waitFor(() => {
+			expect(screen.getByText('Frontend Jobs')).toBeInTheDocument();
+		});
+
+		// Select first profile with postings
+		mockJsonResponse(MOCK_POSTINGS);
+		await fireEvent.click(screen.getByText('Frontend Jobs'));
+
+		await waitFor(() => {
+			expect(screen.getByText('Senior Frontend Developer')).toBeInTheDocument();
+		});
+
+		// Refresh to produce deltas: posting 10 removed, 12 added
+		mockJsonResponse({ new_count: 1, total_count: 2 });
+		mockJsonResponse([MOCK_POSTINGS[1], MOCK_POSTING_NEW]);
+		mockJsonResponse([MOCK_PROFILE, MOCK_PROFILE_NO_RESULTS]);
+
+		await fireEvent.click(screen.getByText('Refresh'));
+
+		await waitFor(() => {
+			expect(screen.getByText('Vue.js Developer')).toBeInTheDocument();
+		});
+
+		// Switch to second profile — deltas should be cleared
+		mockJsonResponse([]);
+		await fireEvent.click(screen.getByText('Backend Jobs'));
+
+		await waitFor(() => {
+			expect(screen.getByText(/no results/i)).toBeInTheDocument();
+		});
+
+		// Switch back to first profile — no delta markers should persist
+		mockJsonResponse([MOCK_POSTINGS[1], MOCK_POSTING_NEW]);
+		await fireEvent.click(screen.getByText('Frontend Jobs'));
+
+		await waitFor(() => {
+			expect(screen.getByText('Vue.js Developer')).toBeInTheDocument();
+		});
+
+		// No added markers should be present since deltas were cleared
+		const newRow = screen.getByText('Vue.js Developer').closest('tr');
+		expect(newRow).not.toHaveAttribute('data-delta', 'added');
+	});
+});
+
+describe('Search Page — acknowledge deltas', () => {
+	let SearchPage: typeof import('./+page.svelte').default;
+
+	beforeEach(async () => {
+		mockFetch.mockReset();
+		const mod = await import('./+page.svelte');
+		SearchPage = mod.default;
+	});
+
+	it('clears delta highlights and calls markReviewed when acknowledging', async () => {
+		// Select profile and get initial postings
+		await selectProfileWithPostings(SearchPage, MOCK_PROFILE, MOCK_POSTINGS);
+
+		// Refresh to produce deltas: new posting 12 added
+		mockJsonResponse({ new_count: 1, total_count: 3 });
+		mockJsonResponse([...MOCK_POSTINGS, MOCK_POSTING_NEW]);
+		mockJsonResponse([MOCK_PROFILE]);
+
+		await fireEvent.click(screen.getByText('Refresh'));
+
+		await waitFor(() => {
+			expect(screen.getByText('Vue.js Developer')).toBeInTheDocument();
+		});
+
+		// Verify the added posting is marked
+		const addedRow = screen.getByText('Vue.js Developer').closest('tr');
+		expect(addedRow).toHaveAttribute('data-delta', 'added');
+
+		// Click acknowledge to clear deltas
+		mockJsonResponse({}); // markReviewed response
+		mockJsonResponse([{ ...MOCK_PROFILE, new_result_count: 0 }]); // profiles reload
+
+		await fireEvent.click(screen.getByText('Mark All Reviewed'));
+
+		// Verify markReviewed API was called
+		await waitFor(() => {
+			expect(mockFetch).toHaveBeenCalledWith(
+				expect.stringContaining('/search-results/1/mark-reviewed'),
+				expect.objectContaining({ method: 'POST' }),
+			);
+		});
+
+		// After acknowledging, delta highlights should be cleared
+		await waitFor(() => {
+			const row = screen.getByText('Vue.js Developer').closest('tr');
+			expect(row).not.toHaveAttribute('data-delta', 'added');
+		});
+	});
+});
+
+describe('Search Page — individual actions clear delta state', () => {
+	let SearchPage: typeof import('./+page.svelte').default;
+
+	beforeEach(async () => {
+		mockFetch.mockReset();
+		const mod = await import('./+page.svelte');
+		SearchPage = mod.default;
+	});
+
+	it('saving a posting that was marked as added removes it from results and addedIds', async () => {
+		// Select profile with initial postings [10, 11]
+		await selectProfileWithPostings(SearchPage, MOCK_PROFILE, MOCK_POSTINGS);
+
+		// Refresh: adds posting 12 → results now [10, 11, 12]
+		mockJsonResponse({ new_count: 1, total_count: 3 });
+		mockJsonResponse([...MOCK_POSTINGS, MOCK_POSTING_NEW]);
+		mockJsonResponse([MOCK_PROFILE]);
+
+		await fireEvent.click(screen.getByText('Refresh'));
+
+		await waitFor(() => {
+			expect(screen.getByText('Vue.js Developer')).toBeInTheDocument();
+		});
+
+		// Save the newly added posting (id 12)
+		mockJsonResponse({}); // save response
+
+		// Find the Save button in the row for Vue.js Developer
+		const row = screen.getByText('Vue.js Developer').closest('tr')!;
+		const saveBtn = row.querySelector('button.btn-primary')!;
+		await fireEvent.click(saveBtn);
+
+		// The posting should be removed from results entirely
+		await waitFor(() => {
+			expect(screen.queryByText('Vue.js Developer')).not.toBeInTheDocument();
+		});
+	});
+
+	it('dismissing a posting that was marked as added removes it from results and addedIds', async () => {
+		// Select profile with initial postings [10, 11]
+		await selectProfileWithPostings(SearchPage, MOCK_PROFILE, MOCK_POSTINGS);
+
+		// Refresh: adds posting 12 → results now [10, 11, 12]
+		mockJsonResponse({ new_count: 1, total_count: 3 });
+		mockJsonResponse([...MOCK_POSTINGS, MOCK_POSTING_NEW]);
+		mockJsonResponse([MOCK_PROFILE]);
+
+		await fireEvent.click(screen.getByText('Refresh'));
+
+		await waitFor(() => {
+			expect(screen.getByText('Vue.js Developer')).toBeInTheDocument();
+		});
+
+		// Dismiss the newly added posting (id 12)
+		mockJsonResponse({}); // dismiss response
+
+		const row = screen.getByText('Vue.js Developer').closest('tr')!;
+		const dismissBtn = row.querySelector('button.btn-danger')!;
+		await fireEvent.click(dismissBtn);
+
+		// The posting should be removed from results entirely
+		await waitFor(() => {
+			expect(screen.queryByText('Vue.js Developer')).not.toBeInTheDocument();
+		});
+	});
+});
