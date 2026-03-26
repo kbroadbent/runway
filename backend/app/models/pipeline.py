@@ -1,5 +1,5 @@
-from datetime import datetime
-from sqlalchemy import Integer, String, Text, DateTime, ForeignKey, func
+from datetime import date, datetime
+from sqlalchemy import Integer, String, Text, Date, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
@@ -14,6 +14,12 @@ class PipelineEntry(Base):
     notes: Mapped[str | None] = mapped_column(Text)
     next_action: Mapped[str | None] = mapped_column(String)
     next_action_date: Mapped[datetime | None] = mapped_column(DateTime)
+    applied_date: Mapped[date | None] = mapped_column(Date)
+    recruiter_screen_date: Mapped[date | None] = mapped_column(Date)
+    tech_screen_date: Mapped[date | None] = mapped_column(Date)
+    onsite_date: Mapped[date | None] = mapped_column(Date)
+    offer_date: Mapped[date | None] = mapped_column(Date)
+    offer_expiration_date: Mapped[date | None] = mapped_column(Date)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -25,6 +31,9 @@ class PipelineEntry(Base):
         back_populates="pipeline_entry", cascade="all, delete-orphan"
     )
     comments: Mapped[list["PipelineComment"]] = relationship(
+        back_populates="pipeline_entry", cascade="all, delete-orphan"
+    )
+    custom_dates: Mapped[list["PipelineCustomDate"]] = relationship(
         back_populates="pipeline_entry", cascade="all, delete-orphan"
     )
 
@@ -58,3 +67,15 @@ class PipelineHistory(Base):
     changed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     pipeline_entry: Mapped["PipelineEntry"] = relationship(back_populates="history")
+
+
+class PipelineCustomDate(Base):
+    __tablename__ = "pipeline_custom_dates"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    pipeline_entry_id: Mapped[int] = mapped_column(ForeignKey("pipeline_entries.id", ondelete="CASCADE"))
+    label: Mapped[str] = mapped_column(String, nullable=False)
+    date: Mapped[date] = mapped_column(Date, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    pipeline_entry: Mapped["PipelineEntry"] = relationship(back_populates="custom_dates")
