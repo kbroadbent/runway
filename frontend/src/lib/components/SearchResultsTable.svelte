@@ -16,6 +16,7 @@
 	let selectedPosting = $state<JobPosting | null>(null);
 	let sortKey = $state<string>('date_posted');
 	let sortAsc = $state(false);
+	let removedExpanded = $state(false);
 
 	function handleSort(key: string) {
 		if (sortKey === key) {
@@ -130,18 +131,22 @@
 
 {#if removedPostings.length > 0}
 	<div class="removed-section">
-		<h3>Removed</h3>
-		<table>
-			<tbody>
-				{#each removedPostings as posting}
-					<tr class="result-row removed" data-delta="removed">
-						<td>{posting.title}</td>
-						<td>{posting.company?.name ?? ''}</td>
-						<td>{posting.location ?? ''}</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
+		<button type="button" class="removed-header" onclick={() => removedExpanded = !removedExpanded}>
+			{removedPostings.length > 1 ? `Removed (${removedPostings.length})` : 'Removed'}
+		</button>
+		<div hidden={!removedExpanded}>
+			<table>
+				<tbody>
+					{#each removedPostings as posting}
+						<tr class="result-row removed" data-delta="removed">
+							<td>{posting.title}</td>
+							<td>{posting.company?.name ?? ''}</td>
+							<td>{posting.location ?? ''}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
 	</div>
 {/if}
 
@@ -187,5 +192,30 @@
 		color: var(--text-muted);
 		text-align: center;
 		padding: 2rem;
+	}
+
+	:global(tr[data-delta='added']) {
+		border-left: 3px solid var(--accent-green, #22c55e);
+	}
+
+	:global(tr[data-delta='removed']) {
+		opacity: 0.6;
+	}
+
+	.removed-section {
+		margin-top: 1rem;
+	}
+
+	.removed-header {
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: var(--text-muted);
+		font-size: 0.875rem;
+		padding: 0.5rem 0;
+	}
+
+	.removed-header:hover {
+		color: var(--text-primary);
 	}
 </style>
