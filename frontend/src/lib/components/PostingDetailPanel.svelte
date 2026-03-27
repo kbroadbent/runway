@@ -1,6 +1,8 @@
 <script lang="ts">
-	import type { JobPosting } from '$lib/types';
+	import type { JobPosting, LeadSource } from '$lib/types';
+	import { LEAD_SOURCE_LABELS } from '$lib/types';
 	import { postings } from '$lib/api';
+	import LeadSourceTooltip from './LeadSourceTooltip.svelte';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 
@@ -37,6 +39,7 @@
 	let editUrl = $state('');
 	let editDescription = $state('');
 	let editTier = $state<number | null>(null);
+	let editLeadSource = $state<LeadSource>('cold_apply');
 
 	function handleEditStart() {
 		editTitle = localPosting.title;
@@ -48,6 +51,7 @@
 		editUrl = localPosting.url ?? '';
 		editDescription = localPosting.description ?? '';
 		editTier = localPosting.tier ?? null;
+		editLeadSource = localPosting.lead_source ?? 'cold_apply';
 		editing = true;
 	}
 
@@ -69,6 +73,7 @@
 				salary_max: editSalaryMax ?? null,
 				url: editUrl || null,
 				description: editDescription || null,
+				lead_source: editLeadSource,
 			});
 			localPosting = updated;
 			editing = false;
@@ -186,6 +191,17 @@
 					<input type="url" bind:value={editUrl} style="width: 100%" />
 				</div>
 				<div class="form-group">
+					<div style="display: flex; align-items: center; gap: 0.3rem;">
+						<label style="margin-bottom: 0;">Lead Source</label>
+						<LeadSourceTooltip />
+					</div>
+					<select bind:value={editLeadSource} style="width: 100%">
+						{#each Object.entries(LEAD_SOURCE_LABELS) as [value, label]}
+							<option {value}>{label}</option>
+						{/each}
+					</select>
+				</div>
+				<div class="form-group">
 					<label>Description</label>
 					<textarea bind:value={editDescription} rows={8} style="width: 100%" onkeydown={(e) => { if (e.ctrlKey && e.key === 'Enter' && editTitle) handleSave(); }}></textarea>
 				</div>
@@ -225,6 +241,7 @@
 				{/if}
 				<span class="meta-item">💰 {formatSalary(localPosting.salary_min, localPosting.salary_max)}</span>
 				<span class="meta-item">🔗 {localPosting.source}</span>
+				<span class="badge badge-stage">{LEAD_SOURCE_LABELS[localPosting.lead_source] ?? localPosting.lead_source}</span>
 				{#if localPosting.pipeline_stage}
 					<span class="badge badge-stage">{localPosting.pipeline_stage}</span>
 				{/if}
