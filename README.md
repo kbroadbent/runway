@@ -12,11 +12,7 @@ A personal job search pipeline tool that tracks job postings from initial discov
 | Scraping | python-jobspy                                     |
 | AI       | LiteLLM (optional Ollama for local model support) |
 
-## Getting Started
-
-There are two ways to run Runway. Pick whichever suits you.
-
-### Option A: Docker (recommended)
+## Docker
 
 Requires only [Docker](https://docs.docker.com/get-docker/).
 
@@ -24,12 +20,17 @@ Requires only [Docker](https://docs.docker.com/get-docker/).
 git clone <repo-url>
 cd runway
 cp .env.example .env
-docker compose up --build
+docker compose build
+docker compose up
 ```
 
 Open [http://localhost:8000](http://localhost:8000). Migrations run automatically on startup.
 
-### Option B: Local Development
+**Using an existing database:** mount your `runway.db` via a volume in `docker-compose.yml`, or set `DATABASE_PATH` in the environment.
+
+**Ollama with Docker:** if you have Ollama running on the host, set `OLLAMA_BASE_URL=http://host.docker.internal:11434` in your `.env` so the container can reach it.
+
+## Getting Started (Local Development)
 
 Requires Python (>= 3.10), Node.js, and optionally Ollama. Instructions assume macOS.
 
