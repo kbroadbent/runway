@@ -1,9 +1,11 @@
 <script lang="ts">
-	import type { JobPosting, Company, PostingsFilter } from '$lib/types';
+	import type { JobPosting, Company, PostingsFilter, LeadSource } from '$lib/types';
+	import { LEAD_SOURCE_LABELS } from '$lib/types';
 	import { postings as postingsApi } from '$lib/api';
 	import ImportModal from '$lib/components/ImportModal.svelte';
 	import PostingDetailPanel from '$lib/components/PostingDetailPanel.svelte';
 	import CompanyDetail from '$lib/components/CompanyDetail.svelte';
+	import LeadSourceTooltip from '$lib/components/LeadSourceTooltip.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 
@@ -21,6 +23,7 @@
 	let tierFilter = $state<string>('');
 	let salaryMinFilter = $state<number | undefined>(undefined);
 	let salaryMaxFilter = $state<number | undefined>(undefined);
+	let leadSourceFilter = $state('');
 
 	// Sort
 	let sortKey = $state('date_saved');
@@ -58,6 +61,7 @@
 			if (tierFilter && tierFilter !== 'none' && p.tier !== Number(tierFilter)) return false;
 			if (salaryMinFilter && (p.salary_max ?? 0) < salaryMinFilter) return false;
 			if (salaryMaxFilter && (p.salary_min ?? Infinity) > salaryMaxFilter) return false;
+			if (leadSourceFilter && p.lead_source !== leadSourceFilter) return false;
 			if (hideArchived && p.pipeline_stage === 'archived') return false;
 			return true;
 		});
@@ -71,6 +75,7 @@
 				case 'salary': av = a.salary_min ?? 0; bv = b.salary_min ?? 0; break;
 				case 'tier': av = a.tier ?? 99; bv = b.tier ?? 99; break;
 				case 'source': av = a.source; bv = b.source; break;
+				case 'lead_source': av = a.lead_source; bv = b.lead_source; break;
 				case 'pipeline_stage': av = a.pipeline_stage ?? ''; bv = b.pipeline_stage ?? ''; break;
 				default: av = a.date_saved; bv = b.date_saved;
 			}
@@ -134,7 +139,8 @@
 		{ key: 'location', label: 'Location' },
 		{ key: 'salary', label: 'Salary' },
 		{ key: 'tier', label: 'Tier' },
-		{ key: 'source', label: 'Source' },
+		{ key: 'source', label: 'Search Source' },
+		{ key: 'lead_source', label: 'Lead' },
 		{ key: 'pipeline_stage', label: 'Pipeline' },
 		{ key: 'date_saved', label: 'Saved' },
 	];
@@ -167,6 +173,15 @@
 		<option value="hybrid">Hybrid</option>
 		<option value="onsite">Onsite</option>
 	</select>
+	<div class="filter-with-help">
+		<select bind:value={leadSourceFilter}>
+			<option value="">Any lead source</option>
+			{#each Object.entries(LEAD_SOURCE_LABELS) as [value, label]}
+				<option {value}>{label}</option>
+			{/each}
+		</select>
+		<LeadSourceTooltip />
+	</div>
 	<select bind:value={tierFilter}>
 		<option value="">Any tier</option>
 		<option value="1">Tier 1</option>
@@ -246,6 +261,7 @@
 							</select>
 						</td>
 						<td><span class="badge badge-stage">{posting.source}</span></td>
+					<td></td>
 						<td>
 							{#if posting.pipeline_stage}
 								<span class="badge badge-stage">{posting.pipeline_stage}</span>
@@ -368,6 +384,18 @@
 	.btn-xs {
 		padding: 0.15rem 0.5rem;
 		font-size: 0.75rem;
+	}
+
+	.filter-with-help {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		flex: 1;
+		min-width: 140px;
+	}
+
+	.filter-with-help select {
+		flex: 1;
 	}
 
 	.filter-checkbox {
