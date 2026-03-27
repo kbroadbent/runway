@@ -78,5 +78,6 @@ cd frontend && npm run test
 ## Key Conventions
 
 - **Tiers:** `job_postings` has a `tier` field for priority categorization (used to filter and sort postings)
+- **Lead source:** `job_postings` has a `lead_source` field tracking how the opportunity was found — `referral`, `recruiter_inbound`, `recruiter_outbound`, or `cold_apply` (default). Both postings and pipeline pages support filtering by lead source.
 - **Pipeline:** stages are tracked in `pipeline_entries` with full audit history — don't update in place, append new entries
 - **Company research:** Glassdoor, Levels.fyi, and Blind links are stored on the `Company` model alongside other research metadata
