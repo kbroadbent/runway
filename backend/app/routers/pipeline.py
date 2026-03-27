@@ -10,6 +10,7 @@ from app.schemas.pipeline import (
 )
 from app.schemas.pipeline_comment import PipelineCommentCreate, PipelineCommentUpdate, PipelineCommentRead
 from app.constants import STAGES, VALID_STAGES
+from app.schemas.job_posting import VALID_LEAD_SOURCES
 
 router = APIRouter(tags=["pipeline"])
 
@@ -23,16 +24,19 @@ def _validate_stage(stage: str) -> None:
 def list_pipeline(
     search: str | None = None,
     tier: int | None = None,
+    lead_source: str | None = None,
     db: Session = Depends(get_db),
 ):
     if tier is not None and tier not in (1, 2, 3):
         raise HTTPException(status_code=422, detail="Tier must be 1, 2, or 3")
+    if lead_source is not None and lead_source not in VALID_LEAD_SOURCES:
+        raise HTTPException(status_code=422, detail=f"Invalid lead_source '{lead_source}'. Must be one of: {', '.join(sorted(VALID_LEAD_SOURCES))}")
 
     query = db.query(PipelineEntry).options(
         joinedload(PipelineEntry.job_posting).joinedload(JobPosting.company)
     )
 
-    if search or tier is not None:
+    if search or tier is not None or lead_source is not None:
         query = query.join(JobPosting)
         if search:
             query = query.filter(or_(
@@ -41,6 +45,8 @@ def list_pipeline(
             ))
         if tier is not None:
             query = query.filter(JobPosting.tier == tier)
+        if lead_source is not None:
+            query = query.filter(JobPosting.lead_source == lead_source)
 
     entries = query.order_by(PipelineEntry.position).all()
     grouped = {stage: [] for stage in STAGES}

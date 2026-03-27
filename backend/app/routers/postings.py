@@ -36,6 +36,7 @@ def create_posting(data: JobPostingCreate, db: Session = Depends(get_db)):
         salary_max=data.salary_max,
         url=data.url,
         source=data.source,
+        lead_source=data.lead_source,
     )
     db.add(posting)
     try:
@@ -79,6 +80,7 @@ def import_confirm(data: ImportPreview, db: Session = Depends(get_db)):
         source="url_import" if data.url else "pasted",
         raw_content=data.raw_content,
         notes=data.notes,
+        lead_source=data.lead_source,
     )
     db.add(posting)
     try:

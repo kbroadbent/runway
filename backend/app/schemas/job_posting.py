@@ -1,6 +1,10 @@
 from datetime import datetime
+from typing import Literal
 from pydantic import BaseModel, computed_field
 from app.schemas.company import CompanyRead
+
+LeadSource = Literal["referral", "recruiter_inbound", "recruiter_outbound", "cold_apply"]
+VALID_LEAD_SOURCES = {"referral", "recruiter_inbound", "recruiter_outbound", "cold_apply"}
 
 
 class JobPostingCreate(BaseModel):
@@ -14,6 +18,7 @@ class JobPostingCreate(BaseModel):
     salary_max: int | None = None
     url: str | None = None
     source: str = "manual"
+    lead_source: LeadSource = "cold_apply"
 
 
 class JobPostingUpdate(BaseModel):
@@ -28,6 +33,7 @@ class JobPostingUpdate(BaseModel):
     status: str | None = None
     tier: int | None = None
     notes: str | None = None
+    lead_source: LeadSource | None = None
 
 
 class JobPostingRead(BaseModel):
@@ -49,6 +55,7 @@ class JobPostingRead(BaseModel):
     company_name: str | None = None
     pipeline_stage: str | None = None
     raw_content: str | None = None
+    lead_source: str = "cold_apply"
 
     @computed_field
     @property
@@ -75,3 +82,4 @@ class ImportPreview(BaseModel):
     raw_content: str | None = None
     notes: str | None = None
     ai_used: bool = False
+    lead_source: LeadSource = "cold_apply"
