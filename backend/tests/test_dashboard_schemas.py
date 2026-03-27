@@ -133,9 +133,11 @@ class TestDashboardResponse:
     def test_valid_dashboard_response_with_empty_lists(self):
         resp = DashboardResponse(
             lane_counts={"Interested": 3, "Applied": 1},
+            upcoming_events=[],
             action_items=[],
         )
         assert resp.lane_counts == {"Interested": 3, "Applied": 1}
+        assert resp.upcoming_events == []
         assert resp.action_items == []
 
     def test_dashboard_response_with_action_items(self):
@@ -150,22 +152,46 @@ class TestDashboardResponse:
         )
         resp = DashboardResponse(
             lane_counts={"Interested": 2},
+            upcoming_events=[],
             action_items=[action],
         )
         assert len(resp.action_items) == 1
         assert resp.action_items[0].job_title == "Engineer"
 
+    def test_dashboard_response_with_upcoming_events(self):
+        event = ActionItemRead(
+            pipeline_entry_id=5,
+            job_title="Dev",
+            company_name="BigCo",
+            type="interview",
+            description="Technical Screen",
+            date="2026-04-01",
+            is_overdue=False,
+        )
+        resp = DashboardResponse(
+            lane_counts={"Interested": 1},
+            upcoming_events=[event],
+            action_items=[],
+        )
+        assert len(resp.upcoming_events) == 1
+        assert resp.upcoming_events[0].description == "Technical Screen"
+
     def test_dashboard_response_requires_lane_counts(self):
         with pytest.raises(ValidationError):
-            DashboardResponse(action_items=[])
+            DashboardResponse(upcoming_events=[], action_items=[])
 
     def test_dashboard_response_requires_action_items(self):
         with pytest.raises(ValidationError):
-            DashboardResponse(lane_counts={"Interested": 1})
+            DashboardResponse(lane_counts={"Interested": 1}, upcoming_events=[])
+
+    def test_dashboard_response_requires_upcoming_events(self):
+        with pytest.raises(ValidationError):
+            DashboardResponse(lane_counts={"Interested": 1}, action_items=[])
 
     def test_dashboard_response_lane_counts_is_string_to_int_dict(self):
         resp = DashboardResponse(
             lane_counts={"Interested": 5, "Applying": 0, "Offer": 1},
+            upcoming_events=[],
             action_items=[],
         )
         for key, val in resp.lane_counts.items():
@@ -175,6 +201,7 @@ class TestDashboardResponse:
     def test_dashboard_response_serializes_to_dict(self):
         resp = DashboardResponse(
             lane_counts={"Applied": 2},
+            upcoming_events=[],
             action_items=[
                 ActionItemRead(
                     pipeline_entry_id=10,
@@ -189,5 +216,6 @@ class TestDashboardResponse:
         )
         data = resp.model_dump()
         assert data["lane_counts"] == {"Applied": 2}
+        assert data["upcoming_events"] == []
         assert len(data["action_items"]) == 1
         assert data["action_items"][0]["pipeline_entry_id"] == 10

@@ -3,6 +3,7 @@
 	import type { DashboardResponse } from '$lib/types';
 	import { dashboard as dashboardApi } from '$lib/api';
 	import DashboardLaneCounts from '$lib/components/DashboardLaneCounts.svelte';
+	import DashboardUpcomingEvents from '$lib/components/DashboardUpcomingEvents.svelte';
 	import DashboardActionItems from '$lib/components/DashboardActionItems.svelte';
 
 	let data = $state<DashboardResponse | null>(null);
@@ -29,6 +30,7 @@
 
 	<div class="dashboard-grid">
 		<DashboardLaneCounts laneCounts={data.lane_counts} />
+		<DashboardUpcomingEvents items={data.upcoming_events} />
 		<DashboardActionItems items={data.action_items} />
 	</div>
 {/if}

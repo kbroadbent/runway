@@ -35,4 +35,5 @@ class InterviewItemRead(BaseModel):
 
 class DashboardResponse(BaseModel):
     lane_counts: dict[str, int]
+    upcoming_events: list[ActionItemRead]
     action_items: list[ActionItemRead]

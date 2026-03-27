@@ -33,17 +33,17 @@
 	}
 </script>
 
-<div class="action-items">
-	<h2>Action Items</h2>
+<div class="upcoming-events">
+	<h2>Upcoming Events</h2>
 
 	{#if items.length === 0}
-		<p class="empty-state">No upcoming actions. You're up to date.</p>
+		<p class="empty-state">No upcoming events scheduled.</p>
 	{:else}
 		<div class="items-list">
 			{#each visibleItems as item}
-				<div class="action-item" class:overdue={item.is_overdue}>
+				<div class="event-item" class:overdue={item.is_overdue}>
 					<div class="item-left">
-						<span class="item-type-badge">Action</span>
+						<span class="item-type-badge">Interview</span>
 						<div class="item-details">
 							<span class="item-description">{item.description}</span>
 							<span class="item-job">
@@ -60,14 +60,14 @@
 
 		{#if hasMore && !showAll}
 			<button class="show-more" onclick={() => (showAll = true)}>
-				Show all ({items.length} items)
+				Show all ({items.length} events)
 			</button>
 		{/if}
 	{/if}
 </div>
 
 <style>
-	.action-items {
+	.upcoming-events {
 		background: var(--bg-secondary);
 		border: 1px solid var(--border-color);
 		border-radius: var(--radius);
@@ -93,17 +93,17 @@
 		gap: 0.375rem;
 	}
 
-	.action-item {
+	.event-item {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		padding: 0.625rem 0.75rem;
 		background: var(--bg-tertiary);
 		border-radius: var(--radius);
-		border-left: 3px solid var(--accent-yellow);
+		border-left: 3px solid var(--accent-blue);
 	}
 
-	.action-item.overdue {
+	.event-item.overdue {
 		border-left-color: var(--accent-red);
 	}
 
@@ -122,7 +122,7 @@
 		padding: 0.125rem 0.375rem;
 		border-radius: 3px;
 		background: var(--bg-primary);
-		color: var(--accent-yellow);
+		color: var(--accent-blue);
 		white-space: nowrap;
 	}
 

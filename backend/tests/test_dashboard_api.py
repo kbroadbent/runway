@@ -33,15 +33,14 @@ def test_dashboard_action_items_include_upcoming_interviews(client):
 
     resp = client.get("/api/dashboard")
     assert resp.status_code == 200
-    items = resp.json()["action_items"]
-    interview_items = [i for i in items if i["type"] == "interview"]
-    assert len(interview_items) == 1
-    assert interview_items[0]["description"] == "Technical"
-    assert interview_items[0]["is_overdue"] is False
+    events = resp.json()["upcoming_events"]
+    assert len(events) == 1
+    assert events[0]["description"] == "Technical"
+    assert events[0]["is_overdue"] is False
 
 
 def test_dashboard_excludes_interviews_with_outcome(client):
-    """Interviews with an outcome set should NOT appear in action items."""
+    """Interviews with an outcome set should NOT appear in upcoming events."""
     _, entry_id = _create_posting_and_entry(client, stage="tech_screen_completed")
 
     scheduled = (datetime.utcnow() - timedelta(days=1)).isoformat()
@@ -54,9 +53,8 @@ def test_dashboard_excludes_interviews_with_outcome(client):
 
     resp = client.get("/api/dashboard")
     assert resp.status_code == 200
-    items = resp.json()["action_items"]
-    interview_items = [i for i in items if i["type"] == "interview"]
-    assert len(interview_items) == 0
+    events = resp.json()["upcoming_events"]
+    assert len(events) == 0
 
 
 def test_dashboard_overdue_interview(client):
@@ -72,7 +70,6 @@ def test_dashboard_overdue_interview(client):
 
     resp = client.get("/api/dashboard")
     assert resp.status_code == 200
-    items = resp.json()["action_items"]
-    interview_items = [i for i in items if i["type"] == "interview"]
-    assert len(interview_items) == 1
-    assert interview_items[0]["is_overdue"] is True
+    events = resp.json()["upcoming_events"]
+    assert len(events) == 1
+    assert events[0]["is_overdue"] is True

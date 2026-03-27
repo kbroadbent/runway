@@ -70,11 +70,12 @@ def get_dashboard(db: Session = Depends(get_db)):
         .all()
     )
 
+    upcoming_events: list[ActionItemRead] = []
     for note in interview_notes:
         entry = note.pipeline_entry
         posting = entry.job_posting
         is_overdue = note.scheduled_at is not None and note.scheduled_at < now
-        action_items.append(
+        upcoming_events.append(
             ActionItemRead(
                 pipeline_entry_id=entry.id,
                 job_title=posting.title,
@@ -98,5 +99,10 @@ def get_dashboard(db: Session = Depends(get_db)):
             return (2, "")
 
     action_items.sort(key=sort_key)
+    upcoming_events.sort(key=sort_key)
 
-    return DashboardResponse(lane_counts=lane_counts, action_items=action_items)
+    return DashboardResponse(
+        lane_counts=lane_counts,
+        upcoming_events=upcoming_events,
+        action_items=action_items,
+    )

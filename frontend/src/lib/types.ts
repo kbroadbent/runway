@@ -145,6 +145,7 @@ export interface DashboardActionItem {
 
 export interface DashboardResponse {
   lane_counts: Record<string, number>;
+  upcoming_events: DashboardActionItem[];
   action_items: DashboardActionItem[];
 }
 
