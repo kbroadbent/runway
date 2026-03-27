@@ -1,3 +1,19 @@
+export type LeadSource = 'referral' | 'recruiter_inbound' | 'recruiter_outbound' | 'cold_apply';
+
+export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
+  referral: 'Referral',
+  recruiter_inbound: 'Recruiter (Inbound)',
+  recruiter_outbound: 'Recruiter (Outbound)',
+  cold_apply: 'Cold Apply',
+};
+
+export const LEAD_SOURCE_DESCRIPTIONS: Record<LeadSource, string> = {
+  referral: 'Someone referred you to this role',
+  recruiter_inbound: 'A recruiter reached out to you',
+  recruiter_outbound: 'You reached out to a recruiter',
+  cold_apply: 'You found and applied independently',
+};
+
 export interface Company {
   id: number;
   name: string;
@@ -34,6 +50,7 @@ export interface JobPosting {
   pipeline_stage: string | null;
   has_raw_content: boolean;
   notes: string | null;
+  lead_source: LeadSource;
 }
 
 export interface PipelineEntry {
@@ -131,6 +148,7 @@ export interface ImportPreview {
   raw_content: string | null;
   ai_used?: boolean;
   notes?: string | null;
+  lead_source?: LeadSource;
 }
 
 export interface DashboardActionItem {
@@ -155,4 +173,5 @@ export interface PostingsFilter {
   salary_min?: number;
   salary_max?: number;
   remote_type?: string;
+  lead_source?: LeadSource;
 }
