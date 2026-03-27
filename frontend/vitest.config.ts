@@ -10,6 +10,7 @@ export default defineConfig({
 		alias: {
 			'$app/state': new URL('./src/tests/mocks/app-state.ts', import.meta.url).pathname,
 			'$app/navigation': new URL('./src/tests/mocks/app-navigation.ts', import.meta.url).pathname,
+			'$app/stores': new URL('./src/tests/mocks/app-stores.ts', import.meta.url).pathname,
 			'$lib': new URL('./src/lib', import.meta.url).pathname,
 		},
 	},
