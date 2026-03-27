@@ -4,8 +4,8 @@
 	const navItems = [
 		{ href: '/dashboard', label: 'Dashboard', exact: true },
 		{ href: '/pipeline', label: 'Pipeline' },
-		{ href: '/search', label: 'Search' },
 		{ href: '/postings', label: 'Saved Postings' },
+		{ href: '/search', label: 'Search' },
 		{ href: '/companies', label: 'Companies' },
 	];
 </script>
