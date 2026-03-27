@@ -1,9 +1,11 @@
 <script lang="ts">
 	import type { PipelineEntry } from '$lib/types';
+	import { LEAD_SOURCE_LABELS } from '$lib/types';
 	import { pipeline } from '$lib/api';
 	import KanbanBoard from '$lib/components/KanbanBoard.svelte';
 	import PipelineDetailPanel from '$lib/components/PipelineDetailPanel.svelte';
-	import { tierFilter, searchFilter } from '$lib/stores/pipelineFilters';
+	import LeadSourceTooltip from '$lib/components/LeadSourceTooltip.svelte';
+	import { tierFilter, searchFilter, leadSourceFilter } from '$lib/stores/pipelineFilters';
 
 	let board = $state<Record<string, PipelineEntry[]>>({});
 	let selectedEntry = $state<PipelineEntry | null>(null);
@@ -13,6 +15,7 @@
 	$effect(() => {
 		const _search = $searchFilter;
 		const _tier = $tierFilter;
+		const _leadSource = $leadSourceFilter;
 		clearTimeout(debounceTimer);
 		debounceTimer = setTimeout(() => loadBoard(), 200);
 		return () => clearTimeout(debounceTimer);
@@ -22,6 +25,7 @@
 		board = await pipeline.list({
 			search: $searchFilter || undefined,
 			tier: $tierFilter ?? undefined,
+			lead_source: $leadSourceFilter ?? undefined,
 		});
 	}
 
@@ -58,6 +62,19 @@
 			<button class="btn btn-sm tier-btn-1" class:active={$tierFilter === 1} onclick={() => ($tierFilter = $tierFilter === 1 ? null : 1)}>T1</button>
 			<button class="btn btn-sm tier-btn-2" class:active={$tierFilter === 2} onclick={() => ($tierFilter = $tierFilter === 2 ? null : 2)}>T2</button>
 			<button class="btn btn-sm tier-btn-3" class:active={$tierFilter === 3} onclick={() => ($tierFilter = $tierFilter === 3 ? null : 3)}>T3</button>
+		</div>
+		<div class="lead-source-filter">
+			<select
+				class="filter-select"
+				value={$leadSourceFilter ?? ''}
+				onchange={(e) => ($leadSourceFilter = (e.target as HTMLSelectElement).value || null)}
+			>
+				<option value="">All sources</option>
+				{#each Object.entries(LEAD_SOURCE_LABELS) as [value, label]}
+					<option {value}>{label}</option>
+				{/each}
+			</select>
+			<LeadSourceTooltip />
 		</div>
 	</div>
 </div>
@@ -116,6 +133,26 @@
 		background: color-mix(in srgb, #6b7280 30%, transparent);
 		color: #374151;
 		border-color: #9ca3af;
+	}
+
+	.lead-source-filter {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+	}
+
+	.filter-select {
+		padding: 0.35rem 0.5rem;
+		font-size: 0.85rem;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-color);
+		border-radius: var(--radius);
+		color: var(--text-primary);
+		outline: none;
+	}
+
+	.filter-select:focus {
+		border-color: var(--accent-blue);
 	}
 </style>
 
