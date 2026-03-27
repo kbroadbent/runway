@@ -1,6 +1,8 @@
 <script lang="ts">
-	import type { ImportPreview } from '$lib/types';
+	import type { ImportPreview, LeadSource } from '$lib/types';
+	import { LEAD_SOURCE_LABELS } from '$lib/types';
 	import { postings, ApiError } from '$lib/api';
+	import LeadSourceTooltip from './LeadSourceTooltip.svelte';
 
 	interface Props {
 		onClose: () => void;
@@ -28,6 +30,7 @@
 	let description = $state('');
 	let notes = $state('');
 	let url = $state('');
+	let lead_source = $state<LeadSource>('cold_apply');
 
 	function applyPreview(p: ImportPreview) {
 		title = p.title ?? '';
@@ -71,6 +74,7 @@
 				notes: notes || null,
 				url,
 				raw_content: preview?.raw_content ?? null,
+				lead_source,
 			};
 			await postings.importConfirm(data);
 			onSaved();
@@ -187,6 +191,17 @@
 				<div class="form-group">
 					<label>Notes</label>
 					<textarea bind:value={notes} rows={3} style="width: 100%" placeholder="e.g. Referral from Jane, found via recruiter..."></textarea>
+				</div>
+				<div class="form-group">
+					<div style="display: flex; align-items: center; gap: 0.3rem;">
+						<label style="margin-bottom: 0;">Lead Source</label>
+						<LeadSourceTooltip />
+					</div>
+					<select bind:value={lead_source} style="width: 100%">
+						{#each Object.entries(LEAD_SOURCE_LABELS) as [value, label]}
+							<option {value}>{label}</option>
+						{/each}
+					</select>
 				</div>
 
 				{#if error}
