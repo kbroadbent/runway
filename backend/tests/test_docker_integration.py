@@ -16,7 +16,6 @@ import shutil
 import socket
 import sqlite3
 import subprocess
-import tempfile
 import time
 from pathlib import Path
 
@@ -223,7 +222,7 @@ class TestDataPersistence:
                 timeout=5,
             )
             assert resp.status_code in (200, 201), f"Failed to create company: {resp.text}"
-            company_id = resp.json().get("id")
+            resp.json().get("id")
         finally:
             subprocess.run(["docker", "rm", "-f", cid1], capture_output=True, timeout=10)
 

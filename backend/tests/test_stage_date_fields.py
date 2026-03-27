@@ -1,4 +1,4 @@
-from app.constants import STAGES, VALID_STAGES
+from app.constants import VALID_STAGES
 
 
 def test_stage_date_fields_exists_and_is_dict():

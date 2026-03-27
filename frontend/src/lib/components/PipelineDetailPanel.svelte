@@ -60,6 +60,13 @@
 		loadEntryData();
 	});
 
+	async function clearNextAction() {
+		await pipeline.update(entry.id, { next_action: null, next_action_date: null });
+		next_action = '';
+		next_action_date = '';
+		onUpdated();
+	}
+
 	async function saveDetails() {
 		saving = true;
 		try {
@@ -169,7 +176,7 @@
 
 				<div class="section">
 					<h3>Tier</h3>
-					<select bind:value={tier} style="width: 120px" onchange={() => postings.update(entry.job_posting.id, { tier })}>
+					<select bind:value={tier} style="width: 120px" onchange={async () => { await postings.update(entry.job_posting.id, { tier }); onUpdated(); }}>
 						<option value={null}>None</option>
 						<option value={1}>Tier 1</option>
 						<option value={2}>Tier 2</option>
@@ -185,7 +192,12 @@
 				</div>
 
 				<div class="section">
-					<h3>Next Action</h3>
+					<div class="section-header">
+						<h3>Next Action</h3>
+						{#if next_action || next_action_date}
+							<button class="btn btn-sm btn-secondary" onclick={clearNextAction}>Clear</button>
+						{/if}
+					</div>
 					<input type="text" bind:value={next_action} style="width: 100%" placeholder="e.g. Follow up with recruiter" />
 					<input type="date" bind:value={next_action_date} style="width: 100%; margin-top: 0.5rem" />
 				</div>
@@ -416,6 +428,17 @@
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		margin-bottom: 0.4rem;
+	}
+
+	.section-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 0.4rem;
+	}
+
+	.section-header h3 {
+		margin-bottom: 0;
 	}
 
 	.company-links {
