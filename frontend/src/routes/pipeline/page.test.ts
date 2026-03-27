@@ -1,0 +1,120 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
+import { leadSourceFilter } from '$lib/stores/pipelineFilters';
+
+// Use vi.hoisted so mockPipelineList is available inside the hoisted vi.mock factory
+const { mockPipelineList } = vi.hoisted(() => ({
+	mockPipelineList: vi.fn().mockResolvedValue({}),
+}));
+
+vi.mock('$lib/api', () => ({
+	pipeline: {
+		list: mockPipelineList,
+		update: vi.fn(),
+		move: vi.fn(),
+		history: vi.fn().mockResolvedValue([]),
+		interviews: vi.fn().mockResolvedValue([]),
+		comments: vi.fn().mockResolvedValue([]),
+		addComment: vi.fn(),
+		deleteComment: vi.fn(),
+		customDates: vi.fn().mockResolvedValue([]),
+	},
+	postings: {
+		get: vi.fn(),
+		update: vi.fn(),
+	},
+}));
+
+import PipelinePage from './+page.svelte';
+
+describe('Pipeline Page — lead source filter', () => {
+	beforeEach(() => {
+		mockPipelineList.mockClear();
+		mockPipelineList.mockResolvedValue({});
+		leadSourceFilter.set(null);
+	});
+
+	it('renders a lead source select in the filter bar', async () => {
+		render(PipelinePage);
+		await waitFor(() => {
+			const selects = screen.getAllByRole('combobox');
+			const leadSourceSelect = selects.find((s) =>
+				Array.from(s.querySelectorAll('option')).some((o) => o.textContent?.includes('Referral'))
+			);
+			expect(leadSourceSelect).toBeDefined();
+		});
+	});
+
+	it('lead source select has an "All sources" default option', async () => {
+		render(PipelinePage);
+		await waitFor(() => {
+			expect(screen.getByText('All sources')).toBeInTheDocument();
+		});
+	});
+
+	it('lead source select includes options for all four lead source values', async () => {
+		render(PipelinePage);
+		await waitFor(() => {
+			expect(screen.getByText('Referral')).toBeInTheDocument();
+			expect(screen.getByText('Recruiter (Inbound)')).toBeInTheDocument();
+			expect(screen.getByText('Recruiter (Outbound)')).toBeInTheDocument();
+			expect(screen.getByText('Cold Apply')).toBeInTheDocument();
+		});
+	});
+
+	it('renders a lead source help icon button near the filter', async () => {
+		render(PipelinePage);
+		await waitFor(() => {
+			const helpBtn = screen.getByRole('button', { name: /lead source help/i });
+			expect(helpBtn).toBeInTheDocument();
+		});
+	});
+
+	it('changing the lead source select calls pipeline.list with lead_source param', async () => {
+		render(PipelinePage);
+		// Wait for initial load
+		await waitFor(() => expect(mockPipelineList).toHaveBeenCalled());
+		mockPipelineList.mockClear();
+
+		const selects = screen.getAllByRole('combobox');
+		const leadSourceSelect = selects.find((s) =>
+			Array.from(s.querySelectorAll('option')).some((o) => o.textContent?.includes('Referral'))
+		);
+		expect(leadSourceSelect).toBeDefined();
+
+		await fireEvent.change(leadSourceSelect!, { target: { value: 'referral' } });
+
+		await waitFor(
+			() => {
+				expect(mockPipelineList).toHaveBeenCalledWith(
+					expect.objectContaining({ lead_source: 'referral' })
+				);
+			},
+			{ timeout: 500 },
+		);
+	});
+
+	it('selecting "All sources" (empty string) calls pipeline.list without lead_source', async () => {
+		leadSourceFilter.set('referral');
+		render(PipelinePage);
+		await waitFor(() => expect(mockPipelineList).toHaveBeenCalled());
+		mockPipelineList.mockClear();
+
+		const selects = screen.getAllByRole('combobox');
+		const leadSourceSelect = selects.find((s) =>
+			Array.from(s.querySelectorAll('option')).some((o) => o.textContent?.includes('Referral'))
+		);
+		expect(leadSourceSelect).toBeDefined();
+
+		await fireEvent.change(leadSourceSelect!, { target: { value: '' } });
+
+		await waitFor(
+			() => {
+				expect(mockPipelineList).toHaveBeenCalledWith(
+					expect.not.objectContaining({ lead_source: 'referral' })
+				);
+			},
+			{ timeout: 500 },
+		);
+	});
+});
