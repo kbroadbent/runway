@@ -18,7 +18,7 @@ INTERVIEW_LOOKBACK_DAYS = 7
 
 @router.get("", response_model=DashboardResponse)
 def get_dashboard(db: Session = Depends(get_db)):
-    now = datetime.utcnow()
+    now = datetime.now()
 
     # Load all pipeline entries with their job postings and companies
     entries = (

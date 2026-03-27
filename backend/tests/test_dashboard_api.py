@@ -24,7 +24,7 @@ def test_dashboard_action_items_include_upcoming_interviews(client):
     """Interviews with no outcome and recent scheduled_at should appear."""
     _, entry_id = _create_posting_and_entry(client, stage="tech_screen_scheduled")
 
-    scheduled = (datetime.utcnow() + timedelta(days=2)).isoformat()
+    scheduled = (datetime.now() + timedelta(days=2)).isoformat()
     resp = client.post(f"/api/pipeline/{entry_id}/interviews", json={
         "round": "Technical",
         "scheduled_at": scheduled,
@@ -43,7 +43,7 @@ def test_dashboard_excludes_interviews_with_outcome(client):
     """Interviews with an outcome set should NOT appear in upcoming events."""
     _, entry_id = _create_posting_and_entry(client, stage="tech_screen_completed")
 
-    scheduled = (datetime.utcnow() - timedelta(days=1)).isoformat()
+    scheduled = (datetime.now() - timedelta(days=1)).isoformat()
     resp = client.post(f"/api/pipeline/{entry_id}/interviews", json={
         "round": "Technical",
         "scheduled_at": scheduled,
@@ -61,7 +61,7 @@ def test_dashboard_overdue_interview(client):
     """An interview scheduled in the past with no outcome should be marked overdue."""
     _, entry_id = _create_posting_and_entry(client, stage="onsite_scheduled")
 
-    scheduled = (datetime.utcnow() - timedelta(days=2)).isoformat()
+    scheduled = (datetime.now() - timedelta(days=2)).isoformat()
     resp = client.post(f"/api/pipeline/{entry_id}/interviews", json={
         "round": "Onsite",
         "scheduled_at": scheduled,
