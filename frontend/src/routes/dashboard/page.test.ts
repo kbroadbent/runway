@@ -18,6 +18,7 @@ const EMPTY_DASHBOARD: DashboardResponse = {
 		Rejected: 0,
 		Archived: 0,
 	},
+	upcoming_events: [],
 	action_items: [],
 };
 
@@ -33,6 +34,7 @@ const POPULATED_DASHBOARD: DashboardResponse = {
 		Rejected: 1,
 		Archived: 0,
 	},
+	upcoming_events: [],
 	action_items: [
 		{
 			pipeline_entry_id: 1,

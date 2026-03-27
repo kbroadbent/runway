@@ -1,6 +1,6 @@
 """Tests for pipeline event date columns and PipelineCustomDate model."""
 
-from datetime import date, datetime
+from datetime import date
 
 import pytest
 from sqlalchemy import create_engine, inspect

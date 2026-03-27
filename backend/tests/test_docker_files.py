@@ -30,7 +30,7 @@ class TestDockerfileMultiStage:
     def test_has_final_stage_based_on_python(self, dockerfile_content):
         # The final stage should use a Python base image
         lines = dockerfile_content.strip().splitlines()
-        from_lines = [l for l in lines if l.strip().upper().startswith("FROM")]
+        from_lines = [ln for ln in lines if ln.strip().upper().startswith("FROM")]
         assert len(from_lines) >= 2, "Multi-stage build requires at least 2 FROM instructions"
         # Last FROM should be Python-based
         last_from = from_lines[-1].lower()
@@ -38,7 +38,7 @@ class TestDockerfileMultiStage:
 
     def test_frontend_stage_uses_node(self, dockerfile_content):
         lines = dockerfile_content.strip().splitlines()
-        from_lines = [l for l in lines if l.strip().upper().startswith("FROM")]
+        from_lines = [ln for ln in lines if ln.strip().upper().startswith("FROM")]
         first_from = from_lines[0].lower()
         assert "node" in first_from
 

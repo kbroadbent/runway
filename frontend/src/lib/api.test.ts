@@ -51,6 +51,7 @@ describe('DashboardResponse type', () => {
         Rejected: 1,
         Archived: 0,
       },
+      upcoming_events: [],
       action_items: [
         {
           pipeline_entry_id: 1,
@@ -70,6 +71,7 @@ describe('DashboardResponse type', () => {
   it('accepts empty action_items array', () => {
     const response: DashboardResponse = {
       lane_counts: {},
+      upcoming_events: [],
       action_items: [],
     };
     expect(response.action_items).toHaveLength(0);
@@ -84,6 +86,7 @@ describe('dashboard.get()', () => {
   it('calls GET /api/dashboard and returns typed response', async () => {
     const mockResponse: DashboardResponse = {
       lane_counts: { Interested: 3, Applying: 1 },
+      upcoming_events: [],
       action_items: [
         {
           pipeline_entry_id: 5,

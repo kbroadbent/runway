@@ -8,7 +8,6 @@ round-trip through the API.
 """
 
 import pytest
-from datetime import datetime
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from app.database import Base
