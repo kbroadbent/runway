@@ -92,7 +92,7 @@ describe('Postings Page — lead_source filter select', () => {
 		const selects = screen.getAllByRole('combobox');
 		const leadSourceSelect = selects.find((s) =>
 			s.querySelector('option[value="referral"]') !== null ||
-			Array.from(s.options ?? []).some((o: HTMLOptionElement) => o.text === 'Any lead source')
+			Array.from((s as HTMLSelectElement).options).some((o) => o.text === 'Any lead source')
 		);
 
 		await fireEvent.change(leadSourceSelect!, { target: { value: 'referral' } });
