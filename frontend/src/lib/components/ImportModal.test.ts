@@ -41,7 +41,8 @@ const mockPreview = {
 
 async function renderWithPreview(overrides = {}) {
 	vi.mocked(postings.importPreview).mockResolvedValue(mockPreview);
-	vi.mocked(postings.importConfirm).mockResolvedValue({ id: 1, ...mockPreview });
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	vi.mocked(postings.importConfirm).mockResolvedValue({ id: 1, ...mockPreview } as any);
 
 	const result = render(ImportModal, { props: { ...defaultProps, ...overrides } });
 
@@ -103,7 +104,7 @@ describe('ImportModal lead_source', () => {
 		await renderWithPreview();
 		await fireEvent.click(screen.getByRole('button', { name: /save posting/i }));
 		expect(postings.importConfirm).toHaveBeenCalledOnce();
-		const payload = vi.mocked(postings.importConfirm).mock.calls[0][0] as Record<string, unknown>;
+		const payload = vi.mocked(postings.importConfirm).mock.calls[0][0] as unknown as Record<string, unknown>;
 		expect(payload.lead_source).toBe('cold_apply');
 	});
 
@@ -116,7 +117,7 @@ describe('ImportModal lead_source', () => {
 		await fireEvent.change(leadSourceSelect, { target: { value: 'referral' } });
 
 		await fireEvent.click(screen.getByRole('button', { name: /save posting/i }));
-		const payload = vi.mocked(postings.importConfirm).mock.calls[0][0] as Record<string, unknown>;
+		const payload = vi.mocked(postings.importConfirm).mock.calls[0][0] as unknown as Record<string, unknown>;
 		expect(payload.lead_source).toBe('referral');
 	});
 
@@ -129,7 +130,7 @@ describe('ImportModal lead_source', () => {
 		await fireEvent.change(leadSourceSelect, { target: { value: 'recruiter_outbound' } });
 
 		await fireEvent.click(screen.getByRole('button', { name: /save posting/i }));
-		const payload = vi.mocked(postings.importConfirm).mock.calls[0][0] as Record<string, unknown>;
+		const payload = vi.mocked(postings.importConfirm).mock.calls[0][0] as unknown as Record<string, unknown>;
 		expect(payload.lead_source).toBe('recruiter_outbound');
 	});
 });

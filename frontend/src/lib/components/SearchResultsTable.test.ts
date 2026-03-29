@@ -37,6 +37,7 @@ function makePosting(overrides: Partial<JobPosting> = {}): JobPosting {
 		pipeline_stage: null,
 		has_raw_content: false,
 		notes: null,
+		lead_source: 'cold_apply',
 		...overrides,
 	};
 }

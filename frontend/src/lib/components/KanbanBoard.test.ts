@@ -62,6 +62,7 @@ function makePipelineEntry(overrides: Partial<PipelineEntry> = {}): PipelineEntr
 			pipeline_stage: 'interested',
 			has_raw_content: false,
 			notes: null,
+			lead_source: 'cold_apply',
 		},
 		stage: 'interested',
 		position: 0,

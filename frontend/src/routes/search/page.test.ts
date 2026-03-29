@@ -62,6 +62,7 @@ const MOCK_POSTINGS: JobPosting[] = [
 		pipeline_stage: null,
 		has_raw_content: false,
 		notes: null,
+		lead_source: 'cold_apply',
 	},
 	{
 		id: 11,
@@ -82,6 +83,7 @@ const MOCK_POSTINGS: JobPosting[] = [
 		pipeline_stage: null,
 		has_raw_content: false,
 		notes: null,
+		lead_source: 'cold_apply',
 	},
 ];
 
@@ -351,6 +353,7 @@ const MOCK_POSTING_NEW: JobPosting = {
 	pipeline_stage: null,
 	has_raw_content: false,
 	notes: null,
+	lead_source: 'cold_apply',
 };
 
 const MOCK_POSTING_NEW_2: JobPosting = {
@@ -372,6 +375,7 @@ const MOCK_POSTING_NEW_2: JobPosting = {
 	pipeline_stage: null,
 	has_raw_content: false,
 	notes: null,
+	lead_source: 'cold_apply',
 };
 
 /**
