@@ -74,6 +74,7 @@ def upgrade() -> None:
         sa.Column('tier', sa.Integer(), nullable=True),
         sa.Column('consecutive_misses', sa.Integer(), server_default='0', nullable=False),
         sa.Column('notes', sa.Text(), nullable=True),
+        sa.Column('company_name', sa.String(), nullable=True),
         sa.Column('lead_source', sa.String(), server_default='cold_apply', nullable=False),
         sa.ForeignKeyConstraint(['company_id'], ['companies.id']),
         sa.PrimaryKeyConstraint('id'),
