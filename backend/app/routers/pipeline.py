@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
-from app.models import PipelineEntry, PipelineHistory, InterviewNote, JobPosting, PipelineComment, PipelineCustomDate
+from app.models import PipelineEntry, PipelineHistory, InterviewNote, JobPosting, PipelineComment, PipelineCustomDate, Company
 from app.schemas.pipeline import (
     PipelineEntryCreate, PipelineEntryUpdate, PipelineMoveRequest, PipelineEntryRead,
     PipelineHistoryRead, InterviewNoteCreate, InterviewNoteUpdate, InterviewNoteRead,
@@ -39,9 +39,11 @@ def list_pipeline(
     if search or tier is not None or lead_source is not None:
         query = query.join(JobPosting)
         if search:
+            query = query.outerjoin(Company, JobPosting.company_id == Company.id)
             query = query.filter(or_(
                 JobPosting.title.ilike(f"%{search}%"),
                 JobPosting.company_name.ilike(f"%{search}%"),
+                Company.name.ilike(f"%{search}%"),
             ))
         if tier is not None:
             query = query.filter(JobPosting.tier == tier)
