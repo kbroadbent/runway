@@ -1,9 +1,54 @@
+import ipaddress
 import re
+import socket
+from urllib.parse import urlparse
+
 import httpx
 from bs4 import BeautifulSoup
 from app.schemas.job_posting import ImportPreview
 from app.services import ai_service
 from app.services.ai_service import AIServiceError
+
+
+# --- SSRF protection ---
+
+_PRIVATE_NETWORKS = [
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("0.0.0.0/8"),
+]
+
+
+def _validate_url(url: str) -> None:
+    """Raise ValueError if url uses a non-http/https scheme or resolves to a private IP."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"Unsupported URL scheme: {parsed.scheme!r}")
+
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("Missing hostname")
+
+    if hostname.lower() == "localhost":
+        raise ValueError("Loopback address not allowed: localhost")
+
+    try:
+        addr = ipaddress.ip_address(hostname)
+    except ValueError:
+        # Not a bare IP address — resolve it
+        try:
+            resolved = socket.gethostbyname(hostname)
+            addr = ipaddress.ip_address(resolved)
+        except socket.gaierror:
+            return  # Can't resolve; let the HTTP client fail naturally
+
+    if addr.is_loopback or addr.is_unspecified:
+        raise ValueError(f"Private or loopback IP not allowed: {hostname}")
+    for network in _PRIVATE_NETWORKS:
+        if addr in network:
+            raise ValueError(f"Private IP not allowed: {hostname}")
 
 
 # --- salary patterns ---
@@ -105,15 +150,33 @@ def parse_posting_text(text: str) -> ImportPreview:
     )
 
 
+_FETCH_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
+_MAX_REDIRECTS = 10
+
+
 def fetch_and_parse_url(url: str) -> ImportPreview:
     """Fetch a URL, extract text, and parse it as a job posting."""
-    with httpx.Client(follow_redirects=True, timeout=15) as client:
-        response = client.get(url, headers={
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9",
-        })
-        response.raise_for_status()
+    _validate_url(url)
+
+    with httpx.Client(follow_redirects=False, timeout=15) as client:
+        current_url = url
+        for _ in range(_MAX_REDIRECTS):
+            response = client.get(current_url, headers=_FETCH_HEADERS)
+            if response.status_code in (301, 302, 303, 307, 308):
+                location = response.headers.get("Location", "")
+                _validate_url(location)
+                current_url = location
+            else:
+                response.raise_for_status()
+                break
+        else:
+            raise httpx.TooManyRedirects(f"Exceeded {_MAX_REDIRECTS} redirects")
+
         html = response.text
 
     soup = BeautifulSoup(html, "html.parser")

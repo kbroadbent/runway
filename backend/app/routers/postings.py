@@ -56,8 +56,10 @@ def import_preview(data: ImportRequest):
     if data.url:
         try:
             return fetch_and_parse_url(data.url)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
         except Exception as exc:
-            raise HTTPException(status_code=502, detail=f"Could not fetch URL: {exc}") from exc
+            raise HTTPException(status_code=502, detail="Could not fetch URL") from exc
     if data.text:
         return parse_posting_text(data.text)
     raise HTTPException(status_code=400, detail="Provide text or url")
