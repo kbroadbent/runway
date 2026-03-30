@@ -49,7 +49,7 @@ async function renderWithPreview(mode: 'url' | 'text' = 'url') {
 		await fireEvent.input(textarea, { target: { value: 'Some job text here' } });
 	}
 
-	const parseBtn = screen.getByRole('button', { name: /parse/i });
+	const parseBtn = screen.getByRole('button', { name: /import/i });
 	await fireEvent.click(parseBtn);
 
 	await screen.findByText(/review and edit/i);
@@ -100,7 +100,7 @@ describe('ImportForm — parse phase', () => {
 
 		const urlInput = screen.getByPlaceholderText(/https:\/\//);
 		await fireEvent.input(urlInput, { target: { value: 'https://example.com/job' } });
-		await fireEvent.click(screen.getByRole('button', { name: /parse/i }));
+		await fireEvent.click(screen.getByRole('button', { name: /import/i }));
 
 		expect(postings.importPreview).toHaveBeenCalledWith({ url: 'https://example.com/job' });
 	});
@@ -111,7 +111,7 @@ describe('ImportForm — parse phase', () => {
 
 		const textarea = screen.getByPlaceholderText(/paste the full job posting text/i);
 		await fireEvent.input(textarea, { target: { value: 'Some job text here' } });
-		await fireEvent.click(screen.getByRole('button', { name: /parse/i }));
+		await fireEvent.click(screen.getByRole('button', { name: /import/i }));
 
 		expect(postings.importPreview).toHaveBeenCalledWith({ text: 'Some job text here' });
 	});
@@ -127,7 +127,7 @@ describe('ImportForm — parse phase', () => {
 
 		const urlInput = screen.getByPlaceholderText(/https:\/\//);
 		await fireEvent.input(urlInput, { target: { value: 'https://example.com/job' } });
-		await fireEvent.click(screen.getByRole('button', { name: /parse/i }));
+		await fireEvent.click(screen.getByRole('button', { name: /import/i }));
 
 		expect(await screen.findByText(/fetch failed/i)).toBeDefined();
 	});

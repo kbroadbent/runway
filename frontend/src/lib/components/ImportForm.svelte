@@ -128,7 +128,7 @@
 			{/if}
 
 			<button onclick={handleParse} disabled={parsing}>
-				{parsing ? 'Parsing…' : 'Parse'}
+				{parsing ? 'Importing…' : 'Import'}
 			</button>
 		</div>
 	{:else if phase === 'preview'}
