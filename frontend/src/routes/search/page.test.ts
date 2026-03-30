@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/svelte';
 import type { SearchProfile, JobPosting } from '$lib/types';
+import { setSearchParams, resetSearchParams } from '../../tests/mocks/app-state';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -643,5 +644,203 @@ describe('Search Page — individual actions clear delta state', () => {
 		await waitFor(() => {
 			expect(screen.queryByText('Vue.js Developer')).not.toBeInTheDocument();
 		});
+	});
+});
+
+describe('Search Page — page heading', () => {
+	let SearchPage: typeof import('./+page.svelte').default;
+
+	beforeEach(async () => {
+		mockFetch.mockReset();
+		resetSearchParams();
+		mockFetch.mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve([]) });
+		const mod = await import('./+page.svelte');
+		SearchPage = mod.default;
+	});
+
+	it('renders "Find Jobs" as the page heading instead of "Search"', async () => {
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByRole('heading', { level: 1, name: /find jobs/i })).toBeInTheDocument();
+		});
+	});
+
+	it('does not render "Search" as an h1', async () => {
+		render(SearchPage);
+		await waitFor(() => {
+			const h1s = screen.queryAllByRole('heading', { level: 1 });
+			h1s.forEach((h) => {
+				expect(h.textContent?.trim()).not.toBe('Search');
+			});
+		});
+	});
+});
+
+describe('Search Page — tab bar', () => {
+	let SearchPage: typeof import('./+page.svelte').default;
+
+	beforeEach(async () => {
+		mockFetch.mockReset();
+		resetSearchParams();
+		mockFetch.mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve([]) });
+		const mod = await import('./+page.svelte');
+		SearchPage = mod.default;
+	});
+
+	it('renders a Search tab', async () => {
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByRole('tab', { name: /^search$/i })).toBeInTheDocument();
+		});
+	});
+
+	it('renders a From URL tab', async () => {
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByRole('tab', { name: /from url/i })).toBeInTheDocument();
+		});
+	});
+
+	it('renders a From Text tab', async () => {
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByRole('tab', { name: /from text/i })).toBeInTheDocument();
+		});
+	});
+
+	it('shows search profiles panel by default (no URL param)', async () => {
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByText(/search profiles/i)).toBeInTheDocument();
+		});
+	});
+
+	it('does not show a URL import input by default', async () => {
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.queryByPlaceholderText(/https:\/\//)).toBeNull();
+		});
+	});
+
+	it('does not show a paste textarea by default', async () => {
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.queryByPlaceholderText(/paste the full job posting text/i)).toBeNull();
+		});
+	});
+
+	it('clicking From URL tab shows a URL import input', async () => {
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByRole('tab', { name: /from url/i })).toBeInTheDocument();
+		});
+		await fireEvent.click(screen.getByRole('tab', { name: /from url/i }));
+		await waitFor(() => {
+			expect(screen.getByPlaceholderText(/https:\/\//)).toBeInTheDocument();
+		});
+	});
+
+	it('clicking From Text tab shows a paste textarea', async () => {
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByRole('tab', { name: /from text/i })).toBeInTheDocument();
+		});
+		await fireEvent.click(screen.getByRole('tab', { name: /from text/i }));
+		await waitFor(() => {
+			expect(screen.getByPlaceholderText(/paste the full job posting text/i)).toBeInTheDocument();
+		});
+	});
+
+	it('clicking From URL tab hides the search profiles panel', async () => {
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByRole('tab', { name: /from url/i })).toBeInTheDocument();
+		});
+		await fireEvent.click(screen.getByRole('tab', { name: /from url/i }));
+		await waitFor(() => {
+			expect(screen.queryByText(/search profiles/i)).toBeNull();
+		});
+	});
+
+	it('clicking Search tab after From URL hides the URL import input', async () => {
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByRole('tab', { name: /from url/i })).toBeInTheDocument();
+		});
+		await fireEvent.click(screen.getByRole('tab', { name: /from url/i }));
+		await waitFor(() => {
+			expect(screen.getByPlaceholderText(/https:\/\//)).toBeInTheDocument();
+		});
+		await fireEvent.click(screen.getByRole('tab', { name: /^search$/i }));
+		await waitFor(() => {
+			expect(screen.queryByPlaceholderText(/https:\/\//)).toBeNull();
+		});
+	});
+});
+
+describe('Search Page — tab URL param routing', () => {
+	let SearchPage: typeof import('./+page.svelte').default;
+
+	beforeEach(async () => {
+		mockFetch.mockReset();
+		resetSearchParams();
+		mockFetch.mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve([]) });
+		const mod = await import('./+page.svelte');
+		SearchPage = mod.default;
+	});
+
+	it('shows URL import form when ?tab=import-url is set on load', async () => {
+		setSearchParams({ tab: 'import-url' });
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByPlaceholderText(/https:\/\//)).toBeInTheDocument();
+		});
+	});
+
+	it('shows paste form when ?tab=paste is set on load', async () => {
+		setSearchParams({ tab: 'paste' });
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByPlaceholderText(/paste the full job posting text/i)).toBeInTheDocument();
+		});
+	});
+
+	it('shows search profiles panel when ?tab=search is set on load', async () => {
+		setSearchParams({ tab: 'search' });
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByText(/search profiles/i)).toBeInTheDocument();
+		});
+	});
+
+	it('clicking From URL tab calls goto with ?tab=import-url', async () => {
+		const { goto } = await import('$app/navigation');
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByRole('tab', { name: /from url/i })).toBeInTheDocument();
+		});
+		await fireEvent.click(screen.getByRole('tab', { name: /from url/i }));
+		expect(goto).toHaveBeenCalledWith(expect.stringContaining('tab=import-url'));
+	});
+
+	it('clicking From Text tab calls goto with ?tab=paste', async () => {
+		const { goto } = await import('$app/navigation');
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByRole('tab', { name: /from text/i })).toBeInTheDocument();
+		});
+		await fireEvent.click(screen.getByRole('tab', { name: /from text/i }));
+		expect(goto).toHaveBeenCalledWith(expect.stringContaining('tab=paste'));
+	});
+
+	it('clicking Search tab calls goto with ?tab=search', async () => {
+		const { goto } = await import('$app/navigation');
+		setSearchParams({ tab: 'import-url' });
+		render(SearchPage);
+		await waitFor(() => {
+			expect(screen.getByRole('tab', { name: /^search$/i })).toBeInTheDocument();
+		});
+		await fireEvent.click(screen.getByRole('tab', { name: /^search$/i }));
+		expect(goto).toHaveBeenCalledWith(expect.stringContaining('tab=search'));
 	});
 });
