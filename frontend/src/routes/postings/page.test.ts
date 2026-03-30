@@ -228,3 +228,61 @@ describe('Postings Page — lead_source sorting', () => {
 		});
 	});
 });
+
+describe('Postings Page — Import Posting button removed', () => {
+	let PostingsPage: typeof import('./+page.svelte').default;
+
+	beforeEach(async () => {
+		mockFetch.mockReset();
+		const mod = await import('./+page.svelte');
+		PostingsPage = mod.default;
+	});
+
+	it('does not render an Import Posting button', async () => {
+		mockJsonResponse([REFERRAL_POSTING]);
+		render(PostingsPage);
+
+		await waitFor(() => {
+			expect(screen.getByText('Referral Role')).toBeInTheDocument();
+		});
+
+		expect(screen.queryByText('Import Posting')).toBeNull();
+	});
+});
+
+describe('Postings Page — empty state links to search and import', () => {
+	let PostingsPage: typeof import('./+page.svelte').default;
+
+	beforeEach(async () => {
+		mockFetch.mockReset();
+		const mod = await import('./+page.svelte');
+		PostingsPage = mod.default;
+	});
+
+	it('empty state has a link to /search?tab=import-url', async () => {
+		mockJsonResponse([]);
+		render(PostingsPage);
+
+		await waitFor(() => {
+			const links = screen.getAllByRole('link');
+			const importLink = links.find(
+				(l) => (l as HTMLAnchorElement).href?.includes('/search?tab=import-url'),
+			);
+			expect(importLink).toBeDefined();
+		});
+	});
+
+	it('empty state has a link to /search', async () => {
+		mockJsonResponse([]);
+		render(PostingsPage);
+
+		await waitFor(() => {
+			const links = screen.getAllByRole('link');
+			const searchLink = links.find((l) => {
+				const href = (l as HTMLAnchorElement).getAttribute('href');
+				return href === '/search';
+			});
+			expect(searchLink).toBeDefined();
+		});
+	});
+});
