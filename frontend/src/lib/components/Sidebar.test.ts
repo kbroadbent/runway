@@ -53,4 +53,22 @@ describe('Sidebar', () => {
 			'Companies',
 		]);
 	});
+
+	it('renders Find Jobs nav link pointing to /search', () => {
+		render(Sidebar);
+		const link = screen.getByRole('link', { name: 'Find Jobs' });
+		expect(link).toHaveAttribute('href', '/search');
+	});
+
+	it('does not render a nav link labeled Search', () => {
+		render(Sidebar);
+		expect(screen.queryByRole('link', { name: 'Search' })).toBeNull();
+	});
+
+	it('marks Find Jobs link active when on /search path', () => {
+		setPathname('/search');
+		render(Sidebar);
+		const link = screen.getByRole('link', { name: 'Find Jobs' });
+		expect(link).toHaveClass('active');
+	});
 });

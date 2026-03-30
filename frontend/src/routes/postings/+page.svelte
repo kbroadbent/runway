@@ -2,17 +2,15 @@
 	import type { JobPosting, Company, PostingsFilter, LeadSource } from '$lib/types';
 	import { LEAD_SOURCE_LABELS } from '$lib/types';
 	import { postings as postingsApi } from '$lib/api';
-	import ImportModal from '$lib/components/ImportModal.svelte';
 	import PostingDetailPanel from '$lib/components/PostingDetailPanel.svelte';
 	import CompanyDetail from '$lib/components/CompanyDetail.svelte';
 	import LeadSourceTooltip from '$lib/components/LeadSourceTooltip.svelte';
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	let allPostings = $state<JobPosting[]>([]);
 	let selectedPosting = $state<JobPosting | null>(null);
 	let selectedCompany = $state<Company | null>(null);
-	let showImport = $state(false);
 	let showDismissed = $state(false);
 	let selected = $state<Set<number>>(new Set());
 
@@ -35,7 +33,7 @@
 
 	async function loadPostings() {
 		allPostings = await postingsApi.list(showDismissed ? 'dismissed' : 'saved');
-		const idParam = $page.url.searchParams.get('id');
+		const idParam = page.url?.searchParams?.get('id');
 		if (idParam) {
 			const id = parseInt(idParam);
 			selectedPosting = allPostings.find((p) => p.id === id) ?? null;
@@ -152,9 +150,6 @@
 		<button class="btn btn-secondary" onclick={async () => { showDismissed = !showDismissed; selected = new Set(); await loadPostings(); }}>
 			{showDismissed ? 'View Saved' : 'View Dismissed'}
 		</button>
-		{#if !showDismissed}
-			<button class="btn btn-primary" onclick={() => (showImport = true)}>Import Posting</button>
-		{/if}
 	</div>
 </div>
 
@@ -210,7 +205,7 @@
 
 <div class="table-wrap">
 	{#if filtered.length === 0}
-		<p class="empty-state">No postings found. Import one or run a search.</p>
+		<p class="empty-state">No postings found. <a href="/search?tab=import-url">Import a posting</a> or <a href="/search">run a search</a>.</p>
 	{:else}
 		<table>
 			<thead>
@@ -261,7 +256,7 @@
 							</select>
 						</td>
 						<td><span class="badge badge-stage">{posting.source}</span></td>
-					<td></td>
+						<td></td>
 						<td>
 							{#if posting.pipeline_stage}
 								<span class="badge badge-stage">{posting.pipeline_stage}</span>
@@ -274,13 +269,6 @@
 		</table>
 	{/if}
 </div>
-
-{#if showImport}
-	<ImportModal
-		onClose={() => (showImport = false)}
-		onSaved={async () => { await loadPostings(); }}
-	/>
-{/if}
 
 {#if selectedCompany}
 	<CompanyDetail
