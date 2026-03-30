@@ -3,7 +3,10 @@
 	import { searchProfiles, postings, searchResults } from '$lib/api';
 	import SearchProfileForm from '$lib/components/SearchProfileForm.svelte';
 	import SearchResultsTable from '$lib/components/SearchResultsTable.svelte';
+	import ImportForm from '$lib/components/ImportForm.svelte';
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 
 	let profiles = $state<SearchProfile[]>([]);
 	let selectedProfile = $state<SearchProfile | null>(null);
@@ -15,6 +18,13 @@
 	let runStatus = $state('');
 	let addedIds = $state<Set<number>>(new Set());
 	let removedPostings = $state<JobPosting[]>([]);
+
+	let activeTab = $state(page.url.searchParams.get('tab') ?? 'search');
+
+	function switchTab(tab: string) {
+		activeTab = tab;
+		goto(`?tab=${tab}`);
+	}
 
 	onMount(async () => {
 		await loadProfiles();
@@ -139,17 +149,29 @@
 </script>
 
 <div class="page-header">
-	<h1>Search</h1>
-	<button class="btn btn-primary" onclick={handleCreateProfile}>New Profile</button>
+	<h1>Find Jobs</h1>
 </div>
 
-{#if showForm}
+<div class="tab-bar" role="tablist">
+	<button role="tab" class="tab-btn" class:active={activeTab === 'search'} onclick={() => switchTab('search')}>Search</button>
+	<button role="tab" class="tab-btn" class:active={activeTab === 'import-url'} onclick={() => switchTab('import-url')}>From URL</button>
+	<button role="tab" class="tab-btn" class:active={activeTab === 'paste'} onclick={() => switchTab('paste')}>From Text</button>
+</div>
+
+{#if activeTab === 'import-url'}
+	<ImportForm mode="url" />
+{:else if activeTab === 'paste'}
+	<ImportForm mode="text" />
+{:else if showForm}
 	<SearchProfileForm
 		profile={editingProfile ?? {}}
 		onSave={handleSaveProfile}
 		onCancel={handleCancelForm}
 	/>
 {:else}
+	<div class="search-layout-header">
+		<button class="btn btn-primary" onclick={handleCreateProfile}>New Profile</button>
+	</div>
 	<div class="search-layout">
 		<div class="profiles-panel">
 			<h2 class="panel-title">Search Profiles</h2>
@@ -228,6 +250,41 @@
 {/if}
 
 <style>
+	.tab-bar {
+		display: flex;
+		gap: 0.25rem;
+		border-bottom: 1px solid var(--border-color);
+		margin-bottom: 1.5rem;
+	}
+
+	.tab-btn {
+		padding: 0.5rem 1rem;
+		background: none;
+		border: none;
+		border-bottom: 2px solid transparent;
+		color: var(--text-secondary);
+		cursor: pointer;
+		font-size: 0.9rem;
+		font-weight: 500;
+		margin-bottom: -1px;
+		transition: color 0.15s, border-color 0.15s;
+	}
+
+	.tab-btn:hover {
+		color: var(--text-primary);
+	}
+
+	.tab-btn.active {
+		color: var(--accent-blue);
+		border-bottom-color: var(--accent-blue);
+	}
+
+	.search-layout-header {
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 1rem;
+	}
+
 	.search-layout {
 		display: flex;
 		gap: 1.5rem;
