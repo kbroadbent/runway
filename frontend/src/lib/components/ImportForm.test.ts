@@ -216,8 +216,8 @@ describe('ImportForm — save phase', () => {
 	});
 
 	it('shows an error message when save fails', async () => {
-		vi.mocked(postings.importConfirm).mockRejectedValue(new Error('Save failed'));
 		await renderWithPreview();
+		vi.mocked(postings.importConfirm).mockRejectedValue(new Error('Save failed'));
 		await fireEvent.click(screen.getByRole('button', { name: /save posting/i }));
 		expect(await screen.findByText(/save failed/i)).toBeDefined();
 	});
@@ -248,10 +248,10 @@ describe('ImportForm — success state', () => {
 
 	it('shows duplicate error with link to existing posting on 409', async () => {
 		const { ApiError } = await import('$lib/api');
+		await renderWithPreview();
 		vi.mocked(postings.importConfirm).mockRejectedValue(
 			new ApiError('Already imported', 409, { message: 'Already imported', existing_id: 7 })
 		);
-		await renderWithPreview();
 		await fireEvent.click(screen.getByRole('button', { name: /save posting/i }));
 		const viewLink = await screen.findByRole('link', { name: /view posting/i });
 		expect(viewLink).toBeDefined();

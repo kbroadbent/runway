@@ -13,7 +13,9 @@ import type {
   CustomDate,
 } from './types';
 
-const BASE = (import.meta.env.VITE_API_BASE || 'http://localhost:8000/api').replace(/\/$/, '');
+function getBase() {
+  return (import.meta.env.VITE_API_BASE || 'http://localhost:8000/api').replace(/\/$/, '');
+}
 
 export class ApiError extends Error {
   status: number;
@@ -26,7 +28,7 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const resp = await fetch(`${BASE}${path}`, {
+  const resp = await fetch(`${getBase()}${path}`, {
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });

@@ -47,9 +47,9 @@ describe('Sidebar', () => {
 		const labels = links.map((link) => link.textContent?.trim());
 		expect(labels).toEqual([
 			'Dashboard',
+			'Find Jobs',
 			'Pipeline',
 			'Saved Postings',
-			'Find Jobs',
 			'Companies',
 		]);
 	});

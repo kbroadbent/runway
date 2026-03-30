@@ -288,6 +288,7 @@
 		color: var(--text-primary);
 		cursor: pointer;
 		font-size: 0.9rem;
+		width: fit-content;
 	}
 
 	button:hover:not(:disabled) {

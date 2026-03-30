@@ -47,7 +47,7 @@
 						<div class="item-details">
 							<span class="item-description">{item.description}</span>
 							<span class="item-job">
-								{item.job_title}{item.company_name ? ` · ${item.company_name}` : ''}
+								<span>{item.job_title}</span>{#if item.company_name} · <span>{item.company_name}</span>{/if}
 							</span>
 						</div>
 					</div>

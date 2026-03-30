@@ -8,15 +8,18 @@ vi.stubGlobal('fetch', mockFetch);
 
 const EMPTY_DASHBOARD: DashboardResponse = {
 	lane_counts: {
-		Interested: 0,
-		Applying: 0,
-		Applied: 0,
-		'Recruiter Screen': 0,
-		'Tech Screen': 0,
-		Onsite: 0,
-		Offer: 0,
-		Rejected: 0,
-		Archived: 0,
+		interested: 0,
+		applying: 0,
+		applied: 0,
+		recruiter_screen_scheduled: 0,
+		recruiter_screen_completed: 0,
+		tech_screen_scheduled: 0,
+		tech_screen_completed: 0,
+		onsite_scheduled: 0,
+		onsite_completed: 0,
+		offer: 0,
+		rejected: 0,
+		archived: 0,
 	},
 	upcoming_events: [],
 	action_items: [],
@@ -24,15 +27,18 @@ const EMPTY_DASHBOARD: DashboardResponse = {
 
 const POPULATED_DASHBOARD: DashboardResponse = {
 	lane_counts: {
-		Interested: 3,
-		Applying: 1,
-		Applied: 2,
-		'Recruiter Screen': 1,
-		'Tech Screen': 0,
-		Onsite: 0,
-		Offer: 0,
-		Rejected: 1,
-		Archived: 0,
+		interested: 3,
+		applying: 1,
+		applied: 2,
+		recruiter_screen_scheduled: 1,
+		recruiter_screen_completed: 0,
+		tech_screen_scheduled: 0,
+		tech_screen_completed: 0,
+		onsite_scheduled: 0,
+		onsite_completed: 0,
+		offer: 0,
+		rejected: 1,
+		archived: 0,
 	},
 	upcoming_events: [],
 	action_items: [
@@ -191,7 +197,6 @@ describe('Dashboard Page respects configured API base URL', () => {
 
 	beforeEach(() => {
 		mockFetch.mockReset();
-		vi.resetModules();
 		originalViteApiBase = import.meta.env.VITE_API_BASE;
 	});
 

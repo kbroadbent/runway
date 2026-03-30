@@ -28,11 +28,15 @@
 {:else if data}
 	<h1>Dashboard</h1>
 
-	<div class="dashboard-grid">
-		<DashboardLaneCounts laneCounts={data.lane_counts} />
-		<DashboardUpcomingEvents items={data.upcoming_events} />
-		<DashboardActionItems items={data.action_items} />
-	</div>
+	{#if Object.keys(data.lane_counts).length === 0}
+		<p class="empty-state">No jobs yet. <a href="/search">Find or import jobs</a> to get started.</p>
+	{:else}
+		<div class="dashboard-grid">
+			<DashboardLaneCounts laneCounts={data.lane_counts} />
+			<DashboardUpcomingEvents items={data.upcoming_events} />
+			<DashboardActionItems items={data.action_items} />
+		</div>
+	{/if}
 {/if}
 
 <style>
@@ -40,6 +44,10 @@
 		font-size: 1.5rem;
 		font-weight: 700;
 		margin-bottom: 1.25rem;
+	}
+
+	.empty-state {
+		color: var(--text-secondary);
 	}
 
 	.dashboard-grid {
