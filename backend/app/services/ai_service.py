@@ -76,13 +76,13 @@ def extract_job_posting(raw_text: str) -> ImportPreview:
             {
                 "role": "user",
                 "content": (
-                    "Write a markdown summary of this job posting using these sections "
+                    "Write a markdown summary of this job posting. Use ## headings for these sections "
                     "(omit any section not present in the posting):\n"
-                    "- ## Role Overview\n"
-                    "- ## Key Responsibilities\n"
-                    "- ## Requirements\n"
-                    "- ## Compensation & Benefits\n"
-                    "- ## Work Arrangement (only if hybrid)\n\n"
+                    "- Role Overview\n"
+                    "- Key Responsibilities\n"
+                    "- Requirements\n"
+                    "- Compensation & Benefits\n"
+                    "- Work Arrangement (only if hybrid)\n\n"
                     f"Job posting:\n{raw_text}"
                 ),
             },
@@ -109,13 +109,13 @@ def summarize_posting(raw_content: str) -> str:
             {
                 "role": "user",
                 "content": (
-                    "Write a markdown summary of this job posting using these sections "
+                    "Write a markdown summary of this job posting. Use ## headings for these sections "
                     "(omit any section not present in the posting):\n"
-                    "- ## Role Overview\n"
-                    "- ## Key Responsibilities\n"
-                    "- ## Requirements\n"
-                    "- ## Compensation & Benefits\n"
-                    "- ## Work Arrangement (only if hybrid)\n\n"
+                    "- Role Overview\n"
+                    "- Key Responsibilities\n"
+                    "- Requirements\n"
+                    "- Compensation & Benefits\n"
+                    "- Work Arrangement (only if hybrid)\n\n"
                     f"Job posting:\n{raw_content}"
                 ),
             },
