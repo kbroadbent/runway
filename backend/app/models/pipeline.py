@@ -16,6 +16,7 @@ class PipelineEntry(Base):
     next_action_date: Mapped[datetime | None] = mapped_column(DateTime)
     applied_date: Mapped[date | None] = mapped_column(Date)
     recruiter_screen_date: Mapped[date | None] = mapped_column(Date)
+    manager_screen_date: Mapped[date | None] = mapped_column(Date)
     tech_screen_date: Mapped[date | None] = mapped_column(Date)
     onsite_date: Mapped[date | None] = mapped_column(Date)
     offer_date: Mapped[date | None] = mapped_column(Date)

@@ -62,6 +62,7 @@ export interface PipelineEntry {
   next_action_date: string | null;
   applied_date: string | null;
   recruiter_screen_date: string | null;
+  manager_screen_date: string | null;
   tech_screen_date: string | null;
   onsite_date: string | null;
   offer_date: string | null;

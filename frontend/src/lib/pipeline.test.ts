@@ -15,6 +15,7 @@ describe('STAGES', () => {
 			'applying',
 			'applied',
 			'recruiter_screen',
+			'manager_screen',
 			'tech_screen',
 			'onsite',
 			'offer',
