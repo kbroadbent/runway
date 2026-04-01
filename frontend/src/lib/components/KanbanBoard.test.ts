@@ -70,6 +70,7 @@ function makePipelineEntry(overrides: Partial<PipelineEntry> = {}): PipelineEntr
 		next_action_date: null,
 		applied_date: null,
 		recruiter_screen_date: null,
+		manager_screen_date: null,
 		tech_screen_date: null,
 		onsite_date: null,
 		offer_date: null,
