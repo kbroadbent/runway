@@ -33,6 +33,7 @@ class PipelineEntryUpdate(BaseModel):
     next_action_date: datetime | None = None
     applied_date: Optional[FlexDate] = None
     recruiter_screen_date: Optional[FlexDate] = None
+    manager_screen_date: Optional[FlexDate] = None
     tech_screen_date: Optional[FlexDate] = None
     onsite_date: Optional[FlexDate] = None
     offer_date: Optional[FlexDate] = None
@@ -78,6 +79,7 @@ class PipelineEntryRead(BaseModel):
     next_action_date: datetime | None
     applied_date: Optional[Date] = None
     recruiter_screen_date: Optional[Date] = None
+    manager_screen_date: Optional[Date] = None
     tech_screen_date: Optional[Date] = None
     onsite_date: Optional[Date] = None
     offer_date: Optional[Date] = None

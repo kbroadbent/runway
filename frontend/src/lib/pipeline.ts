@@ -17,6 +17,14 @@ export const STAGES: StageConfig[] = [
 		],
 	},
 	{
+		key: 'manager_screen',
+		label: 'Manager Screen',
+		subLanes: [
+			{ key: 'manager_screen_scheduled', label: 'Scheduled' },
+			{ key: 'manager_screen_completed', label: 'Completed' },
+		],
+	},
+	{
 		key: 'tech_screen',
 		label: 'Tech Screen',
 		subLanes: [
@@ -40,6 +48,7 @@ export const STAGES: StageConfig[] = [
 export const STAGE_DATE_FIELDS: Record<string, { label: string; field: string }[]> = {
 	applied: [{ label: 'Applied Date', field: 'applied_date' }],
 	recruiter_screen_scheduled: [{ label: 'Recruiter Screen Date', field: 'recruiter_screen_date' }],
+	manager_screen_scheduled: [{ label: 'Manager Screen Date', field: 'manager_screen_date' }],
 	tech_screen_scheduled: [{ label: 'Tech Screen Date', field: 'tech_screen_date' }],
 	onsite_scheduled: [{ label: 'Onsite Date', field: 'onsite_date' }],
 	offer: [

@@ -56,7 +56,7 @@ def test_stage_group_order_has_nine_groups():
     """There should be exactly 9 display groups."""
     from app.constants import STAGE_GROUP_ORDER
 
-    assert len(STAGE_GROUP_ORDER) == 9
+    assert len(STAGE_GROUP_ORDER) == 10
 
 
 def test_stage_group_order_preserves_pipeline_order():
@@ -68,6 +68,7 @@ def test_stage_group_order_preserves_pipeline_order():
         "Applying",
         "Applied",
         "Recruiter Screen",
+        "Manager Screen",
         "Tech Screen",
         "Onsite",
         "Offer",

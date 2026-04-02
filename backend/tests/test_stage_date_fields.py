@@ -42,6 +42,7 @@ def test_stage_date_fields_has_expected_stages():
     expected_keys = {
         "applied",
         "recruiter_screen_scheduled",
+        "manager_screen_scheduled",
         "tech_screen_scheduled",
         "onsite_scheduled",
         "offer",
