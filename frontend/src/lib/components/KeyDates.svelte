@@ -14,6 +14,7 @@
 	const allStageDateFields = [
 		{ label: 'Applied Date', field: 'applied_date' },
 		{ label: 'Recruiter Screen Date', field: 'recruiter_screen_date' },
+		{ label: 'Manager Screen Date', field: 'manager_screen_date' },
 		{ label: 'Tech Screen Date', field: 'tech_screen_date' },
 		{ label: 'Onsite Date', field: 'onsite_date' },
 		{ label: 'Offer Date', field: 'offer_date' },
