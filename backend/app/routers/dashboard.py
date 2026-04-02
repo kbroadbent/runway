@@ -8,6 +8,7 @@ from app.database import get_db
 from app.models import PipelineEntry, JobPosting, InterviewNote
 from app.schemas.dashboard import (
     ActionItemRead,
+    ClosedPostingAlert,
     DashboardResponse,
 )
 
@@ -101,8 +102,32 @@ def get_dashboard(db: Session = Depends(get_db)):
     action_items.sort(key=sort_key)
     upcoming_events.sort(key=sort_key)
 
+    # Closed posting alerts
+    terminal_stages = {"rejected", "archived"}
+    closed_postings_query = (
+        db.query(JobPosting)
+        .join(PipelineEntry)
+        .filter(
+            JobPosting.status == "saved",
+            JobPosting.is_closed_detected == True,  # noqa: E712
+            JobPosting.closed_check_dismissed == False,  # noqa: E712
+            PipelineEntry.stage.notin_(terminal_stages),
+        )
+        .all()
+    )
+    closed_postings = [
+        ClosedPostingAlert(
+            id=p.id,
+            title=p.title,
+            company_name=p.company.name if p.company else p.company_name,
+            url=p.url,
+        )
+        for p in closed_postings_query
+    ]
+
     return DashboardResponse(
         lane_counts=lane_counts,
         upcoming_events=upcoming_events,
         action_items=action_items,
+        closed_postings=closed_postings,
     )
