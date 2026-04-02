@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Integer, String, Text, DateTime, ForeignKey, UniqueConstraint, func
+from sqlalchemy import Boolean, Integer, String, Text, DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
@@ -30,6 +30,8 @@ class JobPosting(Base):
     tier: Mapped[int | None] = mapped_column(Integer)
     consecutive_misses: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
     lead_source: Mapped[str] = mapped_column(String, nullable=False, server_default="cold_apply")
+    is_closed_detected: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", nullable=False)
+    closed_check_dismissed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", nullable=False)
 
     company: Mapped["Company"] = relationship(back_populates="postings")
     pipeline_entry: Mapped["PipelineEntry | None"] = relationship(
