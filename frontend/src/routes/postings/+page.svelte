@@ -220,7 +220,12 @@
 						<td onclick={(e) => e.stopPropagation()}>
 							<input type="checkbox" checked={selected.has(posting.id)} onchange={() => toggleSelect(posting.id)} />
 						</td>
-						<td>{posting.title}</td>
+						<td>
+						{posting.title}
+						{#if posting.is_closed_detected && !posting.closed_check_dismissed}
+							<span class="badge-closed">Possibly Closed</span>
+						{/if}
+					</td>
 						<td>
 							{#if posting.company}
 								<button class="company-link" onclick={(e) => { e.stopPropagation(); selectedCompany = posting.company; }}>
@@ -299,6 +304,20 @@
 
 	.table-wrap {
 		overflow-x: auto;
+	}
+
+	.badge-closed {
+		display: inline-block;
+		font-size: 0.625rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		padding: 0.1rem 0.375rem;
+		border-radius: 3px;
+		background: rgba(239, 68, 68, 0.15);
+		color: var(--accent-red, #ef4444);
+		margin-left: 0.5rem;
+		vertical-align: middle;
 	}
 
 	.company-link {
