@@ -57,3 +57,34 @@ def run_scheduled_search(profile_id: int, db_url: str) -> None:
             run_search(profile, db)
     finally:
         db.close()
+
+
+def schedule_posting_check(scheduler: BackgroundScheduler) -> None:
+    """Register a daily job to check if saved postings are still open."""
+    job_id = "closed_posting_check"
+    existing = scheduler.get_job(job_id)
+    if existing:
+        existing.remove()
+
+    db_url = getattr(scheduler, "_db_url", None)
+    scheduler.add_job(
+        run_posting_check,
+        trigger="interval",
+        hours=24,
+        id=job_id,
+        args=[db_url],
+        replace_existing=True,
+    )
+
+
+def run_posting_check(db_url: str) -> None:
+    """Callback that creates a DB session and runs the posting closed check."""
+    from app.services.posting_check_service import check_all_postings
+
+    engine = create_engine(db_url, connect_args={"check_same_thread": False})
+    Session = sessionmaker(bind=engine)
+    db = Session()
+    try:
+        check_all_postings(db)
+    finally:
+        db.close()

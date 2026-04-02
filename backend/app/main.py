@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import companies, dashboard, postings, pipeline, search
-from app.services.scheduler_service import init_scheduler, schedule_profile
+from app.services.scheduler_service import init_scheduler, schedule_profile, schedule_posting_check
 from app.database import DATABASE_URL, SessionLocal
 from app.models import SearchProfile, JobPosting, PipelineEntry, PipelineHistory
 
@@ -23,6 +23,7 @@ async def lifespan(app):
             ).all()
             for profile in profiles:
                 schedule_profile(scheduler, profile)
+            schedule_posting_check(scheduler)
         finally:
             db.close()
     # Backfill pipeline entries for any saved postings that don't have one

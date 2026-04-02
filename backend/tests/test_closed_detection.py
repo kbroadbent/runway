@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from app.models import JobPosting, PipelineEntry
 
 
@@ -84,3 +86,16 @@ def test_dashboard_excludes_closed_in_terminal_stages(client, db_session):
     assert resp.status_code == 200
     closed = resp.json()["closed_postings"]
     assert len(closed) == 0
+
+
+def test_scheduler_registers_posting_check_job(client):
+    """Verify that when SCHEDULER_ENABLED=true, the posting check job is registered."""
+    # In test mode, scheduler is not started via lifespan, so create one directly.
+    from app.services.scheduler_service import init_scheduler, schedule_posting_check
+    scheduler = init_scheduler("sqlite:///:memory:")
+    job = scheduler.get_job("closed_posting_check")
+    assert job is None  # not yet registered
+
+    schedule_posting_check(scheduler)
+    job = scheduler.get_job("closed_posting_check")
+    assert job is not None
