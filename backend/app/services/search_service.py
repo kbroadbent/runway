@@ -21,6 +21,13 @@ def run_search(profile: SearchProfile, db: Session) -> dict:
     new_count = 0
     total_count = len(df)
 
+    # Reset new flags from previous run so badge reflects this run only
+    db.query(SearchResult).filter(
+        SearchResult.search_profile_id == profile.id,
+        SearchResult.is_new.is_(True),
+    ).update({"is_new": False}, synchronize_session=False)
+    db.flush()
+
     # Build seen sets from raw scrape (before filters) for age-out tracking
     seen_urls: set[str] = {str(row["job_url"]) for _, row in df.iterrows() if row.get("job_url")}
     seen_title_company: set[tuple[str, str]] = {
