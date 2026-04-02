@@ -211,6 +211,21 @@ def dismiss_posting(posting_id: int, db: Session = Depends(get_db)):
     return data
 
 
+@router.post("/{posting_id}/dismiss-closed", response_model=JobPostingRead)
+def dismiss_closed(posting_id: int, db: Session = Depends(get_db)):
+    posting = db.query(JobPosting).options(
+        joinedload(JobPosting.company), joinedload(JobPosting.pipeline_entry)
+    ).filter(JobPosting.id == posting_id).first()
+    if not posting:
+        raise HTTPException(status_code=404, detail="Posting not found")
+    posting.closed_check_dismissed = True
+    db.commit()
+    db.refresh(posting)
+    result = JobPostingRead.model_validate(posting)
+    result.pipeline_stage = posting.pipeline_entry.stage if posting.pipeline_entry else None
+    return result
+
+
 @router.delete("/{posting_id}", status_code=204)
 def delete_posting(posting_id: int, db: Session = Depends(get_db)):
     posting = db.get(JobPosting, posting_id)
