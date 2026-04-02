@@ -10,8 +10,8 @@ vi.mock('$lib/api', () => ({
 	ApiError: class ApiError extends Error {
 		status: number;
 		data: unknown;
-		constructor(message: string, status: number, data: unknown) {
-			super(message);
+		constructor(status: number, statusText: string, data: unknown) {
+			super(`API error: ${status} ${statusText}`);
 			this.status = status;
 			this.data = data;
 		}
@@ -250,7 +250,7 @@ describe('ImportForm — success state', () => {
 		const { ApiError } = await import('$lib/api');
 		await renderWithPreview();
 		vi.mocked(postings.importConfirm).mockRejectedValue(
-			new ApiError('Already imported', 409, { message: 'Already imported', existing_id: 7 })
+			new ApiError(409, 'Already imported', { message: 'Already imported', existing_id: 7 })
 		);
 		await fireEvent.click(screen.getByRole('button', { name: /save posting/i }));
 		const viewLink = await screen.findByRole('link', { name: /view posting/i });
