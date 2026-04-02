@@ -47,16 +47,16 @@ describe('Sidebar', () => {
 		const labels = links.map((link) => link.textContent?.trim());
 		expect(labels).toEqual([
 			'Dashboard',
-			'Find Jobs',
 			'Pipeline',
-			'Saved Postings',
+			'Saved Jobs',
+			'Add Jobs',
 			'Companies',
 		]);
 	});
 
-	it('renders Find Jobs nav link pointing to /search', () => {
+	it('renders Add Jobs nav link pointing to /search', () => {
 		render(Sidebar);
-		const link = screen.getByRole('link', { name: 'Find Jobs' });
+		const link = screen.getByRole('link', { name: 'Add Jobs' });
 		expect(link).toHaveAttribute('href', '/search');
 	});
 
@@ -65,10 +65,10 @@ describe('Sidebar', () => {
 		expect(screen.queryByRole('link', { name: 'Search' })).toBeNull();
 	});
 
-	it('marks Find Jobs link active when on /search path', () => {
+	it('marks Add Jobs link active when on /search path', () => {
 		setPathname('/search');
 		render(Sidebar);
-		const link = screen.getByRole('link', { name: 'Find Jobs' });
+		const link = screen.getByRole('link', { name: 'Add Jobs' });
 		expect(link).toHaveClass('active');
 	});
 });

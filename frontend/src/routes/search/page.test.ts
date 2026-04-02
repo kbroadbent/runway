@@ -658,10 +658,10 @@ describe('Search Page — page heading', () => {
 		SearchPage = mod.default;
 	});
 
-	it('renders "Find Jobs" as the page heading instead of "Search"', async () => {
+	it('renders "Add Jobs" as the page heading', async () => {
 		render(SearchPage);
 		await waitFor(() => {
-			expect(screen.getByRole('heading', { level: 1, name: /find jobs/i })).toBeInTheDocument();
+			expect(screen.getByRole('heading', { level: 1, name: /add jobs/i })).toBeInTheDocument();
 		});
 	});
 

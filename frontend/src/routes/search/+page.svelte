@@ -149,7 +149,7 @@
 </script>
 
 <div class="page-header">
-	<h1>Find Jobs</h1>
+	<h1>Add Jobs</h1>
 </div>
 
 <div class="tab-bar" role="tablist">
@@ -169,6 +169,16 @@
 		onCancel={handleCancelForm}
 	/>
 {:else}
+	<div class="import-cards">
+		<button class="import-card" onclick={() => switchTab('import-url')}>
+			<span class="import-card-title">Import from URL</span>
+			<span class="import-card-subtitle">Paste a job posting link</span>
+		</button>
+		<button class="import-card" onclick={() => switchTab('paste')}>
+			<span class="import-card-title">Import from Text</span>
+			<span class="import-card-subtitle">Paste job description text</span>
+		</button>
+	</div>
 	<div class="search-layout-header">
 		<button class="btn btn-primary" onclick={handleCreateProfile}>New Profile</button>
 	</div>
@@ -250,6 +260,42 @@
 {/if}
 
 <style>
+	.import-cards {
+		display: flex;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.import-card {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 1rem 1.25rem;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-color);
+		border-radius: var(--radius);
+		cursor: pointer;
+		text-align: left;
+		color: var(--text-primary);
+		transition: border-color 0.15s, background 0.15s;
+	}
+
+	.import-card:hover {
+		border-color: var(--accent-blue);
+		background: var(--bg-tertiary);
+	}
+
+	.import-card-title {
+		font-weight: 600;
+		font-size: 0.95rem;
+	}
+
+	.import-card-subtitle {
+		font-size: 0.85rem;
+		color: var(--text-muted);
+	}
+
 	.tab-bar {
 		display: flex;
 		gap: 0.25rem;

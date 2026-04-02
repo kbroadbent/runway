@@ -145,7 +145,7 @@
 </script>
 
 <div class="page-header">
-	<h1>{showDismissed ? 'Dismissed Postings' : 'Saved Postings'}</h1>
+	<h1>{showDismissed ? 'Dismissed Jobs' : 'Saved Jobs'}</h1>
 	<div style="display: flex; gap: 0.5rem;">
 		<button class="btn btn-secondary" onclick={async () => { showDismissed = !showDismissed; selected = new Set(); await loadPostings(); }}>
 			{showDismissed ? 'View Saved' : 'View Dismissed'}
