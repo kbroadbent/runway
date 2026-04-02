@@ -11,7 +11,6 @@
 	let allPostings = $state<JobPosting[]>([]);
 	let selectedPosting = $state<JobPosting | null>(null);
 	let selectedCompany = $state<Company | null>(null);
-	let showDismissed = $state(false);
 	let selected = $state<Set<number>>(new Set());
 
 	// Filters
@@ -32,7 +31,7 @@
 	onMount(loadPostings);
 
 	async function loadPostings() {
-		allPostings = await postingsApi.list(showDismissed ? 'dismissed' : 'saved');
+		allPostings = await postingsApi.list('saved');
 		const idParam = page.url?.searchParams?.get('id');
 		if (idParam) {
 			const id = parseInt(idParam);
@@ -117,12 +116,6 @@
 		await loadPostings();
 	}
 
-	async function undismissSelected() {
-		await Promise.all([...selected].map((id) => postingsApi.save(id)));
-		selected = new Set();
-		await loadPostings();
-	}
-
 	function formatSalary(min: number | null, max: number | null): string {
 		if (!min && !max) return '';
 		const fmt = (n: number) => '$' + Math.round(n / 1000) + 'k';
@@ -145,12 +138,7 @@
 </script>
 
 <div class="page-header">
-	<h1>{showDismissed ? 'Dismissed Jobs' : 'Saved Jobs'}</h1>
-	<div style="display: flex; gap: 0.5rem;">
-		<button class="btn btn-secondary" onclick={async () => { showDismissed = !showDismissed; selected = new Set(); await loadPostings(); }}>
-			{showDismissed ? 'View Saved' : 'View Dismissed'}
-		</button>
-	</div>
+	<h1>Saved Jobs</h1>
 </div>
 
 <!-- Filters -->
@@ -195,9 +183,6 @@
 {#if selected.size > 0}
 	<div class="bulk-actions">
 		<span>{selected.size} selected</span>
-		{#if showDismissed}
-			<button class="btn btn-sm btn-primary" onclick={undismissSelected}>Undismiss Selected</button>
-		{/if}
 		<button class="btn btn-sm btn-danger" onclick={deleteSelected}>Delete Selected</button>
 		<button class="btn btn-sm btn-secondary" onclick={() => (selected = new Set())}>Clear</button>
 	</div>

@@ -4,6 +4,7 @@
 	import SearchProfileForm from '$lib/components/SearchProfileForm.svelte';
 	import SearchResultsTable from '$lib/components/SearchResultsTable.svelte';
 	import ImportForm from '$lib/components/ImportForm.svelte';
+	import PostingDetailPanel from '$lib/components/PostingDetailPanel.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -146,6 +147,57 @@
 		}
 	}
 
+	// Dismissed tab state
+	let dismissedPostings = $state<JobPosting[]>([]);
+	let dismissedSelected = $state<Set<number>>(new Set());
+	let dismissedSearch = $state('');
+	let selectedDismissedPosting = $state<JobPosting | null>(null);
+
+	let dismissedFiltered = $derived.by(() => {
+		if (!dismissedSearch) return dismissedPostings;
+		const q = dismissedSearch.toLowerCase();
+		return dismissedPostings.filter((p) =>
+			p.title.toLowerCase().includes(q) ||
+			(p.company?.name ?? p.company_name ?? '').toLowerCase().includes(q) ||
+			(p.location ?? '').toLowerCase().includes(q)
+		);
+	});
+
+	async function loadDismissed() {
+		dismissedPostings = await postings.list('dismissed');
+	}
+
+	$effect(() => {
+		if (activeTab === 'dismissed') {
+			loadDismissed();
+		}
+	});
+
+	function toggleDismissedSelect(id: number) {
+		const next = new Set(dismissedSelected);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		dismissedSelected = next;
+	}
+
+	function toggleDismissedSelectAll() {
+		if (dismissedSelected.size === dismissedFiltered.length) dismissedSelected = new Set();
+		else dismissedSelected = new Set(dismissedFiltered.map((p) => p.id));
+	}
+
+	async function undismissSelected() {
+		await Promise.all([...dismissedSelected].map((id) => postings.save(id)));
+		dismissedSelected = new Set();
+		await loadDismissed();
+	}
+
+	async function deleteDismissedSelected() {
+		if (!confirm(`Delete ${dismissedSelected.size} posting(s)?`)) return;
+		await Promise.all([...dismissedSelected].map((id) => postings.delete(id)));
+		dismissedSelected = new Set();
+		await loadDismissed();
+	}
+
 </script>
 
 <div class="page-header">
@@ -156,12 +208,72 @@
 	<button role="tab" class="tab-btn" class:active={activeTab === 'search'} onclick={() => switchTab('search')}>Search</button>
 	<button role="tab" class="tab-btn" class:active={activeTab === 'import-url'} onclick={() => switchTab('import-url')}>From URL</button>
 	<button role="tab" class="tab-btn" class:active={activeTab === 'paste'} onclick={() => switchTab('paste')}>From Text</button>
+	<button role="tab" class="tab-btn" class:active={activeTab === 'dismissed'} onclick={() => switchTab('dismissed')}>Dismissed</button>
 </div>
 
 {#if activeTab === 'import-url'}
 	<ImportForm mode="url" />
 {:else if activeTab === 'paste'}
 	<ImportForm mode="text" />
+{:else if activeTab === 'dismissed'}
+	<div class="dismissed-section">
+		<input type="text" class="dismissed-search" bind:value={dismissedSearch} placeholder="Search dismissed postings..." />
+
+		{#if dismissedSelected.size > 0}
+			<div class="bulk-actions">
+				<span>{dismissedSelected.size} selected</span>
+				<button class="btn btn-sm btn-primary" onclick={undismissSelected}>Undismiss Selected</button>
+				<button class="btn btn-sm btn-danger" onclick={deleteDismissedSelected}>Delete Selected</button>
+				<button class="btn btn-sm btn-secondary" onclick={() => (dismissedSelected = new Set())}>Clear</button>
+			</div>
+		{/if}
+
+		{#if dismissedFiltered.length === 0}
+			<p class="empty-hint">No dismissed postings.</p>
+		{:else}
+			<div class="table-wrap">
+				<table>
+					<thead>
+						<tr>
+							<th>
+								<input
+									type="checkbox"
+									checked={dismissedSelected.size === dismissedFiltered.length && dismissedFiltered.length > 0}
+									onchange={toggleDismissedSelectAll}
+								/>
+							</th>
+							<th>Title</th>
+							<th>Company</th>
+							<th>Location</th>
+							<th>Saved</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each dismissedFiltered as posting}
+							<tr class="posting-row" class:row-selected={dismissedSelected.has(posting.id)} onclick={() => (selectedDismissedPosting = posting)}>
+								<td onclick={(e) => e.stopPropagation()}>
+									<input type="checkbox" checked={dismissedSelected.has(posting.id)} onchange={() => toggleDismissedSelect(posting.id)} />
+								</td>
+								<td>{posting.title}</td>
+								<td>{posting.company?.name ?? posting.company_name ?? ''}</td>
+								<td>{posting.location ?? ''}</td>
+								<td>{new Date(posting.date_saved).toLocaleDateString()}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+	</div>
+
+	{#if selectedDismissedPosting}
+		<PostingDetailPanel
+			posting={selectedDismissedPosting}
+			onClose={() => (selectedDismissedPosting = null)}
+			onDeleted={async () => { await loadDismissed(); selectedDismissedPosting = null; }}
+			onUpdated={async () => { await loadDismissed(); }}
+		/>
+	{/if}
 {:else if showForm}
 	<SearchProfileForm
 		profile={editingProfile ?? {}}
@@ -430,5 +542,46 @@
 	.empty-hint {
 		color: var(--text-muted);
 		font-size: 0.9rem;
+	}
+
+	.dismissed-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.dismissed-search {
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-color);
+		border-radius: var(--radius);
+		color: var(--text-primary);
+		padding: 0.5rem 0.75rem;
+		font-size: 0.9rem;
+		max-width: 400px;
+	}
+
+	.bulk-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		font-size: 0.9rem;
+		color: var(--text-secondary);
+	}
+
+	.table-wrap {
+		overflow-x: auto;
+	}
+
+	.posting-row {
+		cursor: pointer;
+		transition: background 0.1s;
+	}
+
+	.posting-row:hover {
+		background: var(--bg-tertiary);
+	}
+
+	.row-selected {
+		background: color-mix(in srgb, var(--accent-blue) 10%, transparent);
 	}
 </style>
