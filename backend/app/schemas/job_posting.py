@@ -56,6 +56,8 @@ class JobPostingRead(BaseModel):
     pipeline_stage: str | None = None
     raw_content: str | None = None
     lead_source: str = "cold_apply"
+    is_closed_detected: bool = False
+    closed_check_dismissed: bool = False
 
     @computed_field
     @property

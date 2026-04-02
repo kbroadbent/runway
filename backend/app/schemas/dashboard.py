@@ -33,7 +33,15 @@ class InterviewItemRead(BaseModel):
     is_overdue: bool
 
 
+class ClosedPostingAlert(BaseModel):
+    id: int
+    title: str
+    company_name: str | None
+    url: str | None
+
+
 class DashboardResponse(BaseModel):
     lane_counts: dict[str, int]
     upcoming_events: list[ActionItemRead]
     action_items: list[ActionItemRead]
+    closed_postings: list[ClosedPostingAlert] = []
