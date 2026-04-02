@@ -5,6 +5,7 @@
 	import DashboardLaneCounts from '$lib/components/DashboardLaneCounts.svelte';
 	import DashboardUpcomingEvents from '$lib/components/DashboardUpcomingEvents.svelte';
 	import DashboardActionItems from '$lib/components/DashboardActionItems.svelte';
+	import DashboardClosedPostings from '$lib/components/DashboardClosedPostings.svelte';
 
 	let data = $state<DashboardResponse | null>(null);
 	let error = $state<string | null>(null);
@@ -35,6 +36,7 @@
 			<DashboardLaneCounts laneCounts={data.lane_counts} />
 			<DashboardUpcomingEvents items={data.upcoming_events} />
 			<DashboardActionItems items={data.action_items} />
+			<DashboardClosedPostings items={data.closed_postings} />
 		</div>
 	{/if}
 {/if}
