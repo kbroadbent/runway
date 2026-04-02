@@ -27,6 +27,8 @@ function makeEntry(stage: string, id = 1): PipelineEntry {
 			has_raw_content: false,
 			notes: null,
 			lead_source: 'cold_apply',
+			is_closed_detected: false,
+			closed_check_dismissed: false,
 		},
 		stage,
 		position: 0,

@@ -82,6 +82,8 @@ export const postings = {
     request<JobPosting>(`/postings/${id}/link-company`, { method: 'POST' }),
   summarize: (id: number) =>
     request<JobPosting>(`/postings/${id}/summarize`, { method: 'POST' }),
+  dismissClosed: (id: number) =>
+    request<JobPosting>(`/postings/${id}/dismiss-closed`, { method: 'POST' }),
 };
 
 export const pipeline = {

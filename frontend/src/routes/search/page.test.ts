@@ -64,6 +64,8 @@ const MOCK_POSTINGS: JobPosting[] = [
 		has_raw_content: false,
 		notes: null,
 		lead_source: 'cold_apply',
+		is_closed_detected: false,
+		closed_check_dismissed: false,
 	},
 	{
 		id: 11,
@@ -85,6 +87,8 @@ const MOCK_POSTINGS: JobPosting[] = [
 		has_raw_content: false,
 		notes: null,
 		lead_source: 'cold_apply',
+		is_closed_detected: false,
+		closed_check_dismissed: false,
 	},
 ];
 
@@ -355,6 +359,8 @@ const MOCK_POSTING_NEW: JobPosting = {
 	has_raw_content: false,
 	notes: null,
 	lead_source: 'cold_apply',
+	is_closed_detected: false,
+	closed_check_dismissed: false,
 };
 
 const MOCK_POSTING_NEW_2: JobPosting = {
@@ -377,6 +383,8 @@ const MOCK_POSTING_NEW_2: JobPosting = {
 	has_raw_content: false,
 	notes: null,
 	lead_source: 'cold_apply',
+	is_closed_detected: false,
+	closed_check_dismissed: false,
 };
 
 /**

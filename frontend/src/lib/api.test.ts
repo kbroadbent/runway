@@ -63,6 +63,7 @@ describe('DashboardResponse type', () => {
           is_overdue: false,
         },
       ],
+      closed_postings: [],
     };
     expect(response.lane_counts['Interested']).toBe(2);
     expect(response.action_items).toHaveLength(1);
@@ -73,6 +74,7 @@ describe('DashboardResponse type', () => {
       lane_counts: {},
       upcoming_events: [],
       action_items: [],
+      closed_postings: [],
     };
     expect(response.action_items).toHaveLength(0);
   });
@@ -98,6 +100,7 @@ describe('dashboard.get()', () => {
           is_overdue: true,
         },
       ],
+      closed_postings: [],
     };
 
     mockFetch.mockResolvedValueOnce({

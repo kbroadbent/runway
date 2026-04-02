@@ -43,6 +43,8 @@ function makePosting(overrides: Partial<JobPosting> = {}): JobPosting {
 		has_raw_content: false,
 		notes: null,
 		lead_source: 'cold_apply',
+		is_closed_detected: false,
+		closed_check_dismissed: false,
 		...overrides,
 	};
 }

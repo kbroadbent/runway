@@ -51,6 +51,8 @@ export interface JobPosting {
   has_raw_content: boolean;
   notes: string | null;
   lead_source: LeadSource;
+  is_closed_detected: boolean;
+  closed_check_dismissed: boolean;
 }
 
 export interface PipelineEntry {
@@ -162,10 +164,18 @@ export interface DashboardActionItem {
   is_overdue: boolean;
 }
 
+export interface ClosedPostingAlert {
+  id: number;
+  title: string;
+  company_name: string | null;
+  url: string | null;
+}
+
 export interface DashboardResponse {
   lane_counts: Record<string, number>;
   upcoming_events: DashboardActionItem[];
   action_items: DashboardActionItem[];
+  closed_postings: ClosedPostingAlert[];
 }
 
 export interface PostingsFilter {

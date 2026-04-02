@@ -23,6 +23,7 @@ const EMPTY_DASHBOARD: DashboardResponse = {
 	},
 	upcoming_events: [],
 	action_items: [],
+	closed_postings: [],
 };
 
 const POPULATED_DASHBOARD: DashboardResponse = {
@@ -61,6 +62,7 @@ const POPULATED_DASHBOARD: DashboardResponse = {
 			is_overdue: true,
 		},
 	],
+	closed_postings: [],
 };
 
 function mockDashboardResponse(data: DashboardResponse) {
