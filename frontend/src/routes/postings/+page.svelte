@@ -246,7 +246,7 @@
 							</select>
 						</td>
 						<td><span class="badge badge-stage">{posting.source}</span></td>
-						<td></td>
+						<td><span class="badge badge-lead">{LEAD_SOURCE_LABELS[posting.lead_source] ?? posting.lead_source}</span></td>
 						<td>
 							{#if posting.pipeline_stage}
 								<span class="badge badge-stage">{posting.pipeline_stage}</span>

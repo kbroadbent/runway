@@ -356,7 +356,7 @@
 				{/if}
 
 				{#if selectedProfile.last_run_at}
-					<p class="last-run">Last run: {new Date(selectedProfile.last_run_at).toLocaleString()}</p>
+					<p class="last-run">Last run: {new Date(selectedProfile.last_run_at + 'Z').toLocaleString()}</p>
 				{/if}
 
 				{#if loadingPostings}

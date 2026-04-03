@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PipelineEntry } from '$lib/types';
+	import { LEAD_SOURCE_LABELS } from '$lib/types';
 
 	interface Props {
 		entry: PipelineEntry;
@@ -49,6 +50,9 @@
 		<div class="card-salary">
 			{formatSalary(entry.job_posting.salary_min, entry.job_posting.salary_max)}
 		</div>
+	{/if}
+	{#if entry.job_posting.lead_source && entry.job_posting.lead_source !== 'cold_apply'}
+		<div class="card-lead">{LEAD_SOURCE_LABELS[entry.job_posting.lead_source]}</div>
 	{/if}
 	{#if entry.next_action_date}
 		<div class="card-action" class:urgent-text={isUrgent}>
@@ -129,6 +133,12 @@
 	.card-salary {
 		font-size: 0.8rem;
 		color: var(--accent-green);
+	}
+
+	.card-lead {
+		font-size: 0.7rem;
+		color: var(--text-muted);
+		margin-top: 0.2rem;
 	}
 
 	.card-action {

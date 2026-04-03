@@ -90,14 +90,23 @@ def import_confirm(data: ImportPreview, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         existing = None
+        match_reason = None
         if data.url:
             existing = db.query(JobPosting).filter(JobPosting.url == data.url).first()
+            if existing:
+                match_reason = "URL"
         if not existing and data.title and company:
             existing = db.query(JobPosting).filter(
                 JobPosting.title == (data.title or "Untitled"),
                 JobPosting.company_id == company.id,
             ).first()
-        detail: dict = {"message": "A posting with this title and company already exists"}
+            if existing:
+                match_reason = "title and company"
+        if existing:
+            message = f"This posting already exists (matched by {match_reason})"
+        else:
+            message = "A posting with this title and company already exists"
+        detail: dict = {"message": message}
         if existing:
             detail["existing_id"] = existing.id
         raise HTTPException(status_code=409, detail=detail)

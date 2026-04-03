@@ -10,7 +10,16 @@
 	let board = $state<Record<string, PipelineEntry[]>>({});
 	let selectedEntry = $state<PipelineEntry | null>(null);
 
+	let searchInput = $state<HTMLInputElement>();
 	let debounceTimer: ReturnType<typeof setTimeout>;
+
+	function handleKeydown(e: KeyboardEvent) {
+		if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+			e.preventDefault();
+			searchInput?.focus();
+			searchInput?.select();
+		}
+	}
 
 	$effect(() => {
 		const _search = $searchFilter;
@@ -48,14 +57,17 @@
 	}
 </script>
 
+<svelte:window onkeydown={handleKeydown} />
+
 <div class="pipeline-header">
 	<h1>Pipeline</h1>
 	<div class="filters">
 		<input
 			class="filter-search"
 			type="text"
-			placeholder="Search company or description…"
+			placeholder="Search company or description… (Ctrl+F)"
 			bind:value={$searchFilter}
+			bind:this={searchInput}
 		/>
 		<div class="tier-filter">
 			<button class="btn btn-sm" class:btn-primary={$tierFilter === null} class:btn-secondary={$tierFilter !== null} onclick={() => ($tierFilter = null)}>All</button>

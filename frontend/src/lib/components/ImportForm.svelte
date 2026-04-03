@@ -83,11 +83,11 @@
 			phase = 'success';
 		} catch (err) {
 			if (err instanceof ApiError && err.status === 409) {
-				const data = err.data as { existing_id?: number };
+				const data = err.data as { message?: string; existing_id?: number };
 				if (data?.existing_id) {
 					duplicateId = data.existing_id;
 				}
-				saveError = err.message;
+				saveError = data?.message || 'This posting already exists';
 			} else {
 				saveError = err instanceof Error ? err.message : 'Unknown error';
 			}
