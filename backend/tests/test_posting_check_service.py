@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from app.models import JobPosting, PipelineEntry, PipelineHistory
 from app.services.posting_check_service import get_eligible_postings, check_single_posting
 

@@ -1,6 +1,4 @@
-from unittest.mock import patch
-
-from app.models import JobPosting, PipelineEntry
+from app.models import JobPosting
 
 
 def _create_saved_posting(client, title="SWE", url="https://example.com/job"):
