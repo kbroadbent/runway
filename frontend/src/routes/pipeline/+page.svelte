@@ -6,6 +6,7 @@
 	import PipelineDetailPanel from '$lib/components/PipelineDetailPanel.svelte';
 	import LeadSourceTooltip from '$lib/components/LeadSourceTooltip.svelte';
 	import { tierFilter, searchFilter, leadSourceFilter } from '$lib/stores/pipelineFilters';
+	import { page } from '$app/state';
 
 	let board = $state<Record<string, PipelineEntry[]>>({});
 	let selectedEntry = $state<PipelineEntry | null>(null);
@@ -36,6 +37,16 @@
 			tier: $tierFilter ?? undefined,
 			lead_source: $leadSourceFilter ?? undefined,
 		});
+		if (!selectedEntry) {
+			const entryParam = page.url?.searchParams?.get('entry');
+			if (entryParam) {
+				const id = parseInt(entryParam);
+				for (const entries of Object.values(board)) {
+					const found = entries.find((e) => e.id === id);
+					if (found) { selectedEntry = found; break; }
+				}
+			}
+		}
 	}
 
 	function handleCardClick(entry: PipelineEntry) {
