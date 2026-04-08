@@ -41,7 +41,7 @@
 	{:else}
 		<div class="items-list">
 			{#each visibleItems as item}
-				<div class="event-item" class:overdue={item.is_overdue}>
+				<a class="event-item" class:overdue={item.is_overdue} href="/pipeline?entry={item.pipeline_entry_id}">
 					<div class="item-left">
 						<span class="item-type-badge">Interview</span>
 						<div class="item-details">
@@ -54,7 +54,7 @@
 					<div class="item-date" class:overdue={item.is_overdue}>
 						{formatDate(item.date)}
 					</div>
-				</div>
+				</a>
 			{/each}
 		</div>
 
@@ -101,6 +101,13 @@
 		background: var(--bg-tertiary);
 		border-radius: var(--radius);
 		border-left: 3px solid var(--accent-blue);
+		text-decoration: none;
+		color: inherit;
+		cursor: pointer;
+	}
+
+	.event-item:hover {
+		filter: brightness(1.08);
 	}
 
 	.event-item.overdue {
