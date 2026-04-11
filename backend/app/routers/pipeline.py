@@ -98,7 +98,8 @@ def move_pipeline_entry(entry_id: int, data: PipelineMoveRequest, db: Session = 
     entry.stage = data.to_stage
     if data.stage_dates:
         valid_date_fields = {"applied_date", "recruiter_screen_date", "manager_screen_date",
-                             "tech_screen_date", "onsite_date", "offer_date", "offer_expiration_date"}
+                             "tech_screen_date", "onsite_date", "offer_date", "offer_expiration_date",
+                             "rejected_date"}
         for field, value in data.stage_dates.items():
             if field in valid_date_fields:
                 setattr(entry, field, value)

@@ -42,6 +42,7 @@ export const STAGES: StageConfig[] = [
 	},
 	{ key: 'offer', label: 'Offer' },
 	{ key: 'rejected', label: 'Rejected' },
+	{ key: 'withdrawn', label: 'Withdrawn' },
 	{ key: 'archived', label: 'Archived' },
 ];
 
@@ -57,11 +58,13 @@ export const STAGE_DATE_FIELDS: Record<string, { label: string; field: string }[
 	],
 };
 
-export const AUTO_DATE_STAGES: Record<string, string> = {};
+export const AUTO_DATE_STAGES: Record<string, string> = {
+	rejected: 'rejected_date',
+};
 
 export const ACTIVE_STAGES = STAGES.filter(
-	(s) => s.key !== 'rejected' && s.key !== 'archived'
+	(s) => s.key !== 'rejected' && s.key !== 'withdrawn' && s.key !== 'archived'
 );
 export const TERMINAL_STAGES = STAGES.filter(
-	(s) => s.key === 'rejected' || s.key === 'archived'
+	(s) => s.key === 'rejected' || s.key === 'withdrawn' || s.key === 'archived'
 );

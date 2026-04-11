@@ -21,6 +21,7 @@ class PipelineEntry(Base):
     onsite_date: Mapped[date | None] = mapped_column(Date)
     offer_date: Mapped[date | None] = mapped_column(Date)
     offer_expiration_date: Mapped[date | None] = mapped_column(Date)
+    rejected_date: Mapped[date | None] = mapped_column(Date)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 

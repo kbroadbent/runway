@@ -38,6 +38,7 @@ class PipelineEntryUpdate(BaseModel):
     onsite_date: Optional[FlexDate] = None
     offer_date: Optional[FlexDate] = None
     offer_expiration_date: Optional[FlexDate] = None
+    rejected_date: Optional[FlexDate] = None
 
 
 class PipelineMoveRequest(BaseModel):
@@ -84,6 +85,7 @@ class PipelineEntryRead(BaseModel):
     onsite_date: Optional[Date] = None
     offer_date: Optional[Date] = None
     offer_expiration_date: Optional[Date] = None
+    rejected_date: Optional[Date] = None
     custom_dates: list[CustomDateRead] = []
     created_at: datetime
     updated_at: datetime

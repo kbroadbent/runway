@@ -52,11 +52,11 @@ def test_stage_group_order_contains_all_unique_groups():
     assert len(STAGE_GROUP_ORDER) == len(unique_groups)
 
 
-def test_stage_group_order_has_nine_groups():
-    """There should be exactly 9 display groups."""
+def test_stage_group_order_has_eleven_groups():
+    """There should be exactly 11 display groups."""
     from app.constants import STAGE_GROUP_ORDER
 
-    assert len(STAGE_GROUP_ORDER) == 10
+    assert len(STAGE_GROUP_ORDER) == 11
 
 
 def test_stage_group_order_preserves_pipeline_order():
@@ -73,6 +73,7 @@ def test_stage_group_order_preserves_pipeline_order():
         "Onsite",
         "Offer",
         "Rejected",
+        "Withdrawn",
         "Archived",
     ]
     assert STAGE_GROUP_ORDER == expected
