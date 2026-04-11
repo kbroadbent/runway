@@ -10,6 +10,7 @@ import type {
   ImportPreview,
   PostingsFilter,
   DashboardResponse,
+  FunnelResponse,
   CustomDate,
 } from './types';
 
@@ -143,6 +144,8 @@ export const companies = {
 
 export const dashboard = {
   get: () => request<DashboardResponse>('/dashboard'),
+  funnel: (params?: { start?: string; end?: string }) =>
+    request<FunnelResponse>(`/dashboard/funnel${toQuery(params ?? {})}`),
 };
 
 export const searchResults = {

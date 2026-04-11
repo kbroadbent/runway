@@ -5,12 +5,15 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.models import PipelineEntry, JobPosting, InterviewNote
+from app.models import PipelineEntry, JobPosting, InterviewNote, PipelineHistory
 from app.schemas.dashboard import (
     ActionItemRead,
     ClosedPostingAlert,
     DashboardResponse,
+    FunnelResponse,
+    FunnelTransition,
 )
+from app.constants import STAGE_GROUPS
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -131,3 +134,47 @@ def get_dashboard(db: Session = Depends(get_db)):
         action_items=action_items,
         closed_postings=closed_postings,
     )
+
+
+@router.get("/funnel", response_model=FunnelResponse)
+def get_funnel(
+    start: str | None = None,
+    end: str | None = None,
+    db: Session = Depends(get_db),
+):
+    query = db.query(PipelineHistory).filter(
+        PipelineHistory.event_type == "stage_change",
+        PipelineHistory.from_stage.isnot(None),
+        PipelineHistory.to_stage.isnot(None),
+    )
+
+    if start:
+        query = query.filter(PipelineHistory.changed_at >= datetime.fromisoformat(start))
+    if end:
+        query = query.filter(PipelineHistory.changed_at <= datetime.fromisoformat(end))
+
+    history = query.all()
+
+    # Collapse sub-lanes to parent stage groups
+    transition_counts: dict[tuple[str, str], int] = {}
+    for h in history:
+        from_group = STAGE_GROUPS.get(h.from_stage, h.from_stage)
+        to_group = STAGE_GROUPS.get(h.to_stage, h.to_stage)
+        if from_group == to_group:
+            continue  # skip intra-group transitions (e.g. scheduled→completed)
+        key = (from_group, to_group)
+        transition_counts[key] = transition_counts.get(key, 0) + 1
+
+    transitions = [
+        FunnelTransition(from_stage=k[0], to_stage=k[1], count=v)
+        for k, v in transition_counts.items()
+    ]
+
+    # Current stage counts (also collapsed to groups)
+    entries = db.query(PipelineEntry).all()
+    group_counts: dict[str, int] = {}
+    for e in entries:
+        group = STAGE_GROUPS.get(e.stage, e.stage)
+        group_counts[group] = group_counts.get(group, 0) + 1
+
+    return FunnelResponse(transitions=transitions, stage_counts=group_counts)

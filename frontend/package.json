@@ -19,6 +19,9 @@
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/svelte": "^5.3.1",
+		"@types/d3-sankey": "^0.12.5",
+		"@types/d3-selection": "^3.0.11",
+		"@types/d3-shape": "^3.1.8",
 		"@types/node": "^25.5.0",
 		"jsdom": "^29.0.1",
 		"svelte": "^5.51.0",
@@ -30,6 +33,9 @@
 	"dependencies": {
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@types/dompurify": "^3.0.5",
+		"d3-sankey": "^0.12.3",
+		"d3-selection": "^3.0.0",
+		"d3-shape": "^3.2.0",
 		"dompurify": "^3.3.3",
 		"marked": "^17.0.4"
 	}

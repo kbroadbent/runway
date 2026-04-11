@@ -40,6 +40,17 @@ class ClosedPostingAlert(BaseModel):
     url: str | None
 
 
+class FunnelTransition(BaseModel):
+    from_stage: str
+    to_stage: str
+    count: int
+
+
+class FunnelResponse(BaseModel):
+    transitions: list[FunnelTransition]
+    stage_counts: dict[str, int]
+
+
 class DashboardResponse(BaseModel):
     lane_counts: dict[str, int]
     upcoming_events: list[ActionItemRead]

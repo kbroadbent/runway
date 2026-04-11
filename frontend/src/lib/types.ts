@@ -186,3 +186,14 @@ export interface PostingsFilter {
   remote_type?: string;
   lead_source?: LeadSource;
 }
+
+export interface FunnelTransition {
+	from_stage: string;
+	to_stage: string;
+	count: number;
+}
+
+export interface FunnelResponse {
+	transitions: FunnelTransition[];
+	stage_counts: Record<string, number>;
+}
