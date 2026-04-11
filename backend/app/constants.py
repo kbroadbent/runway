@@ -12,6 +12,7 @@ STAGES = [
     "onsite_completed",
     "offer",
     "rejected",
+    "withdrawn",
     "archived",
 ]
 
@@ -31,6 +32,7 @@ STAGE_GROUPS = {
     "onsite_completed": "Onsite",
     "offer": "Offer",
     "rejected": "Rejected",
+    "withdrawn": "Withdrawn",
     "archived": "Archived",
 }
 
@@ -53,5 +55,6 @@ STAGE_GROUP_ORDER = [
     "Onsite",
     "Offer",
     "Rejected",
+    "Withdrawn",
     "Archived",
 ]
