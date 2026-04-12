@@ -6,6 +6,7 @@
 	import DashboardUpcomingEvents from '$lib/components/DashboardUpcomingEvents.svelte';
 	import DashboardActionItems from '$lib/components/DashboardActionItems.svelte';
 	import DashboardClosedPostings from '$lib/components/DashboardClosedPostings.svelte';
+	import DashboardStaleEntries from '$lib/components/DashboardStaleEntries.svelte';
 	import DashboardFunnel from '$lib/components/DashboardFunnel.svelte';
 
 	let data = $state<DashboardResponse | null>(null);
@@ -35,9 +36,10 @@
 	{:else}
 		<div class="dashboard-grid">
 			<DashboardLaneCounts laneCounts={data.lane_counts} />
-			<DashboardUpcomingEvents items={data.upcoming_events} />
 			<DashboardFunnel />
+			<DashboardUpcomingEvents items={data.upcoming_events} />
 			<DashboardActionItems items={data.action_items} />
+			<DashboardStaleEntries items={data.stale_entries} />
 			<DashboardClosedPostings items={data.closed_postings} />
 		</div>
 	{/if}
