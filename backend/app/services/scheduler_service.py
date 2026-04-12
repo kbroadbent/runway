@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.memory import MemoryJobStore
 from sqlalchemy import create_engine
@@ -73,6 +75,7 @@ def schedule_posting_check(scheduler: BackgroundScheduler) -> None:
         hours=24,
         id=job_id,
         args=[db_url],
+        next_run_time=datetime.now() + timedelta(minutes=2),
         replace_existing=True,
     )
 
