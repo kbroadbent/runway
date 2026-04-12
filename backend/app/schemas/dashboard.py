@@ -33,6 +33,14 @@ class InterviewItemRead(BaseModel):
     is_overdue: bool
 
 
+class StaleEntryRead(BaseModel):
+    pipeline_entry_id: int
+    job_title: str
+    company_name: str | None
+    stage: str
+    days_in_stage: int
+
+
 class ClosedPostingAlert(BaseModel):
     id: int
     title: str
@@ -55,4 +63,5 @@ class DashboardResponse(BaseModel):
     lane_counts: dict[str, int]
     upcoming_events: list[ActionItemRead]
     action_items: list[ActionItemRead]
+    stale_entries: list[StaleEntryRead] = []
     closed_postings: list[ClosedPostingAlert] = []

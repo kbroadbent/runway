@@ -23,6 +23,7 @@ const EMPTY_DASHBOARD: DashboardResponse = {
 	},
 	upcoming_events: [],
 	action_items: [],
+	stale_entries: [],
 	closed_postings: [],
 };
 
@@ -42,6 +43,7 @@ const POPULATED_DASHBOARD: DashboardResponse = {
 		archived: 0,
 	},
 	upcoming_events: [],
+	stale_entries: [],
 	action_items: [
 		{
 			pipeline_entry_id: 1,

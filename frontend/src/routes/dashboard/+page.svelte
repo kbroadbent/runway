@@ -37,8 +37,8 @@
 		<div class="dashboard-grid">
 			<DashboardLaneCounts laneCounts={data.lane_counts} />
 			<DashboardFunnel />
-			<DashboardUpcomingEvents items={data.upcoming_events} />
 			<DashboardActionItems items={data.action_items} />
+			<DashboardUpcomingEvents items={data.upcoming_events} />
 			<DashboardStaleEntries items={data.stale_entries} />
 			<DashboardClosedPostings items={data.closed_postings} />
 		</div>

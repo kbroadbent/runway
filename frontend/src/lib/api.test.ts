@@ -63,6 +63,7 @@ describe('DashboardResponse type', () => {
           is_overdue: false,
         },
       ],
+      stale_entries: [],
       closed_postings: [],
     };
     expect(response.lane_counts['Interested']).toBe(2);
@@ -74,6 +75,7 @@ describe('DashboardResponse type', () => {
       lane_counts: {},
       upcoming_events: [],
       action_items: [],
+      stale_entries: [],
       closed_postings: [],
     };
     expect(response.action_items).toHaveLength(0);

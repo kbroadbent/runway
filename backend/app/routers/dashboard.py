@@ -1,17 +1,18 @@
 from collections import Counter
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.models import PipelineEntry, JobPosting, InterviewNote, PipelineHistory
+from app.models import PipelineEntry, JobPosting, PipelineHistory
 from app.schemas.dashboard import (
     ActionItemRead,
     ClosedPostingAlert,
     DashboardResponse,
     FunnelResponse,
     FunnelTransition,
+    StaleEntryRead,
 )
 from app.constants import STAGE_GROUPS
 
@@ -57,39 +58,34 @@ def get_dashboard(db: Session = Depends(get_db)):
                 )
             )
 
-    # Upcoming events: interviews scheduled today or later with no outcome
-    today_start = datetime.combine(date.today(), datetime.min.time())
-    interview_notes = (
-        db.query(InterviewNote)
-        .options(
-            joinedload(InterviewNote.pipeline_entry)
-            .joinedload(PipelineEntry.job_posting)
-            .joinedload(JobPosting.company)
-        )
-        .filter(
-            InterviewNote.scheduled_at >= today_start,
-            InterviewNote.outcome.is_(None),
-        )
-        .all()
-    )
+    # Upcoming events from pipeline entry key dates (today or later)
+    today = date.today()
+    interview_date_fields = {
+        "recruiter_screen_date": "Recruiter Screen",
+        "manager_screen_date": "Manager Screen",
+        "tech_screen_date": "Tech Screen",
+        "onsite_date": "Onsite",
+    }
 
     upcoming_events: list[ActionItemRead] = []
-    for note in interview_notes:
-        entry = note.pipeline_entry
+    for entry in entries:
         posting = entry.job_posting
-        upcoming_events.append(
-            ActionItemRead(
-                pipeline_entry_id=entry.id,
-                job_title=posting.title,
-                company_name=(
-                    posting.company.name if posting.company else posting.company_name
-                ),
-                type="interview",
-                description=note.round,
-                date=str(note.scheduled_at) if note.scheduled_at else None,
-                is_overdue=False,
-            )
-        )
+        for field, label in interview_date_fields.items():
+            d = getattr(entry, field, None)
+            if d is not None and d >= today:
+                upcoming_events.append(
+                    ActionItemRead(
+                        pipeline_entry_id=entry.id,
+                        job_title=posting.title,
+                        company_name=(
+                            posting.company.name if posting.company else posting.company_name
+                        ),
+                        type="interview",
+                        description=label,
+                        date=str(d),
+                        is_overdue=False,
+                    )
+                )
 
     # Sort: overdue first (oldest first), then upcoming (soonest first), undated last
     def sort_key(item):
@@ -126,10 +122,41 @@ def get_dashboard(db: Session = Depends(get_db)):
         for p in closed_postings_query
     ]
 
+    # Stale entries: applied or later, non-terminal, unchanged for 7+ days
+    pre_funnel_stages = {"interested", "applying"}
+    terminal_stages_stale = {"rejected", "withdrawn", "archived"}
+    stale_threshold = now - timedelta(days=7)
+    stale_entries = []
+    for entry in entries:
+        if entry.stage in pre_funnel_stages or entry.stage in terminal_stages_stale:
+            continue
+        has_future_date = any(
+            getattr(entry, f, None) is not None and getattr(entry, f) >= today
+            for f in interview_date_fields
+        )
+        if has_future_date:
+            continue
+        if entry.updated_at <= stale_threshold:
+            posting = entry.job_posting
+            days = (now - entry.updated_at).days
+            stale_entries.append(
+                StaleEntryRead(
+                    pipeline_entry_id=entry.id,
+                    job_title=posting.title,
+                    company_name=(
+                        posting.company.name if posting.company else posting.company_name
+                    ),
+                    stage=entry.stage,
+                    days_in_stage=days,
+                )
+            )
+    stale_entries.sort(key=lambda x: x.days_in_stage, reverse=True)
+
     return DashboardResponse(
         lane_counts=lane_counts,
         upcoming_events=upcoming_events,
         action_items=action_items,
+        stale_entries=stale_entries,
         closed_postings=closed_postings,
     )
 

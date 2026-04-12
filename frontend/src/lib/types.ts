@@ -171,10 +171,19 @@ export interface ClosedPostingAlert {
   url: string | null;
 }
 
+export interface StaleEntry {
+  pipeline_entry_id: number;
+  job_title: string;
+  company_name: string | null;
+  stage: string;
+  days_in_stage: number;
+}
+
 export interface DashboardResponse {
   lane_counts: Record<string, number>;
   upcoming_events: DashboardActionItem[];
   action_items: DashboardActionItem[];
+  stale_entries: StaleEntry[];
   closed_postings: ClosedPostingAlert[];
 }
 
