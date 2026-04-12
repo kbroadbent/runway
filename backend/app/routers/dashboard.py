@@ -1,5 +1,5 @@
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import date, datetime
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, joinedload
@@ -17,7 +17,6 @@ from app.constants import STAGE_GROUPS
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
-INTERVIEW_LOOKBACK_DAYS = 7
 
 
 @router.get("", response_model=DashboardResponse)
@@ -58,8 +57,8 @@ def get_dashboard(db: Session = Depends(get_db)):
                 )
             )
 
-    # Interview items: no outcome, scheduled within lookback window
-    cutoff = now - timedelta(days=INTERVIEW_LOOKBACK_DAYS)
+    # Upcoming events: interviews scheduled today or later with no outcome
+    today_start = datetime.combine(date.today(), datetime.min.time())
     interview_notes = (
         db.query(InterviewNote)
         .options(
@@ -68,7 +67,7 @@ def get_dashboard(db: Session = Depends(get_db)):
             .joinedload(JobPosting.company)
         )
         .filter(
-            InterviewNote.scheduled_at >= cutoff,
+            InterviewNote.scheduled_at >= today_start,
             InterviewNote.outcome.is_(None),
         )
         .all()
@@ -78,7 +77,6 @@ def get_dashboard(db: Session = Depends(get_db)):
     for note in interview_notes:
         entry = note.pipeline_entry
         posting = entry.job_posting
-        is_overdue = note.scheduled_at is not None and note.scheduled_at < now
         upcoming_events.append(
             ActionItemRead(
                 pipeline_entry_id=entry.id,
@@ -89,7 +87,7 @@ def get_dashboard(db: Session = Depends(get_db)):
                 type="interview",
                 description=note.round,
                 date=str(note.scheduled_at) if note.scheduled_at else None,
-                is_overdue=is_overdue,
+                is_overdue=False,
             )
         )
 
@@ -156,10 +154,15 @@ def get_funnel(
     history = query.all()
 
     # Collapse sub-lanes to parent stage groups
+    # Remap pre-funnel stages to "Applied" so jobs that skip straight
+    # to a terminal stage (e.g. Applying→Withdrawn) still appear in the chart
+    pre_funnel_stages = {"Interested", "Applying"}
     transition_counts: dict[tuple[str, str], int] = {}
     for h in history:
         from_group = STAGE_GROUPS.get(h.from_stage, h.from_stage)
         to_group = STAGE_GROUPS.get(h.to_stage, h.to_stage)
+        if from_group in pre_funnel_stages:
+            from_group = "Applied"
         if from_group == to_group:
             continue  # skip intra-group transitions (e.g. scheduled→completed)
         key = (from_group, to_group)
@@ -176,5 +179,13 @@ def get_funnel(
     for e in entries:
         group = STAGE_GROUPS.get(e.stage, e.stage)
         group_counts[group] = group_counts.get(group, 0) + 1
+
+    # Add "Still Active" synthetic transitions for non-terminal stages
+    terminal_stages = {"Rejected", "Withdrawn", "Archived", "Interested", "Applying"}
+    for stage, count in group_counts.items():
+        if stage not in terminal_stages and count > 0:
+            transitions.append(
+                FunnelTransition(from_stage=stage, to_stage="Still Active", count=count)
+            )
 
     return FunnelResponse(transitions=transitions, stage_counts=group_counts)

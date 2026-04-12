@@ -39,8 +39,9 @@ def test_funnel_with_transitions(client):
     data = resp.json()
 
     transitions = {(t["from_stage"], t["to_stage"]): t["count"] for t in data["transitions"]}
-    assert transitions[("Interested", "Applying")] == 2
-    assert transitions[("Applying", "Applied")] == 2
+    # Pre-funnel stages (Interested, Applying) are remapped to Applied
+    assert ("Interested", "Applying") not in transitions
+    assert ("Applying", "Applied") not in transitions
     assert transitions[("Applied", "Recruiter Screen")] == 1
     assert transitions[("Applied", "Rejected")] == 1
 
@@ -66,11 +67,16 @@ def test_funnel_collapses_sublanes(client):
 def test_funnel_date_filter(client):
     _, eid = _create_posting_and_entry(client)
     client.put(f"/api/pipeline/{eid}/move", json={"to_stage": "applying"})
+    client.put(f"/api/pipeline/{eid}/move", json={"to_stage": "applied"})
+    client.put(f"/api/pipeline/{eid}/move", json={"to_stage": "recruiter_screen_scheduled"})
 
     resp = client.get("/api/dashboard/funnel?start=2099-01-01T00:00:00")
     data = resp.json()
-    assert data["transitions"] == []
+    # Only "Still Active" transition remains (from stage_counts, not history)
+    history_transitions = [t for t in data["transitions"] if t["to_stage"] != "Still Active"]
+    assert history_transitions == []
 
     resp = client.get("/api/dashboard/funnel")
     data = resp.json()
-    assert len(data["transitions"]) == 1
+    transitions = {(t["from_stage"], t["to_stage"]): t["count"] for t in data["transitions"]}
+    assert transitions[("Applied", "Recruiter Screen")] == 1

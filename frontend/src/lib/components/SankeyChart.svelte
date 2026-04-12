@@ -11,7 +11,7 @@
 	let svgEl = $state<SVGSVGElement | null>(null);
 	let containerEl = $state<HTMLDivElement | null>(null);
 
-	const EXCLUDED_STAGES = new Set(['Interested', 'Applying']);
+	const EXCLUDED_STAGES = new Set(['Interested', 'Applying', 'Archived']);
 
 	const STAGE_ORDER: Record<string, number> = {
 		'Applied': 0,
@@ -23,13 +23,14 @@
 		'Rejected': 6,
 		'Withdrawn': 6,
 		'Archived': 6,
+		'Still Active': 6,
 	};
 
 	function getLinkColor(target: string): string {
 		switch (target) {
 			case 'Rejected': return 'rgba(248, 113, 113, 0.4)';
 			case 'Withdrawn': return 'rgba(251, 191, 36, 0.4)';
-			case 'Archived': return 'rgba(100, 116, 139, 0.4)';
+			case 'Still Active': return 'rgba(100, 116, 139, 0.4)';
 			case 'Offer': return 'rgba(52, 211, 153, 0.4)';
 			default: return 'rgba(148, 163, 184, 0.15)';
 		}
@@ -39,7 +40,7 @@
 		switch (target) {
 			case 'Rejected': return 'rgba(248, 113, 113, 0.7)';
 			case 'Withdrawn': return 'rgba(251, 191, 36, 0.7)';
-			case 'Archived': return 'rgba(100, 116, 139, 0.7)';
+			case 'Still Active': return 'rgba(100, 116, 139, 0.7)';
 			case 'Offer': return 'rgba(52, 211, 153, 0.7)';
 			default: return 'rgba(148, 163, 184, 0.35)';
 		}
@@ -48,7 +49,7 @@
 	function getNodeColor(name: string): string {
 		if (name === 'Rejected') return '#f87171';
 		if (name === 'Withdrawn') return '#fbbf24';
-		if (name === 'Archived') return '#64748b';
+		if (name === 'Still Active') return '#64748b';
 		if (name === 'Offer') return '#34d399';
 		return '#60a5fa';
 	}
