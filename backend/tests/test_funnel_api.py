@@ -80,3 +80,25 @@ def test_funnel_date_filter(client):
     data = resp.json()
     transitions = {(t["from_stage"], t["to_stage"]): t["count"] for t in data["transitions"]}
     assert transitions[("Applied", "Recruiter Screen")] == 1
+
+
+def test_funnel_deduplicates_bounced_transitions(client):
+    """A posting that bounces (Applied→Withdrawn→Recruiter Screen→Withdrawn)
+    should only show Applied→Recruiter Screen→Withdrawn, not double-count."""
+    _, eid = _create_posting_and_entry(client)
+    client.put(f"/api/pipeline/{eid}/move", json={"to_stage": "applying"})
+    client.put(f"/api/pipeline/{eid}/move", json={"to_stage": "applied"})
+    # Move to withdrawn, then back to recruiter screen, then withdrawn again
+    client.put(f"/api/pipeline/{eid}/move", json={"to_stage": "withdrawn"})
+    client.put(f"/api/pipeline/{eid}/move", json={"to_stage": "recruiter_screen_scheduled"})
+    client.put(f"/api/pipeline/{eid}/move", json={"to_stage": "withdrawn"})
+
+    resp = client.get("/api/dashboard/funnel")
+    data = resp.json()
+    transitions = {(t["from_stage"], t["to_stage"]): t["count"] for t in data["transitions"]}
+
+    # Should show the effective path: Applied → Recruiter Screen → Withdrawn
+    assert transitions.get(("Applied", "Recruiter Screen")) == 1
+    assert transitions.get(("Recruiter Screen", "Withdrawn")) == 1
+    # Should NOT have Applied → Withdrawn (that transition was "undone")
+    assert ("Applied", "Withdrawn") not in transitions

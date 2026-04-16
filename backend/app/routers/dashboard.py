@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends
@@ -178,22 +178,47 @@ def get_funnel(
     if end:
         query = query.filter(PipelineHistory.changed_at <= datetime.fromisoformat(end))
 
-    history = query.all()
+    history = query.order_by(PipelineHistory.changed_at).all()
 
     # Collapse sub-lanes to parent stage groups
     # Remap pre-funnel stages to "Applied" so jobs that skip straight
     # to a terminal stage (e.g. Applying→Withdrawn) still appear in the chart
     pre_funnel_stages = {"Interested", "Applying"}
-    transition_counts: dict[tuple[str, str], int] = {}
+
+    # Group history by pipeline entry to compute effective path per posting.
+    # When a posting bounces (e.g. Applied→Withdrawn→Recruiter Screen→Withdrawn),
+    # we deduplicate to the effective path (Applied→Recruiter Screen→Withdrawn)
+    # so each posting is only counted once per transition.
+    entry_histories: dict[int, list] = defaultdict(list)
     for h in history:
-        from_group = STAGE_GROUPS.get(h.from_stage, h.from_stage)
-        to_group = STAGE_GROUPS.get(h.to_stage, h.to_stage)
-        if from_group in pre_funnel_stages:
-            from_group = "Applied"
-        if from_group == to_group:
-            continue  # skip intra-group transitions (e.g. scheduled→completed)
-        key = (from_group, to_group)
-        transition_counts[key] = transition_counts.get(key, 0) + 1
+        entry_histories[h.pipeline_entry_id].append(h)
+
+    transition_counts: dict[tuple[str, str], int] = {}
+    for entry_id, events in entry_histories.items():
+        # Build the sequence of grouped stages
+        groups = []
+        for h in events:
+            from_g = STAGE_GROUPS.get(h.from_stage, h.from_stage)
+            to_g = STAGE_GROUPS.get(h.to_stage, h.to_stage)
+            if from_g in pre_funnel_stages:
+                from_g = "Applied"
+            if to_g in pre_funnel_stages:
+                to_g = "Applied"
+            if not groups:
+                groups.append(from_g)
+            if to_g != groups[-1]:
+                groups.append(to_g)
+
+        # Deduplicate: keep only the last occurrence of each stage
+        seen: dict[str, int] = {}
+        for i, g in enumerate(groups):
+            seen[g] = i
+        effective = sorted(seen.keys(), key=lambda g: seen[g])
+
+        # Count transitions from the effective path
+        for i in range(len(effective) - 1):
+            key = (effective[i], effective[i + 1])
+            transition_counts[key] = transition_counts.get(key, 0) + 1
 
     transitions = [
         FunnelTransition(from_stage=k[0], to_stage=k[1], count=v)

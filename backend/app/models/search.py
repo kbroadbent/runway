@@ -35,7 +35,7 @@ class SearchResult(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     search_profile_id: Mapped[int] = mapped_column(ForeignKey("search_profiles.id", ondelete="CASCADE"))
-    job_posting_id: Mapped[int] = mapped_column(ForeignKey("job_postings.id"))
+    job_posting_id: Mapped[int] = mapped_column(ForeignKey("job_postings.id", ondelete="CASCADE"))
     run_date: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     is_new: Mapped[bool] = mapped_column(Boolean, default=True)
 

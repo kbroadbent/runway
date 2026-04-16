@@ -37,4 +37,4 @@ class JobPosting(Base):
     pipeline_entry: Mapped["PipelineEntry | None"] = relationship(
         back_populates="job_posting", cascade="all, delete-orphan", uselist=False
     )
-    search_results: Mapped[list["SearchResult"]] = relationship(back_populates="job_posting")
+    search_results: Mapped[list["SearchResult"]] = relationship(back_populates="job_posting", cascade="all, delete-orphan", passive_deletes=True)
