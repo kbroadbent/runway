@@ -9,6 +9,7 @@ from app.models import PipelineEntry, JobPosting, PipelineHistory
 from app.schemas.dashboard import (
     ActionItemRead,
     ClosedPostingAlert,
+    CompletedInterviewRead,
     DashboardResponse,
     FunnelResponse,
     FunnelTransition,
@@ -99,6 +100,45 @@ def get_dashboard(db: Session = Depends(get_db)):
     action_items.sort(key=sort_key)
     upcoming_events.sort(key=sort_key)
 
+    # Completed interviews awaiting next step: entries currently at a *_completed
+    # interview stage. Sorted ascending by interview date (oldest wait first).
+    completed_stage_info = {
+        "recruiter_screen_completed": ("recruiter_screen_date", "Recruiter Screen"),
+        "manager_screen_completed": ("manager_screen_date", "Manager Screen"),
+        "tech_screen_completed": ("tech_screen_date", "Tech Screen"),
+        "onsite_completed": ("onsite_date", "Onsite"),
+    }
+    completed_interviews: list[CompletedInterviewRead] = []
+    for entry in entries:
+        info = completed_stage_info.get(entry.stage)
+        if not info:
+            continue
+        date_field, label = info
+        d = getattr(entry, date_field, None)
+        posting = entry.job_posting
+        if d is not None:
+            interview_date = str(d)
+            days_since = (today - d).days
+        else:
+            interview_date = None
+            days_since = (now - entry.updated_at).days
+        completed_interviews.append(
+            CompletedInterviewRead(
+                pipeline_entry_id=entry.id,
+                job_title=posting.title,
+                company_name=(
+                    posting.company.name if posting.company else posting.company_name
+                ),
+                stage_label=label,
+                interview_date=interview_date,
+                days_since=days_since,
+            )
+        )
+    # Oldest interview date first; null dates sort last.
+    completed_interviews.sort(
+        key=lambda i: (i.interview_date is None, i.interview_date or "")
+    )
+
     # Closed posting alerts
     terminal_stages = {"rejected", "archived"}
     closed_postings_query = (
@@ -158,6 +198,7 @@ def get_dashboard(db: Session = Depends(get_db)):
         action_items=action_items,
         stale_entries=stale_entries,
         closed_postings=closed_postings,
+        completed_interviews=completed_interviews,
     )
 
 
