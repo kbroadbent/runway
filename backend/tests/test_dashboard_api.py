@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 
 def _create_posting_and_entry(client, stage="interested", title="SWE", company="TestCo"):
@@ -20,59 +20,26 @@ def _get_entry_id(client, posting_id):
     raise AssertionError(f"No pipeline entry found for posting {posting_id}")
 
 
-def test_dashboard_action_items_include_upcoming_interviews(client):
-    """Interviews with no outcome and recent scheduled_at should appear."""
+def test_dashboard_upcoming_events_include_future_stage_dates(client):
+    """Entries with a future interview stage date should appear in upcoming_events."""
     _, entry_id = _create_posting_and_entry(client, stage="tech_screen_scheduled")
+    future = (date.today() + timedelta(days=2)).isoformat()
+    client.put(f"/api/pipeline/{entry_id}", json={"tech_screen_date": future})
 
-    scheduled = (datetime.now() + timedelta(days=2)).isoformat()
-    resp = client.post(f"/api/pipeline/{entry_id}/interviews", json={
-        "round": "Technical",
-        "scheduled_at": scheduled,
-    })
-    assert resp.status_code == 201
-
-    resp = client.get("/api/dashboard")
-    assert resp.status_code == 200
-    events = resp.json()["upcoming_events"]
+    events = client.get("/api/dashboard").json()["upcoming_events"]
     assert len(events) == 1
-    assert events[0]["description"] == "Technical"
+    assert events[0]["description"] == "Tech Screen"
     assert events[0]["is_overdue"] is False
 
 
-def test_dashboard_excludes_interviews_with_outcome(client):
-    """Interviews with an outcome set should NOT appear in upcoming events."""
+def test_dashboard_excludes_past_stage_dates(client):
+    """Entries whose interview stage date is in the past should not appear."""
     _, entry_id = _create_posting_and_entry(client, stage="tech_screen_completed")
+    past = (date.today() - timedelta(days=1)).isoformat()
+    client.put(f"/api/pipeline/{entry_id}", json={"tech_screen_date": past})
 
-    scheduled = (datetime.now() - timedelta(days=1)).isoformat()
-    resp = client.post(f"/api/pipeline/{entry_id}/interviews", json={
-        "round": "Technical",
-        "scheduled_at": scheduled,
-        "outcome": "passed",
-    })
-    assert resp.status_code == 201
-
-    resp = client.get("/api/dashboard")
-    assert resp.status_code == 200
-    events = resp.json()["upcoming_events"]
+    events = client.get("/api/dashboard").json()["upcoming_events"]
     assert len(events) == 0
-
-
-def test_dashboard_overdue_interview(client):
-    """An interview scheduled in the past with no outcome should be marked overdue."""
-    _, entry_id = _create_posting_and_entry(client, stage="onsite_scheduled")
-
-    scheduled = (datetime.now() - timedelta(days=2)).isoformat()
-    resp = client.post(f"/api/pipeline/{entry_id}/interviews", json={
-        "round": "Onsite",
-        "scheduled_at": scheduled,
-    })
-    assert resp.status_code == 201
-
-    resp = client.get("/api/dashboard")
-    assert resp.status_code == 200
-    events = resp.json()["upcoming_events"]
-    assert len(events) == 1
-    assert events[0]["is_overdue"] is True
 
 
 # --- Completed interviews awaiting next step ---
