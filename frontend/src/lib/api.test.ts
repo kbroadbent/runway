@@ -65,6 +65,7 @@ describe('DashboardResponse type', () => {
       ],
       stale_entries: [],
       closed_postings: [],
+      completed_interviews: [],
     };
     expect(response.lane_counts['Interested']).toBe(2);
     expect(response.action_items).toHaveLength(1);
@@ -77,6 +78,7 @@ describe('DashboardResponse type', () => {
       action_items: [],
       stale_entries: [],
       closed_postings: [],
+      completed_interviews: [],
     };
     expect(response.action_items).toHaveLength(0);
   });
@@ -102,7 +104,9 @@ describe('dashboard.get()', () => {
           is_overdue: true,
         },
       ],
+      stale_entries: [],
       closed_postings: [],
+      completed_interviews: [],
     };
 
     mockFetch.mockResolvedValueOnce({

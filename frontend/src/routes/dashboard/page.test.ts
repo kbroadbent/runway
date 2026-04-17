@@ -25,6 +25,7 @@ const EMPTY_DASHBOARD: DashboardResponse = {
 	action_items: [],
 	stale_entries: [],
 	closed_postings: [],
+	completed_interviews: [],
 };
 
 const POPULATED_DASHBOARD: DashboardResponse = {
@@ -65,6 +66,7 @@ const POPULATED_DASHBOARD: DashboardResponse = {
 		},
 	],
 	closed_postings: [],
+	completed_interviews: [],
 };
 
 function mockDashboardResponse(data: DashboardResponse) {

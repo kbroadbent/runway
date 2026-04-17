@@ -4,6 +4,7 @@
 	import { dashboard as dashboardApi } from '$lib/api';
 	import DashboardLaneCounts from '$lib/components/DashboardLaneCounts.svelte';
 	import DashboardUpcomingEvents from '$lib/components/DashboardUpcomingEvents.svelte';
+	import DashboardCompletedInterviews from '$lib/components/DashboardCompletedInterviews.svelte';
 	import DashboardActionItems from '$lib/components/DashboardActionItems.svelte';
 	import DashboardClosedPostings from '$lib/components/DashboardClosedPostings.svelte';
 	import DashboardStaleEntries from '$lib/components/DashboardStaleEntries.svelte';
@@ -39,6 +40,7 @@
 			<DashboardFunnel />
 			<DashboardActionItems items={data.action_items} />
 			<DashboardUpcomingEvents items={data.upcoming_events} />
+			<DashboardCompletedInterviews items={data.completed_interviews} />
 			<DashboardStaleEntries items={data.stale_entries} />
 			<DashboardClosedPostings items={data.closed_postings} />
 		</div>

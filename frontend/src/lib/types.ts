@@ -179,12 +179,22 @@ export interface StaleEntry {
   days_in_stage: number;
 }
 
+export interface CompletedInterview {
+  pipeline_entry_id: number;
+  job_title: string;
+  company_name: string | null;
+  stage_label: string;
+  interview_date: string | null;
+  days_since: number;
+}
+
 export interface DashboardResponse {
   lane_counts: Record<string, number>;
   upcoming_events: DashboardActionItem[];
   action_items: DashboardActionItem[];
   stale_entries: StaleEntry[];
   closed_postings: ClosedPostingAlert[];
+  completed_interviews: CompletedInterview[];
 }
 
 export interface PostingsFilter {

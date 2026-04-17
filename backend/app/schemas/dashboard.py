@@ -41,6 +41,15 @@ class StaleEntryRead(BaseModel):
     days_in_stage: int
 
 
+class CompletedInterviewRead(BaseModel):
+    pipeline_entry_id: int
+    job_title: str
+    company_name: str | None
+    stage_label: str
+    interview_date: str | None
+    days_since: int
+
+
 class ClosedPostingAlert(BaseModel):
     id: int
     title: str
@@ -65,3 +74,4 @@ class DashboardResponse(BaseModel):
     action_items: list[ActionItemRead]
     stale_entries: list[StaleEntryRead] = []
     closed_postings: list[ClosedPostingAlert] = []
+    completed_interviews: list[CompletedInterviewRead] = []
