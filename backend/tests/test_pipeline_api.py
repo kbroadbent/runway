@@ -50,9 +50,19 @@ def test_stage_history(client, posting_id):
 
 def test_add_interview_note(client, posting_id):
     eid = _get_entry_id(client, posting_id)
-    resp = client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Phone Screen", "outcome": "passed"})
+    resp = client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Phone Screen", "scheduled_at": "2026-04-20"})
     assert resp.status_code == 201
-    assert resp.json()["round"] == "Phone Screen"
+    data = resp.json()
+    assert data["round"] == "Phone Screen"
+    assert data["scheduled_at"] == "2026-04-20"
+    assert "outcome" not in data
+
+
+def test_add_interview_note_datetime_coerced_to_date(client, posting_id):
+    eid = _get_entry_id(client, posting_id)
+    resp = client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Technical", "scheduled_at": "2026-04-20T14:30:00"})
+    assert resp.status_code == 201
+    assert resp.json()["scheduled_at"] == "2026-04-20"
 
 
 def test_list_interview_notes(client, posting_id):
@@ -68,9 +78,22 @@ def test_update_interview_note(client, posting_id):
     eid = _get_entry_id(client, posting_id)
     note = client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Phone Screen"})
     nid = note.json()["id"]
-    resp = client.put(f"/api/interviews/{nid}", json={"outcome": "passed", "notes": "Went well"})
+    resp = client.put(f"/api/interviews/{nid}", json={"notes": "Went well"})
     assert resp.status_code == 200
-    assert resp.json()["outcome"] == "passed"
+    data = resp.json()
+    assert data["notes"] == "Went well"
+    assert "outcome" not in data
+
+
+def test_list_interviews_ordered_by_scheduled_at_nulls_last(client, posting_id):
+    eid = _get_entry_id(client, posting_id)
+    client.post(f"/api/pipeline/{eid}/interviews", json={"round": "No Date"})
+    client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Late", "scheduled_at": "2026-05-01"})
+    client.post(f"/api/pipeline/{eid}/interviews", json={"round": "Early", "scheduled_at": "2026-04-01"})
+    resp = client.get(f"/api/pipeline/{eid}/interviews")
+    assert resp.status_code == 200
+    rounds = [item["round"] for item in resp.json()]
+    assert rounds == ["Early", "Late", "No Date"]
 
 
 def test_delete_interview_note(client, posting_id):
