@@ -140,7 +140,7 @@ def get_dashboard(db: Session = Depends(get_db)):
     )
 
     # Closed posting alerts
-    terminal_stages = {"rejected", "archived"}
+    terminal_stages = {"rejected", "archived", "ghosted"}
     closed_postings_query = (
         db.query(JobPosting)
         .join(PipelineEntry)
@@ -164,7 +164,7 @@ def get_dashboard(db: Session = Depends(get_db)):
 
     # Stale entries: applied or later, non-terminal, unchanged for 7+ days
     pre_funnel_stages = {"interested", "applying"}
-    terminal_stages_stale = {"rejected", "withdrawn", "archived"}
+    terminal_stages_stale = {"rejected", "withdrawn", "archived", "ghosted"}
     stale_threshold = now - timedelta(days=7)
     stale_entries = []
     for entry in entries:
@@ -274,7 +274,7 @@ def get_funnel(
         group_counts[group] = group_counts.get(group, 0) + 1
 
     # Add "Still Active" synthetic transitions for non-terminal stages
-    terminal_stages = {"Rejected", "Withdrawn", "Archived", "Interested", "Applying"}
+    terminal_stages = {"Rejected", "Withdrawn", "Archived", "Ghosted", "Interested", "Applying"}
     for stage, count in group_counts.items():
         if stage not in terminal_stages and count > 0:
             transitions.append(
