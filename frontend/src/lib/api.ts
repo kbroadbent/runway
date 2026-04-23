@@ -123,6 +123,10 @@ export const interviews = {
   delete: (id: number) => request<void>(`/interviews/${id}`, { method: 'DELETE' }),
 };
 
+export const pipelineHistory = {
+  delete: (id: number) => request<void>(`/pipeline-history/${id}`, { method: 'DELETE' }),
+};
+
 export const pipelineComments = {
   update: (id: number, data: { content: string }) =>
     request<PipelineComment>(`/pipeline-comments/${id}`, { method: 'PUT', body: JSON.stringify(data) }),

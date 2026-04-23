@@ -143,3 +143,25 @@ describe('dashboard.get()', () => {
     await expect(dashboard.get()).rejects.toThrow(ApiError);
   });
 });
+
+describe('pipelineHistory.delete()', () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+  });
+
+  it('sends DELETE to /api/pipeline-history/{id}', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 204,
+      json: () => Promise.resolve(null),
+    });
+
+    const { pipelineHistory } = await import('./api');
+    await pipelineHistory.delete(42);
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toBe('http://localhost:8000/api/pipeline-history/42');
+    expect(options.method).toBe('DELETE');
+  });
+});
