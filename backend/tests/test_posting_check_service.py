@@ -101,3 +101,12 @@ def test_check_single_posting_skips_on_fetch_error(mock_fetch, db_session):
 
     db_session.refresh(posting)
     assert posting.is_closed_detected is False
+
+
+def test_get_eligible_postings_excludes_ghosted_stage(db_session):
+    """Postings with pipeline entries in ghosted stage should not be eligible for checks."""
+    posting = _create_eligible_posting(db_session)
+    posting.pipeline_entry.stage = "ghosted"
+    db_session.commit()
+    eligible = get_eligible_postings(db_session)
+    assert len(eligible) == 0

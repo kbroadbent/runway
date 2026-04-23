@@ -102,3 +102,14 @@ def test_funnel_deduplicates_bounced_transitions(client):
     assert transitions.get(("Recruiter Screen", "Withdrawn")) == 1
     # Should NOT have Applied → Withdrawn (that transition was "undone")
     assert ("Applied", "Withdrawn") not in transitions
+
+
+def test_funnel_ghosted_stage_not_shown_as_still_active(client):
+    """Entries in ghosted stage should not produce a 'Still Active' transition in the funnel."""
+    _, eid = _create_posting_and_entry(client)
+    client.put(f"/api/pipeline/{eid}/move", json={"to_stage": "ghosted"})
+
+    resp = client.get("/api/dashboard/funnel")
+    data = resp.json()
+    still_active = [t for t in data["transitions"] if t["to_stage"] == "Still Active"]
+    assert still_active == []

@@ -1,4 +1,6 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+
+from app.models import PipelineEntry
 
 
 def _create_posting_and_entry(client, stage="interested", title="SWE", company="TestCo"):
@@ -107,3 +109,14 @@ def test_completed_interviews_null_date_still_appears(client):
     # so we just verify it's a small integer (just-created entry).
     assert isinstance(items[0]["days_since"], int)
     assert abs(items[0]["days_since"]) <= 1
+
+
+def test_stale_entries_excludes_ghosted_stage(client, db_session):
+    """Entries in ghosted stage should not appear as stale entries."""
+    _, entry_id = _create_posting_and_entry(client, stage="ghosted")
+    entry = db_session.get(PipelineEntry, entry_id)
+    entry.updated_at = datetime.now() - timedelta(days=10)
+    db_session.commit()
+
+    items = client.get("/api/dashboard").json()["stale_entries"]
+    assert items == []
