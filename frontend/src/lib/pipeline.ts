@@ -43,6 +43,7 @@ export const STAGES: StageConfig[] = [
 	{ key: 'offer', label: 'Offer' },
 	{ key: 'rejected', label: 'Rejected' },
 	{ key: 'withdrawn', label: 'Withdrawn' },
+	{ key: 'ghosted', label: 'Ghosted' },
 	{ key: 'archived', label: 'Archived' },
 ];
 
@@ -63,8 +64,8 @@ export const AUTO_DATE_STAGES: Record<string, string> = {
 };
 
 export const ACTIVE_STAGES = STAGES.filter(
-	(s) => s.key !== 'rejected' && s.key !== 'withdrawn' && s.key !== 'archived'
+	(s) => s.key !== 'rejected' && s.key !== 'withdrawn' && s.key !== 'ghosted' && s.key !== 'archived'
 );
 export const TERMINAL_STAGES = STAGES.filter(
-	(s) => s.key === 'rejected' || s.key === 'withdrawn' || s.key === 'archived'
+	(s) => s.key === 'rejected' || s.key === 'withdrawn' || s.key === 'ghosted' || s.key === 'archived'
 );
