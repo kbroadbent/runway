@@ -108,27 +108,24 @@ class PipelineHistoryRead(BaseModel):
 
 class InterviewNoteCreate(BaseModel):
     round: str
-    scheduled_at: datetime | None = None
+    scheduled_at: Optional[FlexDate] = None
     interviewers: str | None = None
     notes: str | None = None
-    outcome: str | None = None
 
 
 class InterviewNoteUpdate(BaseModel):
     round: str | None = None
-    scheduled_at: datetime | None = None
+    scheduled_at: Optional[FlexDate] = None
     interviewers: str | None = None
     notes: str | None = None
-    outcome: str | None = None
 
 
 class InterviewNoteRead(BaseModel):
     id: int
     round: str
-    scheduled_at: datetime | None
+    scheduled_at: Date | None
     interviewers: str | None
     notes: str | None
-    outcome: str | None
     created_at: datetime
 
     model_config = {"from_attributes": True}

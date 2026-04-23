@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date as Date, datetime
 from pydantic import BaseModel
 
 
@@ -46,10 +46,9 @@ class CompanyRead(BaseModel):
 class CompanyInterviewRead(BaseModel):
     id: int
     round: str
-    scheduled_at: datetime | None
+    scheduled_at: Date | None
     interviewers: str | None
     notes: str | None
-    outcome: str | None
     created_at: datetime
     posting_id: int
     posting_title: str

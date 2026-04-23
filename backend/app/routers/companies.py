@@ -77,7 +77,6 @@ def get_company_interviews(company_id: int, db: Session = Depends(get_db)):
             scheduled_at=n.scheduled_at,
             interviewers=n.interviewers,
             notes=n.notes,
-            outcome=n.outcome,
             created_at=n.created_at,
             posting_id=n.pipeline_entry.job_posting.id,
             posting_title=n.pipeline_entry.job_posting.title,
