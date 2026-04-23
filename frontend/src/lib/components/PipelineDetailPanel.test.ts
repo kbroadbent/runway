@@ -3,10 +3,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import PipelineDetailPanel from './PipelineDetailPanel.svelte';
 import type { PipelineEntry, PipelineHistory } from '$lib/types';
 
-const { mockDeleteHistory, mockHistory, mockInterviews } = vi.hoisted(() => ({
+const { mockDeleteHistory, mockHistory, mockInterviews, mockUpdateInterview } = vi.hoisted(() => ({
 	mockDeleteHistory: vi.fn(() => Promise.resolve()),
 	mockHistory: vi.fn(() => Promise.resolve([])),
 	mockInterviews: vi.fn(() => Promise.resolve([])),
+	mockUpdateInterview: vi.fn(() => Promise.resolve({})),
 }));
 
 vi.mock('$lib/api', () => ({
@@ -30,7 +31,7 @@ vi.mock('$lib/api', () => ({
 	},
 	interviews: {
 		delete: vi.fn(() => Promise.resolve()),
-		update: vi.fn(() => Promise.resolve({})),
+		update: mockUpdateInterview,
 	},
 	pipelineComments: {
 		delete: vi.fn(() => Promise.resolve()),
@@ -110,10 +111,15 @@ async function navigateToHistoryTab() {
 	await fireEvent.click(screen.getByRole('button', { name: 'History' }));
 }
 
+async function navigateToInterviewsTab() {
+	await fireEvent.click(screen.getByRole('button', { name: 'Interviews' }));
+}
+
 beforeEach(() => {
 	vi.clearAllMocks();
 	mockHistory.mockResolvedValue([]);
 	mockInterviews.mockResolvedValue([]);
+	mockUpdateInterview.mockResolvedValue({});
 });
 
 describe('PipelineDetailPanel — history tab delete button', () => {
@@ -195,5 +201,95 @@ describe('PipelineDetailPanel — history tab delete button', () => {
 		await waitFor(() => {
 			expect(screen.queryByText('Coffee chat with manager')).not.toBeInTheDocument();
 		});
+	});
+});
+
+describe('PipelineDetailPanel — interview add form', () => {
+	it('uses a date input instead of datetime-local for the scheduled date', async () => {
+		renderPanel();
+		await navigateToInterviewsTab();
+		await fireEvent.click(screen.getByRole('button', { name: /add interview note/i }));
+
+		expect(document.body.querySelector('input[type="datetime-local"]')).toBeNull();
+		expect(document.body.querySelector('input[type="date"]')).not.toBeNull();
+	});
+
+	it('does not include an outcome field', async () => {
+		renderPanel();
+		await navigateToInterviewsTab();
+		await fireEvent.click(screen.getByRole('button', { name: /add interview note/i }));
+
+		expect(screen.queryByText(/^outcome$/i)).not.toBeInTheDocument();
+	});
+});
+
+describe('PipelineDetailPanel — interview card display', () => {
+	it('does not show an outcome badge even when the server returns an outcome value', async () => {
+		mockInterviews.mockResolvedValue([
+			{ id: 1, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: null, outcome: 'passed', created_at: '2026-01-01T00:00:00' },
+		]);
+		renderPanel();
+		await navigateToInterviewsTab();
+		await waitFor(() => screen.getByText('Phone Screen'));
+
+		expect(screen.queryByText('passed')).not.toBeInTheDocument();
+	});
+});
+
+describe('PipelineDetailPanel — interview edit form', () => {
+	it('shows an edit button for each interview note', async () => {
+		mockInterviews.mockResolvedValue([
+			{ id: 1, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: null, outcome: null, created_at: '2026-01-01T00:00:00' },
+			{ id: 2, round: 'Technical', scheduled_at: null, interviewers: null, notes: null, outcome: null, created_at: '2026-01-01T00:00:00' },
+		]);
+		renderPanel();
+		await navigateToInterviewsTab();
+
+		await waitFor(() => {
+			expect(screen.getAllByRole('button', { name: /^edit$/i })).toHaveLength(2);
+		});
+	});
+
+	it('clicking Edit shows a pre-filled form with the note\'s current round', async () => {
+		mockInterviews.mockResolvedValue([
+			{ id: 1, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: 'Great call', outcome: null, created_at: '2026-01-01T00:00:00' },
+		]);
+		renderPanel();
+		await navigateToInterviewsTab();
+
+		await waitFor(() => screen.getByRole('button', { name: /^edit$/i }));
+		await fireEvent.click(screen.getByRole('button', { name: /^edit$/i }));
+
+		expect(screen.getByDisplayValue('Phone Screen')).toBeInTheDocument();
+	});
+
+	it('saving the edit form calls interviews.update with the note id and current data', async () => {
+		mockInterviews.mockResolvedValue([
+			{ id: 42, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: null, outcome: null, created_at: '2026-01-01T00:00:00' },
+		]);
+		renderPanel();
+		await navigateToInterviewsTab();
+
+		await waitFor(() => screen.getByRole('button', { name: /^edit$/i }));
+		await fireEvent.click(screen.getByRole('button', { name: /^edit$/i }));
+		await fireEvent.click(screen.getByRole('button', { name: /^save$/i }));
+
+		expect(mockUpdateInterview).toHaveBeenCalledWith(42, expect.objectContaining({ round: 'Phone Screen' }));
+	});
+
+	it('pressing Ctrl+Enter in the edit form notes field saves the interview', async () => {
+		mockInterviews.mockResolvedValue([
+			{ id: 42, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: null, outcome: null, created_at: '2026-01-01T00:00:00' },
+		]);
+		renderPanel();
+		await navigateToInterviewsTab();
+
+		await waitFor(() => screen.getByRole('button', { name: /^edit$/i }));
+		await fireEvent.click(screen.getByRole('button', { name: /^edit$/i }));
+
+		const notesTextarea = screen.getByRole('textbox', { name: /notes/i });
+		await fireEvent.keyDown(notesTextarea, { key: 'Enter', ctrlKey: true });
+
+		expect(mockUpdateInterview).toHaveBeenCalledWith(42, expect.anything());
 	});
 });
