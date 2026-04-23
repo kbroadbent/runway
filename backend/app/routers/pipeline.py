@@ -134,6 +134,16 @@ def add_manual_event(entry_id: int, data: ManualEventCreate, db: Session = Depen
     return event
 
 
+@router.delete("/api/pipeline-history/{history_id}", status_code=204)
+def delete_history(history_id: int, db: Session = Depends(get_db)):
+    record = db.get(PipelineHistory, history_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="History record not found")
+    db.delete(record)
+    db.commit()
+    return Response(status_code=204)
+
+
 @router.get("/api/pipeline/{entry_id}/interviews", response_model=list[InterviewNoteRead])
 def list_interviews(entry_id: int, db: Session = Depends(get_db)):
     return db.query(InterviewNote).filter(InterviewNote.pipeline_entry_id == entry_id).order_by(InterviewNote.created_at).all()
