@@ -14,7 +14,7 @@ export interface LaneCountResult {
 	terminalTotal: number;
 }
 
-const TERMINAL_STAGES = new Set(['rejected', 'archived']);
+const TERMINAL_STAGES = new Set(['rejected', 'archived', 'ghosted']);
 
 export function computeLaneCounts(entries: PipelineEntry[]): LaneCountResult {
 	// Build a map from sub-lane key -> parent key
