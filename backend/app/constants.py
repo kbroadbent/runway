@@ -13,6 +13,7 @@ STAGES = [
     "offer",
     "rejected",
     "withdrawn",
+    "ghosted",
     "archived",
 ]
 
@@ -33,6 +34,7 @@ STAGE_GROUPS = {
     "offer": "Offer",
     "rejected": "Rejected",
     "withdrawn": "Withdrawn",
+    "ghosted": "Ghosted",
     "archived": "Archived",
 }
 
@@ -56,5 +58,6 @@ STAGE_GROUP_ORDER = [
     "Offer",
     "Rejected",
     "Withdrawn",
+    "Ghosted",
     "Archived",
 ]
