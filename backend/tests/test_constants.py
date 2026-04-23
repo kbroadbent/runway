@@ -52,11 +52,11 @@ def test_stage_group_order_contains_all_unique_groups():
     assert len(STAGE_GROUP_ORDER) == len(unique_groups)
 
 
-def test_stage_group_order_has_eleven_groups():
-    """There should be exactly 11 display groups."""
+def test_stage_group_order_has_twelve_groups():
+    """There should be exactly 12 display groups."""
     from app.constants import STAGE_GROUP_ORDER
 
-    assert len(STAGE_GROUP_ORDER) == 11
+    assert len(STAGE_GROUP_ORDER) == 12
 
 
 def test_stage_group_order_preserves_pipeline_order():
@@ -74,6 +74,33 @@ def test_stage_group_order_preserves_pipeline_order():
         "Offer",
         "Rejected",
         "Withdrawn",
+        "Ghosted",
         "Archived",
     ]
     assert STAGE_GROUP_ORDER == expected
+
+
+def test_ghosted_is_in_stages():
+    """ghosted stage must be present in STAGES."""
+    assert "ghosted" in STAGES
+
+
+def test_ghosted_maps_to_ghosted_group():
+    """ghosted stage must map to the 'Ghosted' display group."""
+    from app.constants import STAGE_GROUPS
+
+    assert STAGE_GROUPS.get("ghosted") == "Ghosted"
+
+
+def test_ghosted_appears_after_withdrawn_in_stages():
+    """ghosted should appear after withdrawn in the STAGES list."""
+    withdrawn_idx = STAGES.index("withdrawn")
+    ghosted_idx = STAGES.index("ghosted")
+    assert ghosted_idx > withdrawn_idx
+
+
+def test_ghosted_appears_before_archived_in_stages():
+    """ghosted should appear before archived in the STAGES list."""
+    ghosted_idx = STAGES.index("ghosted")
+    archived_idx = STAGES.index("archived")
+    assert ghosted_idx < archived_idx
