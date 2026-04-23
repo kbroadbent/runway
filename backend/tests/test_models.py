@@ -82,7 +82,6 @@ def test_interview_note(db):
     note = InterviewNote(
         pipeline_entry_id=entry.id,
         round="Phone Screen",
-        outcome="passed",
     )
     db.add(note)
     db.commit()

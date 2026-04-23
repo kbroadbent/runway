@@ -46,10 +46,9 @@ class InterviewNote(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     pipeline_entry_id: Mapped[int] = mapped_column(ForeignKey("pipeline_entries.id", ondelete="CASCADE"))
     round: Mapped[str] = mapped_column(String, nullable=False)
-    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime)
+    scheduled_at: Mapped[date | None] = mapped_column(Date)
     interviewers: Mapped[str | None] = mapped_column(String)
     notes: Mapped[str | None] = mapped_column(Text)
-    outcome: Mapped[str | None] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     pipeline_entry: Mapped["PipelineEntry"] = relationship(back_populates="interview_notes")

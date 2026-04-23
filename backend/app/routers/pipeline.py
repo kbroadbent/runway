@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
-from sqlalchemy import or_
+from sqlalchemy import case, or_
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.models import PipelineEntry, PipelineHistory, InterviewNote, JobPosting, PipelineComment, PipelineCustomDate, Company
@@ -146,7 +146,10 @@ def delete_history(history_id: int, db: Session = Depends(get_db)):
 
 @router.get("/api/pipeline/{entry_id}/interviews", response_model=list[InterviewNoteRead])
 def list_interviews(entry_id: int, db: Session = Depends(get_db)):
-    return db.query(InterviewNote).filter(InterviewNote.pipeline_entry_id == entry_id).order_by(InterviewNote.created_at).all()
+    return db.query(InterviewNote).filter(InterviewNote.pipeline_entry_id == entry_id).order_by(
+        case((InterviewNote.scheduled_at.is_(None), 1), else_=0),
+        InterviewNote.scheduled_at.asc(),
+    ).all()
 
 
 @router.post("/api/pipeline/{entry_id}/interviews", response_model=InterviewNoteRead, status_code=201)
