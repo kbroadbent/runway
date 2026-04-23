@@ -120,9 +120,34 @@ describe('computeLaneCounts', () => {
 		// Active stages should maintain STAGES order
 		const stageKeys = STAGES.map((s) => s.key);
 		const activeFromConfig = stageKeys.filter(
-			(k) => k !== 'rejected' && k !== 'archived'
+			(k) => k !== 'rejected' && k !== 'archived' && k !== 'ghosted'
 		);
 		expect(activeKeys).toEqual(activeFromConfig);
+	});
+
+	it('classifies ghosted as a terminal stage, not active', () => {
+		const result = computeLaneCounts([]);
+		const activeKeys = result.active.map((l) => l.key);
+		const terminalKeys = result.terminal.map((l) => l.key);
+
+		expect(terminalKeys).toContain('ghosted');
+		expect(activeKeys).not.toContain('ghosted');
+	});
+
+	it('counts entries in ghosted stage as terminal', () => {
+		const entries = [makeEntry('ghosted', 1), makeEntry('ghosted', 2)];
+		const result = computeLaneCounts(entries);
+
+		const ghosted = result.terminal.find((l) => l.key === 'ghosted');
+		expect(ghosted?.count).toBe(2);
+	});
+
+	it('includes ghosted entries in terminalTotal not activeTotal', () => {
+		const entries = [makeEntry('ghosted', 1)];
+		const result = computeLaneCounts(entries);
+
+		expect(result.terminalTotal).toBe(1);
+		expect(result.activeTotal).toBe(0);
 	});
 
 	it('computes total across active and terminal', () => {
