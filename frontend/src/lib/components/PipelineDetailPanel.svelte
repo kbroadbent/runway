@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PipelineEntry, PipelineHistory, InterviewNote } from '$lib/types';
-	import { pipeline, interviews, postings } from '$lib/api';
+	import { pipeline, interviews, postings, pipelineHistory } from '$lib/api';
 	import PipelineComments from './PipelineComments.svelte';
 	import KeyDates from './KeyDates.svelte';
 
@@ -33,6 +33,9 @@
 		next_action_date = entry.next_action_date ? entry.next_action_date.substring(0, 10) : '';
 		tier = entry.job_posting.tier ?? null;
 	});
+
+	// History delete confirmation
+	let confirmingDeleteId = $state<number | null>(null);
 
 	// Manual event form
 	let showEventForm = $state(false);
@@ -114,6 +117,12 @@
 		if (!confirm('Delete this interview note?')) return;
 		await interviews.delete(id);
 		interviewNotes = interviewNotes.filter((n) => n.id !== id);
+	}
+
+	async function deleteHistoryItem(id: number) {
+		await pipelineHistory.delete(id);
+		history = history.filter((h) => h.id !== id);
+		confirmingDeleteId = null;
 	}
 
 	function formatSalary(min: number | null, max: number | null): string {
@@ -273,7 +282,7 @@
 				{#each history as h}
 					<div class="history-item">
 						<div class="history-dot" class:manual-event={h.event_type === 'manual'}></div>
-						<div>
+						<div class="history-content">
 							{#if h.event_type === 'manual'}
 								<span class="history-description">{h.description}</span>
 								<p class="history-date">
@@ -291,6 +300,14 @@
 								{#if h.note}<p class="history-note">{h.note}</p>{/if}
 							{/if}
 						</div>
+						{#if confirmingDeleteId === h.id}
+							<div class="history-actions">
+								<button class="btn btn-sm btn-danger" onclick={() => deleteHistoryItem(h.id)}>Confirm</button>
+								<button class="btn btn-sm btn-secondary" onclick={() => (confirmingDeleteId = null)}>Cancel</button>
+							</div>
+						{:else}
+							<button class="btn btn-sm btn-danger" onclick={() => (confirmingDeleteId = h.id)}>Delete</button>
+						{/if}
 					</div>
 				{/each}
 
@@ -490,6 +507,17 @@
 		display: flex;
 		gap: 0.75rem;
 		align-items: flex-start;
+	}
+
+	.history-content {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.history-actions {
+		display: flex;
+		gap: 0.25rem;
+		flex-shrink: 0;
 	}
 
 	.history-dot {
