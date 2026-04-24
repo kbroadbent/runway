@@ -62,8 +62,8 @@ def test_completed_interviews_includes_recruiter_screen_completed(client):
 
 
 def test_completed_interviews_excludes_offer(client):
-    """Entries in 'offer' should not appear as completed interviews."""
-    _create_posting_and_entry(client, stage="offer")
+    """Entries in 'offer_verbal' should not appear as completed interviews."""
+    _create_posting_and_entry(client, stage="offer_verbal")
     items = client.get("/api/dashboard").json()["completed_interviews"]
     assert items == []
 

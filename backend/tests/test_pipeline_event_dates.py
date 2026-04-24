@@ -94,7 +94,7 @@ def test_pipeline_entry_accepts_date_values(db):
     db.flush()
     entry = PipelineEntry(
         job_posting_id=posting.id,
-        stage="offer",
+        stage="offer_verbal",
         position=0,
         applied_date=date(2026, 1, 15),
         recruiter_screen_date=date(2026, 1, 20),

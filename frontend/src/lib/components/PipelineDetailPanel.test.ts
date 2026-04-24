@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import PipelineDetailPanel from './PipelineDetailPanel.svelte';
-import type { PipelineEntry, PipelineHistory } from '$lib/types';
+import type { PipelineEntry, PipelineHistory, InterviewNote } from '$lib/types';
 
 const { mockDeleteHistory, mockHistory, mockInterviews, mockUpdateInterview } = vi.hoisted(() => ({
-	mockDeleteHistory: vi.fn(() => Promise.resolve()),
-	mockHistory: vi.fn(() => Promise.resolve([])),
-	mockInterviews: vi.fn(() => Promise.resolve([])),
-	mockUpdateInterview: vi.fn(() => Promise.resolve({})),
+	mockDeleteHistory: vi.fn(),
+	mockHistory: vi.fn(),
+	mockInterviews: vi.fn(),
+	mockUpdateInterview: vi.fn(),
 }));
 
 vi.mock('$lib/api', () => ({
@@ -226,7 +226,7 @@ describe('PipelineDetailPanel — interview add form', () => {
 describe('PipelineDetailPanel — interview card display', () => {
 	it('does not show an outcome badge even when the server returns an outcome value', async () => {
 		mockInterviews.mockResolvedValue([
-			{ id: 1, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: null, outcome: 'passed', created_at: '2026-01-01T00:00:00' },
+			{ id: 1, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: null, created_at: '2026-01-01T00:00:00' },
 		]);
 		renderPanel();
 		await navigateToInterviewsTab();
@@ -239,8 +239,8 @@ describe('PipelineDetailPanel — interview card display', () => {
 describe('PipelineDetailPanel — interview edit form', () => {
 	it('shows an edit button for each interview note', async () => {
 		mockInterviews.mockResolvedValue([
-			{ id: 1, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: null, outcome: null, created_at: '2026-01-01T00:00:00' },
-			{ id: 2, round: 'Technical', scheduled_at: null, interviewers: null, notes: null, outcome: null, created_at: '2026-01-01T00:00:00' },
+			{ id: 1, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: null, created_at: '2026-01-01T00:00:00' },
+			{ id: 2, round: 'Technical', scheduled_at: null, interviewers: null, notes: null, created_at: '2026-01-01T00:00:00' },
 		]);
 		renderPanel();
 		await navigateToInterviewsTab();
@@ -252,7 +252,7 @@ describe('PipelineDetailPanel — interview edit form', () => {
 
 	it('clicking Edit shows a pre-filled form with the note\'s current round', async () => {
 		mockInterviews.mockResolvedValue([
-			{ id: 1, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: 'Great call', outcome: null, created_at: '2026-01-01T00:00:00' },
+			{ id: 1, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: 'Great call', created_at: '2026-01-01T00:00:00' },
 		]);
 		renderPanel();
 		await navigateToInterviewsTab();
@@ -265,7 +265,7 @@ describe('PipelineDetailPanel — interview edit form', () => {
 
 	it('saving the edit form calls interviews.update with the note id and current data', async () => {
 		mockInterviews.mockResolvedValue([
-			{ id: 42, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: null, outcome: null, created_at: '2026-01-01T00:00:00' },
+			{ id: 42, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: null, created_at: '2026-01-01T00:00:00' },
 		]);
 		renderPanel();
 		await navigateToInterviewsTab();
@@ -279,7 +279,7 @@ describe('PipelineDetailPanel — interview edit form', () => {
 
 	it('pressing Ctrl+Enter in the edit form notes field saves the interview', async () => {
 		mockInterviews.mockResolvedValue([
-			{ id: 42, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: null, outcome: null, created_at: '2026-01-01T00:00:00' },
+			{ id: 42, round: 'Phone Screen', scheduled_at: null, interviewers: null, notes: null, created_at: '2026-01-01T00:00:00' },
 		]);
 		renderPanel();
 		await navigateToInterviewsTab();

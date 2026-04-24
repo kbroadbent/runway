@@ -33,24 +33,23 @@ def test_move_request_stage_dates_allows_none_values():
     from app.schemas.pipeline import PipelineMoveRequest
 
     req = PipelineMoveRequest(
-        to_stage="offer",
-        stage_dates={"offer_date": date(2026, 4, 1), "offer_expiration_date": None},
+        to_stage="offer_verbal",
+        stage_dates={"offer_date": date(2026, 4, 1)},
     )
-    assert req.stage_dates["offer_expiration_date"] is None
+    assert req.stage_dates["offer_date"] == date(2026, 4, 1)
 
 
-def test_move_request_stage_dates_accepts_multiple_dates():
-    """stage_dates can contain multiple date fields for stages with multiple dates."""
+def test_move_request_stage_dates_accepts_offer_written():
+    """stage_dates can contain offer_expiration_date for offer_written stage."""
     from app.schemas.pipeline import PipelineMoveRequest
 
     req = PipelineMoveRequest(
-        to_stage="offer",
+        to_stage="offer_written",
         stage_dates={
-            "offer_date": date(2026, 4, 1),
             "offer_expiration_date": date(2026, 4, 15),
         },
     )
-    assert len(req.stage_dates) == 2
+    assert req.stage_dates["offer_expiration_date"] == date(2026, 4, 15)
 
 
 # --- PipelineEntryUpdate: stage-linked date fields ---

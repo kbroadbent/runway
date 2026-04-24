@@ -98,7 +98,8 @@ function renderBoard(
 		tech_screen_completed: [],
 		onsite_scheduled: [],
 		onsite_completed: [],
-		offer: [],
+		offer_verbal: [],
+		offer_written: [],
 		rejected: [],
 		archived: [],
 	};
@@ -117,8 +118,8 @@ function renderBoard(
  * Simulate dragging a card and dropping it on a target column.
  * Stages without sub-lanes get a .column-cards drop zone.
  * The STAGES order is: interested, applying, applied, recruiter_screen (sub-lanes),
- * tech_screen (sub-lanes), onsite (sub-lanes), offer, rejected, archived.
- * Non-sub-lane columns with .column-cards: interested(0), applying(1), applied(2), offer(3), rejected(4), archived(5)
+ * tech_screen (sub-lanes), onsite (sub-lanes), offer (sub-lanes), rejected, archived.
+ * Non-sub-lane columns with .column-cards: interested(0), applying(1), applied(2), rejected(3), archived(4)
  */
 async function dragAndDrop(dropZoneIndex: number) {
 	const card = document.querySelector('[draggable="true"]');
