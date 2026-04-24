@@ -40,7 +40,14 @@ export const STAGES: StageConfig[] = [
 			{ key: 'onsite_completed', label: 'Completed' },
 		],
 	},
-	{ key: 'offer', label: 'Offer' },
+	{
+		key: 'offer',
+		label: 'Offer',
+		subLanes: [
+			{ key: 'offer_verbal', label: 'Verbal' },
+			{ key: 'offer_written', label: 'Written' },
+		],
+	},
 	{ key: 'rejected', label: 'Rejected' },
 	{ key: 'withdrawn', label: 'Withdrawn' },
 	{ key: 'ghosted', label: 'Ghosted' },
@@ -53,10 +60,8 @@ export const STAGE_DATE_FIELDS: Record<string, { label: string; field: string }[
 	manager_screen_scheduled: [{ label: 'Manager Screen Date', field: 'manager_screen_date' }],
 	tech_screen_scheduled: [{ label: 'Tech Screen Date', field: 'tech_screen_date' }],
 	onsite_scheduled: [{ label: 'Onsite Date', field: 'onsite_date' }],
-	offer: [
-		{ label: 'Offer Date', field: 'offer_date' },
-		{ label: 'Offer Expiration Date', field: 'offer_expiration_date' },
-	],
+	offer_verbal: [{ label: 'Offer Date', field: 'offer_date' }],
+	offer_written: [{ label: 'Offer Expiration Date', field: 'offer_expiration_date' }],
 };
 
 export const AUTO_DATE_STAGES: Record<string, string> = {

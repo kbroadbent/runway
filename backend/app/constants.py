@@ -10,7 +10,8 @@ STAGES = [
     "tech_screen_completed",
     "onsite_scheduled",
     "onsite_completed",
-    "offer",
+    "offer_verbal",
+    "offer_written",
     "rejected",
     "withdrawn",
     "ghosted",
@@ -31,7 +32,8 @@ STAGE_GROUPS = {
     "tech_screen_completed": "Tech Screen",
     "onsite_scheduled": "Onsite",
     "onsite_completed": "Onsite",
-    "offer": "Offer",
+    "offer_verbal": "Offer",
+    "offer_written": "Offer",
     "rejected": "Rejected",
     "withdrawn": "Withdrawn",
     "ghosted": "Ghosted",
@@ -44,7 +46,8 @@ STAGE_DATE_FIELDS: dict[str, list[tuple[str, str]]] = {
     "manager_screen_scheduled": [("manager_screen_date", "Manager Screen Date")],
     "tech_screen_scheduled": [("tech_screen_date", "Tech Screen Date")],
     "onsite_scheduled": [("onsite_date", "Onsite Date")],
-    "offer": [("offer_date", "Offer Date"), ("offer_expiration_date", "Offer Expiration Date")],
+    "offer_verbal": [("offer_date", "Offer Date")],
+    "offer_written": [("offer_expiration_date", "Offer Expiration Date")],
 }
 
 STAGE_GROUP_ORDER = [

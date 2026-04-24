@@ -45,7 +45,8 @@ def test_stage_date_fields_has_expected_stages():
         "manager_screen_scheduled",
         "tech_screen_scheduled",
         "onsite_scheduled",
-        "offer",
+        "offer_verbal",
+        "offer_written",
     }
     assert set(STAGE_DATE_FIELDS.keys()) == expected_keys
 
@@ -86,14 +87,22 @@ def test_onsite_scheduled_has_date():
     assert fields[0] == ("onsite_date", "Onsite Date")
 
 
-def test_offer_has_two_date_fields():
-    """The offer stage should have both offer_date and offer_expiration_date."""
+def test_offer_verbal_has_offer_date():
+    """The offer_verbal stage should have offer_date."""
     from app.constants import STAGE_DATE_FIELDS
 
-    fields = STAGE_DATE_FIELDS["offer"]
-    assert len(fields) == 2
+    fields = STAGE_DATE_FIELDS["offer_verbal"]
+    assert len(fields) == 1
     assert fields[0] == ("offer_date", "Offer Date")
-    assert fields[1] == ("offer_expiration_date", "Offer Expiration Date")
+
+
+def test_offer_written_has_expiration_date():
+    """The offer_written stage should have offer_expiration_date."""
+    from app.constants import STAGE_DATE_FIELDS
+
+    fields = STAGE_DATE_FIELDS["offer_written"]
+    assert len(fields) == 1
+    assert fields[0] == ("offer_expiration_date", "Offer Expiration Date")
 
 
 def test_stage_date_fields_field_names_are_unique():

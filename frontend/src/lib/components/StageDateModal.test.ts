@@ -83,18 +83,26 @@ describe('StageDateModal', () => {
 		});
 	});
 
-	describe('date fields for multi-date stages', () => {
-		it('renders two date inputs for the offer stage', () => {
-			renderModal({ stage: 'offer' });
+	describe('date fields for offer substages', () => {
+		it('renders offer date input for the offer_verbal stage', () => {
+			renderModal({ stage: 'offer_verbal' });
 			expect(screen.getByLabelText('Offer Date')).toBeInTheDocument();
+		});
+
+		it('renders offer expiration date input for the offer_written stage', () => {
+			renderModal({ stage: 'offer_written' });
 			expect(screen.getByLabelText('Offer Expiration Date')).toBeInTheDocument();
 		});
 
-		it('pre-fills both offer date inputs with today', () => {
-			renderModal({ stage: 'offer' });
+		it('pre-fills offer date input with today for offer_verbal', () => {
+			renderModal({ stage: 'offer_verbal' });
 			const offerDate = screen.getByLabelText('Offer Date') as HTMLInputElement;
-			const expirationDate = screen.getByLabelText('Offer Expiration Date') as HTMLInputElement;
 			expect(offerDate.value).toBe(getToday());
+		});
+
+		it('pre-fills offer expiration date input with today for offer_written', () => {
+			renderModal({ stage: 'offer_written' });
+			const expirationDate = screen.getByLabelText('Offer Expiration Date') as HTMLInputElement;
 			expect(expirationDate.value).toBe(getToday());
 		});
 	});
@@ -126,30 +134,24 @@ describe('StageDateModal', () => {
 			expect(dates.applied_date).toBe(getToday());
 		});
 
-		it('calls onConfirm with multiple dates for offer stage', async () => {
+		it('calls onConfirm with offer_date for offer_verbal stage', async () => {
 			const onConfirm = vi.fn();
-			renderModal({ stage: 'offer', onConfirm });
+			renderModal({ stage: 'offer_verbal', onConfirm });
 
 			await fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
 			const dates = onConfirm.mock.calls[0][0];
 			expect(dates).toHaveProperty('offer_date');
-			expect(dates).toHaveProperty('offer_expiration_date');
 		});
 
-		it('omits empty date values from the confirm payload', async () => {
+		it('calls onConfirm with offer_expiration_date for offer_written stage', async () => {
 			const onConfirm = vi.fn();
-			renderModal({ stage: 'offer', onConfirm });
-
-			// Clear the offer expiration date
-			const expirationInput = screen.getByLabelText('Offer Expiration Date') as HTMLInputElement;
-			await fireEvent.input(expirationInput, { target: { value: '' } });
+			renderModal({ stage: 'offer_written', onConfirm });
 
 			await fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
 			const dates = onConfirm.mock.calls[0][0];
-			expect(dates).toHaveProperty('offer_date');
-			expect(dates).not.toHaveProperty('offer_expiration_date');
+			expect(dates).toHaveProperty('offer_expiration_date');
 		});
 	});
 

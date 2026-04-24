@@ -49,17 +49,27 @@ def test_move_with_stage_dates_persists_applied_date(client, posting_id):
     assert resp.json()["applied_date"] == "2026-03-20"
 
 
-def test_move_with_stage_dates_persists_offer_dates(client, posting_id):
+def test_move_with_stage_dates_persists_verbal_offer_date(client, posting_id):
     eid = _get_entry_id(client, posting_id)
     resp = client.put(f"/api/pipeline/{eid}/move", json={
-        "to_stage": "offer",
+        "to_stage": "offer_verbal",
         "stage_dates": {
             "offer_date": "2026-04-01",
-            "offer_expiration_date": "2026-04-15",
         },
     })
     assert resp.status_code == 200
     assert resp.json()["offer_date"] == "2026-04-01"
+
+
+def test_move_with_stage_dates_persists_written_offer_expiration(client, posting_id):
+    eid = _get_entry_id(client, posting_id)
+    resp = client.put(f"/api/pipeline/{eid}/move", json={
+        "to_stage": "offer_written",
+        "stage_dates": {
+            "offer_expiration_date": "2026-04-15",
+        },
+    })
+    assert resp.status_code == 200
     assert resp.json()["offer_expiration_date"] == "2026-04-15"
 
 

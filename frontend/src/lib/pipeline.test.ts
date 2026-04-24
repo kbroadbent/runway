@@ -62,12 +62,19 @@ describe('STAGES', () => {
 		]);
 	});
 
+	it('includes sub-lanes for offer', () => {
+		const stage = STAGES.find((s) => s.key === 'offer');
+		expect(stage?.subLanes).toEqual([
+			{ key: 'offer_verbal', label: 'Verbal' },
+			{ key: 'offer_written', label: 'Written' },
+		]);
+	});
+
 	it('does not have sub-lanes for simple stages', () => {
 		const simpleKeys = [
 			'interested',
 			'applying',
 			'applied',
-			'offer',
 			'rejected',
 			'withdrawn',
 			'ghosted',
