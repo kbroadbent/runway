@@ -212,10 +212,7 @@
 								<div class="note-header">
 									<strong>{note.round}</strong>
 									{#if note.scheduled_at}
-										<span class="note-meta">{new Date(note.scheduled_at).toLocaleDateString()}</span>
-									{/if}
-									{#if note.outcome}
-										<span class="badge badge-{note.outcome}">{note.outcome}</span>
+										<span class="note-meta">{new Date(note.scheduled_at + 'T00:00:00').toLocaleDateString()}</span>
 									{/if}
 								</div>
 								{#if note.interviewers}

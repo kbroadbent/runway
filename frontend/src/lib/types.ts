@@ -105,7 +105,6 @@ export interface InterviewNote {
   scheduled_at: string | null;
   interviewers: string | null;
   notes: string | null;
-  outcome: string | null;
   created_at: string;
 }
 
@@ -115,7 +114,6 @@ export interface CompanyInterview {
   scheduled_at: string | null;
   interviewers: string | null;
   notes: string | null;
-  outcome: string | null;
   created_at: string;
   posting_id: number;
   posting_title: string;

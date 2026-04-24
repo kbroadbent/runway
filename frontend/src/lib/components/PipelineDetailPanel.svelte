@@ -48,7 +48,13 @@
 	let iScheduled = $state('');
 	let iInterviewers = $state('');
 	let iNotes = $state('');
-	let iOutcome = $state('');
+
+	// Edit interview form
+	let editingInterviewId = $state<number | null>(null);
+	let eRound = $state('');
+	let eScheduled = $state('');
+	let eInterviewers = $state('');
+	let eNotes = $state('');
 
 	async function loadEntryData() {
 		[history, interviewNotes] = await Promise.all([
@@ -95,11 +101,36 @@
 			scheduled_at: iScheduled || null,
 			interviewers: iInterviewers || null,
 			notes: iNotes || null,
-			outcome: iOutcome || null,
 		});
 		interviewNotes = await pipeline.interviews(entry.id);
-		iRound = iScheduled = iInterviewers = iNotes = iOutcome = '';
+		iRound = iScheduled = iInterviewers = iNotes = '';
 		showInterviewForm = false;
+	}
+
+	function startEditInterview(note: InterviewNote) {
+		showInterviewForm = false;
+		editingInterviewId = note.id;
+		eRound = note.round;
+		eScheduled = note.scheduled_at?.substring(0, 10) ?? '';
+		eInterviewers = note.interviewers ?? '';
+		eNotes = note.notes ?? '';
+	}
+
+	function cancelEditInterview() {
+		editingInterviewId = null;
+		eRound = eScheduled = eInterviewers = eNotes = '';
+	}
+
+	async function saveEditInterview() {
+		await interviews.update(editingInterviewId!, {
+			round: eRound,
+			scheduled_at: eScheduled || null,
+			interviewers: eInterviewers || null,
+			notes: eNotes || null,
+		});
+		interviewNotes = await pipeline.interviews(entry.id);
+		editingInterviewId = null;
+		eRound = eScheduled = eInterviewers = eNotes = '';
 	}
 
 	async function addEvent() {
@@ -223,44 +254,60 @@
 					<p class="empty-hint">No interview notes yet.</p>
 				{/if}
 				{#each interviewNotes as note}
-					<div class="interview-card card">
-						<div class="interview-header">
-							<strong>{note.round}</strong>
-							{#if note.outcome}<span class="badge badge-stage">{note.outcome}</span>{/if}
-							<button class="btn btn-sm btn-danger" onclick={() => deleteInterview(note.id)}>Delete</button>
+					{#if editingInterviewId === note.id}
+						<div class="card">
+							<div class="form-group">
+								<label for="edit-round">Round *</label>
+								<input id="edit-round" type="text" bind:value={eRound} placeholder="e.g. Phone Screen" style="width:100%" />
+							</div>
+							<div class="form-group">
+								<label for="edit-date">Date</label>
+								<input id="edit-date" type="date" bind:value={eScheduled} style="width:100%" />
+							</div>
+							<div class="form-group">
+								<label for="edit-interviewers">Interviewers</label>
+								<input id="edit-interviewers" type="text" bind:value={eInterviewers} placeholder="Names or roles" style="width:100%" />
+							</div>
+							<div class="form-group">
+								<label for="edit-notes">Notes</label>
+								<textarea id="edit-notes" aria-label="Notes" bind:value={eNotes} rows={3} style="width:100%" onkeydown={(e) => { if (e.ctrlKey && e.key === 'Enter' && eRound) saveEditInterview(); }}></textarea>
+							</div>
+							<div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+								<button class="btn btn-primary btn-sm" onclick={saveEditInterview} disabled={!eRound}>Save</button>
+								<button class="btn btn-secondary btn-sm" onclick={cancelEditInterview}>Cancel</button>
+							</div>
 						</div>
-						{#if note.scheduled_at}<p class="interview-meta">📅 {new Date(note.scheduled_at).toLocaleString()}</p>{/if}
-						{#if note.interviewers}<p class="interview-meta">👥 {note.interviewers}</p>{/if}
-						{#if note.notes}<p class="interview-notes">{note.notes}</p>{/if}
-					</div>
+					{:else}
+						<div class="interview-card card">
+							<div class="interview-header">
+								<strong>{note.round}</strong>
+								<button class="btn btn-sm btn-secondary" onclick={() => startEditInterview(note)}>Edit</button>
+								<button class="btn btn-sm btn-danger" onclick={() => deleteInterview(note.id)}>Delete</button>
+							</div>
+							{#if note.scheduled_at}<p class="interview-meta">📅 {new Date(note.scheduled_at + 'T00:00:00').toLocaleDateString()}</p>{/if}
+							{#if note.interviewers}<p class="interview-meta">👥 {note.interviewers}</p>{/if}
+							{#if note.notes}<p class="interview-notes">{note.notes}</p>{/if}
+						</div>
+					{/if}
 				{/each}
 
 				{#if showInterviewForm}
 					<div class="card">
 						<div class="form-group">
-							<label>Round *</label>
-							<input type="text" bind:value={iRound} placeholder="e.g. Phone Screen" style="width:100%" />
+							<label for="add-round">Round *</label>
+							<input id="add-round" type="text" bind:value={iRound} placeholder="e.g. Phone Screen" style="width:100%" />
 						</div>
 						<div class="form-group">
-							<label>Date/Time</label>
-							<input type="datetime-local" bind:value={iScheduled} style="width:100%" />
+							<label for="add-date">Date</label>
+							<input id="add-date" type="date" bind:value={iScheduled} style="width:100%" />
 						</div>
 						<div class="form-group">
-							<label>Interviewers</label>
-							<input type="text" bind:value={iInterviewers} placeholder="Names or roles" style="width:100%" />
+							<label for="add-interviewers">Interviewers</label>
+							<input id="add-interviewers" type="text" bind:value={iInterviewers} placeholder="Names or roles" style="width:100%" />
 						</div>
 						<div class="form-group">
-							<label>Notes</label>
-							<textarea bind:value={iNotes} rows={3} style="width:100%" onkeydown={(e) => { if (e.ctrlKey && e.key === 'Enter' && iRound) addInterview(); }}></textarea>
-						</div>
-						<div class="form-group">
-							<label>Outcome</label>
-							<select bind:value={iOutcome} style="width:100%">
-								<option value="">Pending</option>
-								<option value="passed">Passed</option>
-								<option value="failed">Failed</option>
-								<option value="cancelled">Cancelled</option>
-							</select>
+							<label for="add-notes">Notes</label>
+							<textarea id="add-notes" bind:value={iNotes} rows={3} style="width:100%" onkeydown={(e) => { if (e.ctrlKey && e.key === 'Enter' && iRound) addInterview(); }}></textarea>
 						</div>
 						<div style="display:flex;gap:0.5rem;margin-top:0.5rem">
 							<button class="btn btn-primary btn-sm" onclick={addInterview} disabled={!iRound}>Save</button>
@@ -268,7 +315,7 @@
 						</div>
 					</div>
 				{:else}
-					<button class="btn btn-secondary" onclick={() => (showInterviewForm = true)} style="margin-top:0.5rem">
+					<button class="btn btn-secondary" onclick={() => { editingInterviewId = null; showInterviewForm = true; }} style="margin-top:0.5rem">
 						+ Add Interview Note
 					</button>
 				{/if}
