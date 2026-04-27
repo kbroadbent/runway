@@ -20,6 +20,15 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
+    # Truncate datetime strings to date-only ISO format BEFORE altering the
+    # column type. SQLite's NUMERIC affinity on the new Date column would
+    # otherwise coerce a value like '2026-03-24 11:00:00' into the integer
+    # 2026 (numeric prefix), permanently destroying the date.
+    op.execute(
+        "UPDATE interview_notes "
+        "SET scheduled_at = substr(scheduled_at, 1, 10) "
+        "WHERE scheduled_at IS NOT NULL"
+    )
     with op.batch_alter_table('interview_notes', schema=None) as batch_op:
         batch_op.drop_column('outcome')
         batch_op.alter_column('scheduled_at',
