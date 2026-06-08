@@ -6,7 +6,6 @@
 		{ href: '/pipeline', label: 'Pipeline' },
 		{ href: '/postings', label: 'Saved Jobs' },
 		{ href: '/search', label: 'Add Jobs' },
-		{ href: '/companies', label: 'Companies' },
 	];
 </script>
 
